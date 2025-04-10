@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { insertProductSchema } from "@/lib/validators";
+import { insertProductSchema,insertCartSchema,cartItemSchema } from "@/lib/validators";
+
 
 // This reflects the shape after Prisma → JSON.stringify → frontend
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -7,3 +8,12 @@ export type Product = z.infer<typeof insertProductSchema> & {
   rating: string;
   createdAt: string;
 };
+
+
+//Cart Type
+
+export type Cart = z.infer<typeof insertCartSchema>;
+export type CartItem = z.infer<typeof cartItemSchema>;
+
+
+
