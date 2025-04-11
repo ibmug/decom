@@ -3,11 +3,12 @@
 import { getSingleProductBySlug } from "@/lib/actions/product.actions";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
+//import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card"
 import ProductPrice from "@/components/shared/product/productPrice"
 import ProductImages from "@/components/shared/product/product-images";
-import AddToCart, {addToCart} from '@/components/shared/product/add-to-cart';
+//import AddToCart, {addToCart} from '@/components/shared/product/add-to-cart';
+import AddToCart from "@/components/shared/product/add-to-cart";
 
 const ProductDetailsPage = async (props:{
     params:Promise<{slug: string}>

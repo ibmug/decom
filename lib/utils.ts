@@ -30,7 +30,7 @@ export async function formatError(error: any) {
   if(error.name ==='ZodError'){
     //Handle Zod Error
     //errors is the object which contains type/includisve/exact/message..., we get the value 'message' from all the errors shown and pass them over as a joined string.
-    const fieldErrors = Object.keys(error.errors).map((field)=>{error.errors[field].message});
+    const fieldErrors = Object.keys(error.errors).map((field)=>error.errors[field].message);
     return fieldErrors.join('.  ')
   } else if (error.name === 'PrismaClientKnownRequestError' && error.code === 'P2002') {
     //Prisma error

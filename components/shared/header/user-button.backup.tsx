@@ -19,8 +19,8 @@ const UserButton = async () => {
             </Link>
         </Button>);
     }
-
-    const firstInitial = session.user?.name.charAt(0).toUpperCase() ?? 'U';
+    const name = session.user?.name || ''
+    const firstInitial = name.charAt(0).toUpperCase() || 'U';
 
     return ( <div className='flex gap-2 items-center'>
         <DropdownMenu>

@@ -1,7 +1,6 @@
 'use client';
 import { CartItem } from "@/types";
 import { Button } from "@/components/ui/button";
-import { CartItem } from "@/types";
 import {useRouter} from 'next/navigation'
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";

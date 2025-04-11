@@ -3,6 +3,9 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/db/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compareSync } from 'bcrypt-ts-edge';
+import type {JWT} from 'next-auth/jwt'
+//import type { CallbacksOptions } from 'next-auth'
+
 
 export const config = {
   pages: {
@@ -11,7 +14,7 @@ export const config = {
     error: '/sign-in',
   },
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   //debug: true, // helpful for logs
@@ -25,12 +28,16 @@ export const config = {
       async authorize(credentials) {
         if (!credentials) return null;
 
+        const {email, password} = credentials as {
+          email:string
+          password: string
+        }
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email},
         });
 
         if (user && user.password) {
-          const isValid = compareSync(credentials.password, user.password);
+          const isValid = compareSync(password, user.password);
           if (isValid) {
             return {
               id: user.id,
@@ -46,7 +53,8 @@ export const config = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({token,user}: {token: JWT; user?: any}) {
+      
       if (user) {
         token.sub = user.id ?? '';
         token.name = user.name ?? '';
@@ -57,7 +65,7 @@ export const config = {
       return token;
     },
 
-    async session({ session, token }) {
+    async session({ session, token }: {session: any, token:JWT}) {
       session.user = {
         id: token.sub ?? '',
         name: token.name ?? 'Guest',
