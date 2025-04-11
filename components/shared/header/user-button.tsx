@@ -1,54 +1,76 @@
-import Link from "next/link";
-import { auth } from "@/auth";
-import { signOutUser } from "@/lib/actions/user.actions";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { UserIcon } from "lucide-react";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+'use client'
 
+import Link from 'next/link'
+import { signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { UserIcon } from 'lucide-react'
 
+const UserButton = () => {
+  const { data: session, status } = useSession()
 
-const UserButton = async () => {
+  if (status === 'loading') {
+    return null // or a skeleton loader
+  }
 
-    const session = await auth();
+  if (!session?.user) {
+    return (
+      <Button asChild>
+        <Link href="/sign-in">
+          <UserIcon className="mr-1" /> Sign In
+        </Link>
+      </Button>
+    )
+  }
 
-    if(!session){
-        return (<Button asChild>
-            <Link href='/sign-in'>
-            <UserIcon /> Sign In
-            </Link>
-        </Button>);
-    }
+  const { name, email } = session.user
+  const firstInitial = name?.charAt(0).toUpperCase() ?? 'U'
 
-    const firstInitial = session.user?.name.charAt(0).toUpperCase() ?? 'U';
-
-    return ( <div className='flex gap-2 items-center'>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <div className="flex items-center">
-                    <Button variant='ghost' className='relativee w-8 h-8 rounded-full ml-2 flex items-center justify-center bg-gray-200'>{firstInitial}</Button>
-                </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className='w-56' align='end' forceMount>
-                <DropdownMenuLabel className='font-normal'>
-                <div className="flex flex-col space-y-1">
-                    <div className="text-sm font-medium leading-none">
-                        {session.user?.name}
-                    </div>
-                    <div className="text-sm font-medium text-muted-foreground leading-none">
-                        {session.user?.email}
-                    </div>
-                </div>
-                </DropdownMenuLabel>
-                <DropdownMenuItem className='p-0 mb-1'>
-                    <form action= {signOutUser} className='w-full'>
-                        <Button className='w-full py-4 px-2 h-4 justify-start' variant='ghost'>Sign out!</Button>
-                    </form>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-        </div>
-        );
+  return (
+    <div className="flex gap-2 items-center">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="relative w-8 h-8 rounded-full ml-2 flex items-center justify-center bg-gray-200"
+          >
+            {firstInitial}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <div className="text-sm font-medium leading-none">{name}</div>
+              <div className="text-sm font-medium text-muted-foreground leading-none">
+                {email}
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuItem className="p-0 mb-1">
+            <form
+              action={() => signOut({ callbackUrl: '/' })}
+              className="w-full"
+            >
+              <Button
+                type="submit"
+                className="w-full py-4 px-2 h-4 justify-start"
+                variant="ghost"
+              >
+                Sign out!
+              </Button>
+            </form>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
 }
- 
-export default UserButton;
+
+export default UserButton
