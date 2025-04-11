@@ -15,6 +15,7 @@ import { UserIcon } from 'lucide-react'
 
 const UserButton = () => {
   const { data: session, status } = useSession()
+  console.log('[SESSION]', status, session)
 
   if (status === 'loading') {
     return null // or a skeleton loader
