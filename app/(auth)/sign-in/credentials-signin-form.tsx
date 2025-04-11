@@ -1,59 +1,63 @@
-'use client';
+'use client'
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { signInDefaultValues } from "@/lib/constants";
-import Link from "next/link";
-import { signInWithCredentials } from "@/lib/actions/user.actions";
-import { useFormStatus } from "react-dom";
-import { useActionState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
+export default function CredentialsSignInForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/'
 
-const CredentialsSignInForm = () => {
-    const [data,action] = useActionState(signInWithCredentials, {success:false, message:''})
-    const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackurl') || '/';
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-    const SignInButton = () => {
-        const {pending} = useFormStatus();
-        return (
-            <Button disabled={pending} className='w-full' variant='default'>
-                {/* if pending then show the status, are we signing or are we idle? */}
-                {pending ? 'Signin In..' : 'Sign in'}
-            </Button>
-        )
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const res = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    })
+
+    if (res?.error) {
+      setError('Invalid email or password.')
+    } else {
+      router.push(callbackUrl)
     }
 
-    return ( 
-        <form action={action}>
-            <input type="hidden" name="callbackUrl" value={callbackUrl} />
-            <div className="space-y-6">
-                <div>
-                    <Label htmlFor='email'>Email</Label>
-                    <Input id='email' name='email' type='email' required autoComplete='email' defaultValue={signInDefaultValues.email}/>
-                </div>
-                <div>
-                    <Label htmlFor='password'>Password</Label>
-                    <Input id='password' name='password' type='password' required autoComplete='password' defaultValue={signInDefaultValues.password}/>
-                </div>
-                <div>
-                    <SignInButton/>
-                </div>
-                {/* If data.success is false then show the error message*/}
-                {data && !data.success && (
-                    <div className='text-center text-destructive'>
-                    {data.message}
-                    </div>
-                )}
-                <div className="text-sm text-center text-muted-foreground">
-                    Don&apos;t have an account? {' '}
-                    <Link href='/sign-up' target='_self' className='link'> Sign up </Link>
-                </div>
-            </div>
-        </form>
-     );
+    setLoading(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <Input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? 'Signing in...' : 'Sign In'}
+      </Button>
+    </form>
+  )
 }
- 
-export default CredentialsSignInForm;
