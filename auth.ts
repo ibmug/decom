@@ -4,6 +4,9 @@ import { prisma } from '@/db/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compareSync } from 'bcrypt-ts-edge';
 import type {JWT} from 'next-auth/jwt'
+
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 //import type { CallbacksOptions } from 'next-auth'
 
 
