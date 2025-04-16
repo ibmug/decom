@@ -5,7 +5,7 @@ import { CartItem } from "@/types";
 import { convertToPlainObject, formatError } from "../utils";
 import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
-import { cartItemSchema, insertProductSchema } from "../validators";
+import { cartItemSchema, /*insertProductSchema*/ } from "../validators";
 
 export async function addItemToCart(data: CartItem){
     
@@ -20,7 +20,7 @@ export async function addItemToCart(data: CartItem){
         const userId = session?.user?.id ? session.user.id as string : undefined;
 
         //Get Cart
-        const cart = await getMyCart();
+        //const cart = await getMyCart();
         //Lets parse and validate that data.
         const item = cartItemSchema.parse(data);
         const product = await prisma.product.findFirst({
