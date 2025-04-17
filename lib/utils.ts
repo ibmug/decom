@@ -41,3 +41,20 @@ export async function formatError(error: any) {
     return typeof error.message === 'string' ? error.message : JSON.stringify(error.message)
   }
 }
+
+
+//Round Number to two decimals
+
+export function roundtwo(value: number|string){
+
+  if(typeof value==='number'){
+    //We're rounding the number provided to two decimals, EPSILON * 100 and then divided b y 100
+    //help us with the rounding    
+    return Math.round((value + Number.EPSILON) * 100) / 100
+  } else if(typeof value ==='string') {
+    throw new Error ("You sent a string!") 
+
+  }else {
+    throw new Error ("Wrong type for rounding")
+  }
+}
