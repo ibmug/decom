@@ -58,3 +58,22 @@ export function roundtwo(value: number|string){
     throw new Error ("Wrong type for rounding")
   }
 }
+
+
+const CURRENCY_FORMATER =  new Intl.NumberFormat('en-US', {
+  currency:'USD',
+  style:'currency',
+  minimumFractionDigits:2
+})
+
+//Format Currency using the 'currencyFormater'
+
+export function formatCurrency(amount: number|string|null){
+  if(typeof amount==='number'){
+    return CURRENCY_FORMATER.format(amount)
+  } else if (typeof amount ==='string'){
+    return CURRENCY_FORMATER.format(Number(amount))
+  } else {
+    return 'NaN'
+  }
+}
