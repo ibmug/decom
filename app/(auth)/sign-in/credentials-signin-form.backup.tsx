@@ -26,6 +26,8 @@ const CredentialsSignInForm = () => {
             </Button>
         )
     }
+   
+
 
     return ( 
         <form action={action}>
@@ -48,10 +50,12 @@ const CredentialsSignInForm = () => {
                     {data.message}
                     </div>
                 )}
-                <div className="text-sm text-center text-muted-foreground">
-                    Don&apos;t have an account? {' '}
-                    <Link href='/sign-up' target='_self' className='link'> Sign up </Link>
-                </div>
+                <div className='text-sm text-center text-muted-foreground'>
+                    Don&apos;t have an account?{' '}
+                    <Link href='/sign-up' target='_self' className='link'>
+                        Sign Up
+                    </Link>
+                 </div>
             </div>
         </form>
      );

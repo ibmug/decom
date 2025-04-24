@@ -15,3 +15,11 @@ export const signUpDefaultValues = {
     name:'',
     confirmPassword:'',
 };
+
+export const shippingAddressDefaultValues = {
+    fullName:'Nombre',
+    streetAddress:'123 Insurgentes Sur',
+    city: 'Ciudad de Mexico',
+    postalCode: '01234',
+    country: 'Mexico'
+}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function CredentialsSignInForm() {
   const router = useRouter()
@@ -58,6 +59,11 @@ export default function CredentialsSignInForm() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? 'Signing in...' : 'Sign In'}
       </Button>
+      <p className="text-sm text-center text-muted-foreground">
+  Don&apos;t have an account?{' '}
+  <Link href="/sign-up" className="text-primary underline">Sign up</Link>
+</p>
+
     </form>
   )
 }
