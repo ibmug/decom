@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { formatNumberWithDecimal } from "./utils";
+import { PAYMENT_METHODS } from "./constants";
 
 //The following regex after (value)=> /^\d+(\.\d{2})?$ means 
 //^ start with, \d = digit, + means 1 or more, in this case, digits.
@@ -62,12 +63,65 @@ export const signUpFormSchema = z.object({
  });
 
  //Schema for the shipping address
- export const shippingAddressSchema = z.object({
-    fullName: z.string().min(3, 'Name must be at least 3 chars'),
-    streetAddress: z.string().min(3, 'Street Address must be at least 3 chars'),
-    city: z.string().min(3, 'City must be at least 3 chars'),
-    postalCode: z.string().min(5, 'Postal Code must be at least 5 chars'),
-    country: z.string().min(3, 'Country must be at least 3 chars'),
-    lat: z.number().optional(),
-    lng: z.number().optional(),
- });
+
+//  export const shippingAddressSchema = z.object({
+//     fullName: z.string().min(3, 'Name must be at least 3 chars'),
+//     streetAddress: z.string().min(3, 'Street Address must be at least 3 chars'),
+//     city: z.string().min(3, 'City must be at least 3 chars'),
+//     postalCode: z.string().min(5, 'Postal Code must be at least 5 chars'),
+//     country: z.string().min(3, 'Country must be at least 3 chars'),
+//     lat: z.number().optional(),
+//     lng: z.number().optional(),
+//  });
+
+export const shippingAddressSchema = z.discriminatedUnion('shippingMethod', [
+  z.object({
+    shippingMethod: z.literal('DELIVERY'),
+    
+    address: z.object({
+      fullName: z.string().min(1, ' Full Name is Required'),
+      country: z.string().min(1,'Country is Required'),
+      streetName: z.string(),
+      city: z.string(),
+      state: z.string(),
+      postalCode: z.string(),
+      phone: z.string().optional(),
+    }),
+    storeId: z.string().optional(),
+  }),
+  z.object({
+    shippingMethod: z.literal('PICKUP'),
+    fullName: z.undefined(),
+    country: z.undefined(),
+    address: z.any().optional(),         // or z.undefined()
+    storeId: z.string().min(1, 'Select a store for pickup'),
+  }),
+]);
+
+//schema for payment methods.
+export const paymentMethodSchema = z.object({
+  type:z.string().min(1, 'Payment method is required')
+}).refine((data)=> PAYMENT_METHODS.includes(data.type),{
+  path:['type'],
+  message:'Invalid Payment Method',
+});
+
+//schema for inserting order
+export const insertOrderSchema = z.object({
+  userId: z.string().min(1,'User is required'),
+  itemsPrice: currency,
+  shippingPrice: currency,
+  taxPrice: currency,
+  totalPrice: currency,
+  paymentMethod: z.string().refine((data)=>PAYMENT_METHODS.includes(data), {message: 'Invalid payment method'}), //should be one of the paymentmethods WE define.
+  shippingAddress: shippingAddressSchema
+});
+
+export const insertOrderItemSchema = z.object({
+  productId: z.string(),
+  slug: z.string(),
+  image: z.string(),
+  name: z.string(),
+  price: currency,
+  qty: z.number(),
+})

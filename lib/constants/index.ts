@@ -23,3 +23,7 @@ export const shippingAddressDefaultValues = {
     postalCode: '01234',
     country: 'Mexico'
 }
+
+
+export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', '): ['Paypal', 'Stripe','CashOnPickup'];
+export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD

@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     default: APP_NAME,
   },
   description: APP_DESCRIPTION,
+  icons:{
+    icon: '/favicon.ico',
+    shortcut:'/favicon.ico'
+  },
   metadataBase: new URL(SERVER_URL),
 };
 
