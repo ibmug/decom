@@ -14,13 +14,12 @@ import { UserIcon } from 'lucide-react'
 
 const UserButton = () => {
   const { data: session, status } = useSession()
- //console.log('Something');
- //console.log('[UserButton] loaded', { status, session })
+ 
 
   if (status === 'loading') {
     return null // or a skeleton loader
   }
-  //console.log('[SESSION]', status, session)
+  
   if (!session?.user) {
     return (
       <Button asChild>

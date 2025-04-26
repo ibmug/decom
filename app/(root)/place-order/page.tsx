@@ -30,7 +30,7 @@ const PlaceOrderPage = async () => {
     if(!user.paymentMethod) redirect('/payment-method');
 
     const userAddress = user.address as ShippingAddress;
-    console.log(userAddress.shippingMethod);
+    
     return (<>
     <CheckoutSteps current={3}/>
     <h1 className="py-4 text-2xl">Confirm Your Order</h1>
