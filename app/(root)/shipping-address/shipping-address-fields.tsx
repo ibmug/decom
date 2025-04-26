@@ -5,6 +5,8 @@ import { UseFormRegister, FieldErrors, FieldError } from 'react-hook-form';
 import { ShippingAddressInput } from '@/types';
 
 const addressFields = [
+  {label: 'Location Name', key:'fullName'},
+  {label: 'Country', key:'country'},
   { label: 'Street', key: 'streetName' },
   { label: 'City', key: 'city' },
   { label: 'State', key: 'state' },

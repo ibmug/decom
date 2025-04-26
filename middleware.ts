@@ -12,6 +12,7 @@ const protectedPaths = [
   /^\/user\/.*$/,
   /^\/order\/.*$/,
   /^\/admin(?:\/.*)?$/,
+  /^\/api\/user\/.*$/,
 ]
 
 const makeUUID = () => crypto.randomUUID()
@@ -35,9 +36,16 @@ export async function middleware(req: NextRequest) {
   if (needsAuth) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
     if (!token) {
+      //for pages, redirect to sign-in
+      if(!pathname.startsWith('/api')){
       const url = new URL('/sign-in', req.url)
       url.searchParams.set('callbackUrl', pathname)
       return NextResponse.redirect(url)
+      }
+      //For API return 401 JSON
+      return new NextResponse(
+        JSON.stringify({error:'Unauthorized'}), {status:401, headers:{'Content-Type': 'application/json'}}
+      )
     }
   }
 
@@ -45,5 +53,8 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',
+    //AND protect our user-api
+    '/api/user/:path*',
+  ],
 }
