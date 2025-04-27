@@ -8,6 +8,7 @@ import type { JWT }     from 'next-auth/jwt';
 import type { Session } from 'next-auth';
 
 export const authOptions = {
+  secret:process.env.NEXTAUTH_SECRET,
   pages: {
     signIn:  '/sign-in',
     signOut: '/sign-out',
