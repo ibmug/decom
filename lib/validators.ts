@@ -75,26 +75,36 @@ export const signUpFormSchema = z.object({
 //  });
 
 export const shippingAddressSchema = z.discriminatedUnion('shippingMethod', [
+  // DELIVERY branch
   z.object({
     shippingMethod: z.literal('DELIVERY'),
-    
+
     address: z.object({
-      fullName: z.string().min(1, ' Full Name is Required'),
-      country: z.string().min(1,'Country is Required'),
+      fullName:   z.string().min(1, 'Full Name is required'),
+      country:    z.string().min(1, 'Country is required'),
       streetName: z.string(),
-      city: z.string(),
-      state: z.string(),
+      city:       z.string(),
+      state:      z.string(),
       postalCode: z.string(),
-      phone: z.string().optional(),
+      phone:      z.string().optional(),
     }),
-    storeId: z.string().optional(),
+
+    // these are not used on DELIVERY
+    storeId:      z.string().optional(),
+    storeAddress: z.string().optional(),
+    storeName:    z.string().optional(),
   }),
+
+  // PICKUP branch
   z.object({
     shippingMethod: z.literal('PICKUP'),
-    fullName: z.undefined(),
-    country: z.undefined(),
-    address: z.any().optional(),         // or z.undefined()
-    storeId: z.string().min(1, 'Select a store for pickup'),
+
+    // on pickup we only care which store
+    storeId:      z.string().min(1, 'Store is required'),
+    storeName:    z.string().min(1),
+    storeAddress: z.string().min(1),
+
+  
   }),
 ]);
 

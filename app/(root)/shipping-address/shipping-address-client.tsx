@@ -30,27 +30,41 @@ export default function ShippingAddressClient({ defaultAddress }: Props) {
   });
   const router = useRouter();
 
-    const onSubmit = async (data: ShippingAddressInput) => {
-        // 1) Save to server
-        const res = await fetch('/api/user/shipping', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        if (!res.ok) {
-          // TODO: show error to user—res.statusText or await res.json().error
-          console.error('Save failed', await res.json());
-          const {error} = await res.json();
-          alert(error);
-          return;
-        }
-    
-        // 2) Update context (optional, to keep UI in sync)
-        updateUserAddress(data);
-    
-        // 3) Move on to payment
-        router.push('/payment-method');
-    };
+
+    const onSubmit = async (data: ShippingAddressInput) => {  
+      
+      
+          // build the body you’ll send…
+          let payload = { ...data }
+      
+          if (data.shippingMethod === 'PICKUP' && data.storeId) {
+            // fetch all stores once
+            const storeRes = await fetch('/api/stores')
+            const stores: { id: string; name: string; address: string }[] = await storeRes.json()
+            const store = stores.find((s) => s.id === data.storeId)
+      
+            payload = {
+              ...data,
+              storeName:    store?.name    ?? '',
+             storeAddress: store?.address ?? '',
+            }
+          }
+      
+          // now send exactly one POST
+          const res = await fetch('/api/user/shipping', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+          })
+           if (!res.ok) {
+             console.error('Save failed', await res.json())
+             const { error } = await res.json()
+             alert(error)
+             return
+           }
+           updateUserAddress(data)
+           router.push('/payment-method')
+         }
 
   return (
     <FormProvider {...methods}>

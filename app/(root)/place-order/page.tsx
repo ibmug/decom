@@ -57,8 +57,12 @@ const PlaceOrderPage = async () => {
     <CardContent className="p-4 gap-4">
       <h2 className="text-xl pb-4">Pick Up Location</h2>
       <p className="font-medium">
-        Store ID: {userAddress.storeId}
+        Store Name: {userAddress.storeName}
       </p>
+      <p className="font-medium">
+        Store Address: {userAddress.storeAddress}
+      </p>
+
       <Link href="/shipping-address">
         <Button variant="outline">Edit</Button>
       </Link>
