@@ -1,17 +1,17 @@
 import {Metadata} from "next";
-import {auth} from "@/auth";
 import {getUserById}  from '@/lib/actions/user.actions'
 import PaymenMethodForm from './payment-method-form'
 import CheckoutSteps from "@/components/shared/checkout-steps";
 import { ShippingAddress } from "@/types";
-
+import { getServerSession } from 'next-auth/next';
+import { authOptions }      from '@/lib/authOptions';
 export const metadata: Metadata = {
     title: 'Select Payment Method',
 }
 
 const PaymentMethodPage = async () => {
 
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
     
     if(!userId) throw new Error('User id not found');

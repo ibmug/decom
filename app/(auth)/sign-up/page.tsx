@@ -9,16 +9,17 @@ import {
   import Link from 'next/link';
   import Image from 'next/image';
   import { APP_NAME } from '@/lib/constants';
-  import { auth } from '@/auth';
   import { redirect } from 'next/navigation';
   import SignUpForm from './sign-up-form';
+  import { getServerSession } from 'next-auth/next';
+  import { authOptions }      from '@/lib/authOptions';
   
   export const metadata: Metadata = {
     title: 'Sign Up',
   };
   
   const SignUpPage = async () => {
-    const session = await auth();
+    const session = await getServerSession(authOptions)
     if (session) redirect('/');
   
   

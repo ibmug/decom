@@ -2,7 +2,6 @@ import { getMyCart } from "@/lib/actions/cart.actions";
 import { ShippingAddress } from "@/types";
 import {Metadata} from "next";
 import {redirect} from 'next/navigation'
-import { auth } from "@/auth";
 import { getUserById } from "@/lib/actions/user.actions";
 import CheckoutSteps from "@/components/shared/checkout-steps";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
+import { getServerSession } from 'next-auth/next';
+import { authOptions }      from '@/lib/authOptions';
 
 export const metadata:Metadata = {
     title: 'Confirm your Order',
@@ -19,7 +20,7 @@ export const metadata:Metadata = {
 const PlaceOrderPage = async () => {
 
     const cart = await getMyCart();
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
     if(!userId) throw new Error('User Not Found');
