@@ -10,7 +10,19 @@ import { isSafeRedirect } from './utils';
 import type { NextAuthOptions } from 'next-auth';
 
 
+
+  // A simple in-memory map: IP → { count: number; lastAttempt: number }
+  const loginAttempts = new Map<string,{ count: number; lastAttempt: number }>();
+
+  // Rate-limit config
+  const MAX_LOGIN_ATTEMPTS = 5;
+  const WINDOW_MS         = 60 * 1000; // 1 minute
+
 export const authOptions: NextAuthOptions = {
+
+
+
+
   secret:process.env.NEXTAUTH_SECRET,
   pages: {
     signIn:  '/sign-in',
@@ -28,10 +40,30 @@ export const authOptions: NextAuthOptions = {
         email:    { label: 'Email',    type: 'email'    },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(creds) {
-        if (!creds) return null;
-        const user = await prisma.user.findUnique({ where: { email: creds.email } });
-        if (user && user.password && compareSync(creds.password, user.password)) {
+      async authorize(credentials, req) {
+        // 0) Must have credentials
+        if (!credentials?.email || !credentials.password) return null;
+    
+        // 1) Rate limit by IP
+        const forwarded = req?.headers?.get('x-forwarded-for');
+        const host      = req?.headers?.get('host');
+        const ipHeader  = forwarded || host || 'unknown';
+        const ip        = ipHeader.split(',')[0] || 'unknown';
+    
+        const now   = Date.now();
+        const entry = loginAttempts.get(ip) ?? { count: 0, lastAttempt: now };
+        if (now - entry.lastAttempt > WINDOW_MS) entry.count = 0;
+        entry.count++;
+        entry.lastAttempt = now;
+        loginAttempts.set(ip, entry);
+    
+        if (entry.count > MAX_LOGIN_ATTEMPTS) {
+          throw new Error('Too many login attempts. Please try again later.');
+        }
+    
+        // 2) Check credentials
+        const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+        if (user && user.password && compareSync(credentials.password, user.password)) {
           return { id: user.id, name: user.name, email: user.email, role: user.role };
         }
         return null;
@@ -64,5 +96,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+
 
 export type AuthOptions = typeof authOptions;
