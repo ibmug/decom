@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'     // edge-safe helper
-
-///Consider protecting the order, the user's profile ONCE the user is signed. 
-//ex, john cannot access another user's profile or another order he isnt assigned to.
+// middleware.ts
+import { NextResponse }   from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getToken }       from 'next-auth/jwt';
 
 const protectedPaths = [
   /^\/shipping-address/,
@@ -13,48 +12,50 @@ const protectedPaths = [
   /^\/order\/.*$/,
   /^\/admin(?:\/.*)?$/,
   /^\/api\/user\/.*$/,
-]
-
-const makeUUID = () => crypto.randomUUID()
+];
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
+  const res = NextResponse.next();
 
-  // ----- anonymous cart cookie -----
+  // --- cart cookie (unchanged) ---
   if (!req.cookies.get('sessionCartId')) {
-    res.cookies.set('sessionCartId', makeUUID(), {
+    res.cookies.set('sessionCartId', crypto.randomUUID(), {
       httpOnly: true,
       path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    })
+      maxAge: 60 * 60 * 24 * 30,
+    });
   }
 
-  // ----- auth guard (edge-safe) -----
-  const { pathname } = req.nextUrl
-  const needsAuth = protectedPaths.some((rx) => rx.test(pathname))
+  // --- auth guard ---
+  const { pathname } = req.nextUrl;
+  const needsAuth = protectedPaths.some((rx) => rx.test(pathname));
 
   if (needsAuth) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === 'production', // ← add this
+    });
+
     if (!token) {
-      //for pages, redirect to sign-in
-      if(!pathname.startsWith('/api')){
-      const url = new URL('/sign-in', req.url)
-      url.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(url)
+      if (!pathname.startsWith('/api')) {
+        const url = new URL('/sign-in', req.url);
+        url.searchParams.set('callbackUrl', pathname);
+        return NextResponse.redirect(url);
       }
-      //For API return 401 JSON
-      return new NextResponse(
-        JSON.stringify({error:'Unauthorized'}), {status:401, headers:{'Content-Type': 'application/json'}}
-      )
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   }
 
-  return res
+  return res;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',
-    //AND protect our user-api
-    '/api/user/:path*',
+  matcher: [
+    '/((?!_next|favicon.ico).*)',  // protect everything except Next internals + favicon
+    '/api/user/:path*',            // and your user-API
   ],
-}
+};
