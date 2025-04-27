@@ -1,13 +1,16 @@
 // File: lib/authOptions.ts
-//import NextAuth from 'next-auth';
+
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/db/prisma';
 import { compareSync } from 'bcrypt-ts-edge';
 import type { JWT }     from 'next-auth/jwt';
 import type { Session } from 'next-auth';
+import { isSafeRedirect } from './utils';
+import type { NextAuthOptions } from 'next-auth';
 
-export const authOptions = {
+
+export const authOptions: NextAuthOptions = {
   secret:process.env.NEXTAUTH_SECRET,
   pages: {
     signIn:  '/sign-in',
@@ -36,6 +39,9 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async redirect({url, baseUrl}: {url: string; baseUrl: string}): Promise<string> {
+      return isSafeRedirect(url) ? url : baseUrl;
+    },
     async jwt({ token, user }: { token: JWT; user?: { id: string; name: string; email: string; role: string } }
     ): Promise<JWT>{
       if (user) {

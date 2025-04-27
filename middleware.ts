@@ -1,9 +1,10 @@
 // middleware.ts
-import { NextResponse }   from 'next/server';
-import type { NextRequest } from 'next/server';
+import {NextResponse, NextRequest} from 'next/server'
 import { getToken }       from 'next-auth/jwt';
+import { signIn } from 'next-auth/react';
 
-const protectedPaths = [
+
+const PROTECTED_PATHS = [
   /^\/shipping-address/,
   /^\/payment-method/,
   /^\/place-order/,
@@ -14,39 +15,62 @@ const protectedPaths = [
   /^\/api\/user\/.*$/,
 ];
 
+const NEXTAUTH_URL = process.env.NEXTAUTH_URL!;
+
+//Helper to validate redirects
+function isSafeRedirect(url: string): boolean{
+  try {
+    // base = e.g. https://your-domain.com
+    const base = new URL(NEXTAUTH_URL);
+    // dest = absolute URL if path is relative, or parses full URL
+    const dest = new URL(url, base);
+    return dest.origin === base.origin;
+  } catch {
+    return false;
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
-  // --- cart cookie (unchanged) ---
+  // --- cart cookie
   if (!req.cookies.get('sessionCartId')) {
-    res.cookies.set('sessionCartId', crypto.randomUUID(), {
+    res.cookies.set('sessionCartId', globalThis.crypto.randomUUID(), {
       httpOnly: true,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,
+      secure:   process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path:     '/',
+      maxAge:   60 * 60 * 24 * 30,
     });
   }
 
   // --- auth guard ---
   const { pathname } = req.nextUrl;
-  const needsAuth = protectedPaths.some((rx) => rx.test(pathname));
+  const needsAuth = PROTECTED_PATHS.some((rx) => rx.test(pathname));
 
   if (needsAuth) {
     const token = await getToken({
       req,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NODE_ENV === 'production', // ← add this
+      secret:       process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === 'production',
     });
 
     if (!token) {
+      // only for page requests, redirect to sign-in
       if (!pathname.startsWith('/api')) {
-        const url = new URL('/sign-in', req.url);
-        url.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(url);
+        //sanitize full url
+        const fullUrl = req.nextUrl.toString();
+        const callbackUrl =isSafeRedirect(fullUrl) ? fullUrl : '/';
+        const signInUrl = new URL('/sign-ign', req.url);
+        signInUrl.searchParams.set('callbackUrl', callbackUrl);
+        return NextResponse.redirect(signInUrl);
       }
-      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+
+      // for API calls, return 401
+      return new NextResponse(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
     }
   }
 
@@ -54,8 +78,8 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next|favicon.ico).*)',  // protect everything except Next internals + favicon
-    '/api/user/:path*',            // and your user-API
-  ],
-};
+    matcher: [
+      '/((?!_next/static|_next/image|favicon.ico).*)',  // protect everything except Next internals
+      '/api/user/:path*',                                // and your user-API
+    ],
+  };

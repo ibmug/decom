@@ -77,3 +77,9 @@ export function formatCurrency(amount: number|string|null){
     return 'NaN'
   }
 }
+
+export function isSafeRedirect(url: string) {
+  const base = new URL(process.env.NEXTAUTH_URL!);
+  const dest = new URL(url, base);
+  return dest.origin === base.origin;
+}
