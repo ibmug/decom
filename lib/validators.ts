@@ -62,49 +62,44 @@ export const signUpFormSchema = z.object({
     userId: z.string().optional().nullable(),
  });
 
- //Schema for the shipping address
 
-//  export const shippingAddressSchema = z.object({
-//     fullName: z.string().min(3, 'Name must be at least 3 chars'),
-//     streetAddress: z.string().min(3, 'Street Address must be at least 3 chars'),
-//     city: z.string().min(3, 'City must be at least 3 chars'),
-//     postalCode: z.string().min(5, 'Postal Code must be at least 5 chars'),
-//     country: z.string().min(3, 'Country must be at least 3 chars'),
-//     lat: z.number().optional(),
-//     lng: z.number().optional(),
-//  });
 
-export const shippingAddressSchema = z.discriminatedUnion('shippingMethod', [
-  // DELIVERY branch
+
+ export const shippingAddressSchema = z.discriminatedUnion('shippingMethod', [
+  // DELIVERY
   z.object({
     shippingMethod: z.literal('DELIVERY'),
-
     address: z.object({
       fullName:   z.string().min(1, 'Full Name is required'),
       country:    z.string().min(1, 'Country is required'),
-      streetName: z.string(),
-      city:       z.string(),
-      state:      z.string(),
-      postalCode: z.string(),
+      streetName: z.string().min(1, 'Street name is required'),
+      city:       z.string().min(1, 'City is required'),
+      state:      z.string().min(1, 'State is required'),
+      postalCode: z.string().min(1, 'Postal code is required'),
       phone:      z.string().optional(),
     }),
-
-    // these are not used on DELIVERY
-    storeId:      z.string().optional(),
-    storeAddress: z.string().optional(),
-    storeName:    z.string().optional(),
+    storeId:        z.string().optional(),
+    storeName:      z.string().optional(),
+    storeAddress:   z.string().optional(),
   }),
 
-  // PICKUP branch
+  // PICKUP branch (change here)
   z.object({
     shippingMethod: z.literal('PICKUP'),
+    storeId:        z.string().min(1, 'Store is required'),
+    storeName:      z.string().min(1),
+    storeAddress:   z.string().min(1),
 
-    // on pickup we only care which store
-    storeId:      z.string().min(1, 'Store is required'),
-    storeName:    z.string().min(1),
-    storeAddress: z.string().min(1),
-
-  
+    // allow address to be present without error
+    address:        z.object({
+                      fullName:   z.string(),
+                      country:    z.string(),
+                      streetName: z.string(),
+                      city:       z.string(),
+                      state:      z.string(),
+                      postalCode: z.string(),
+                      phone:      z.string().optional(),
+                    }).optional(),
   }),
 ]);
 
