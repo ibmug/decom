@@ -3,6 +3,9 @@ import { getToken }                 from 'next-auth/jwt'
 import { updateUserAddress }        from '@/lib/actions/user.actions'
 import { getMyCart }                from '@/lib/actions/cart.actions'
 import { prisma }                   from '@/db/prisma'
+import { shippingAddressSchema } from '@/lib/validators'
+
+
 const secret = process.env.NEXTAUTH_SECRET!;
 
 export async function POST(req: NextRequest) {
@@ -16,6 +19,12 @@ export async function POST(req: NextRequest) {
   let data;
   try {
     data = await req.json();
+    const result = shippingAddressSchema.safeParse(data);
+    if(!result.success){
+      return NextResponse.json({
+        errors:result.error.flatten(),
+        status:400})
+    }
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
