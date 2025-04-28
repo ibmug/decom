@@ -27,7 +27,7 @@ export default function CredentialsSignInForm() {
       email,
       password,
     })
-
+    console.log(res)
     if (res?.error) {
       setError('Invalid email or password.')
     } else {
