@@ -49,9 +49,11 @@ const PlaceOrderPage = async () => {
         {userAddress.address.state}{' '}
         {userAddress.address.postalCode}, {userAddress.address.country}
       </p>
+      <div className='mt-3'>
       <Link href="/shipping-address">
         <Button variant="outline">Edit</Button>
       </Link>
+      </div>
     </CardContent>
   ) : (
     <CardContent className="p-4 gap-4">
@@ -62,21 +64,24 @@ const PlaceOrderPage = async () => {
       <p className="font-medium">
         Store Address: {userAddress.storeAddress}
       </p>
-
+      <div className='mt-3'>
       <Link href="/shipping-address">
         <Button variant="outline">Edit</Button>
       </Link>
+      </div>
     </CardContent>
   )}
                 
                 <CardContent className="p-4 gap-4">
                     <h2 className="text-xl pb-4">Payment Method</h2>
                     <p>{user.paymentMethod}</p>
+                    <div className='mt-3'>
                     <Link href={'/payment-method'}>
                     <Button variant='outline'>
                         Edit
                     </Button>
                     </Link>
+                    </div>
                 </CardContent>
                 <CardContent className="p-4 gap-4">
                     <h2 className="text-xl pb-4">Order Items</h2>
@@ -92,7 +97,7 @@ const PlaceOrderPage = async () => {
                                 {cart.items.map((item)=>(
                                     <TableRow key={item.slug}>
                                         <TableCell>
-                                            <Link href={`/product/{item.slug}`}className='flex items-center'>
+                                            <Link href={`/product/${item.slug}`} className='flex items-center'>
                                             <Image src={item.image} alt={item.name} width={50} height={50}/>
                                             <span className='px-2'>{item.name}</span>
                                             </Link>
