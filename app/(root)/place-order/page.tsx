@@ -12,6 +12,7 @@ import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
+import PlaceOrderForm from "./place-order-form";
 
 export const metadata:Metadata = {
     title: 'Confirm your Order',
@@ -149,7 +150,7 @@ const PlaceOrderPage = async () => {
                                         {formatCurrency(cart.totalPrice)}
                                     </div>
                                 </div>
-
+                                <PlaceOrderForm/>
             </CardContent>
         </Card>
     </div>

@@ -118,3 +118,27 @@ export async function updateUserPayment(data: z.infer<typeof paymentMethodSchema
     return { success: false, message: formatError(error) };
   }
 }
+
+
+export async function requireShippingAddress(): Promise<ShippingAddress> {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error('Not authenticated');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { address: true },
+  });
+  if (!user?.address) {
+    throw new Error('No shipping address on file');
+  }
+
+  const parsed = shippingAddressSchema.safeParse(user.address);
+  if (!parsed.success) {
+    // Could log parsed.error here if you want
+    throw new Error('Stored shipping address is invalid, please re-enter.');
+  }
+
+  return parsed.data;
+}
