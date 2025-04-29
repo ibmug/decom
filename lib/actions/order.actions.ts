@@ -9,6 +9,7 @@ import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
 import { CartItem } from "@/types";
+import { PrismaClient } from "@prisma/client";
 
 //create order and create the order items
 
@@ -50,7 +51,7 @@ export async function createOrder(){
         });
         /// create transaction to create oredr and order items in db.
 
-        const insertedOrderId = await prisma.$transaction(async (tx)=>{
+        const insertedOrderId = await prisma.$transaction(async (tx:PrismaClient)=>{
             const insertedOrder = await tx.order.create({data: order})
             //create oorder items from the cart items
             for(const item of cart.items as CartItem[]){
@@ -92,7 +93,7 @@ export async function getorderById(orderId: string){
     const data = await prisma.order.findFirst({
         where:{id: orderId},
         include: {
-            orderitems: true,
+            orderItems: true,
             user: { select: {name: true, email: true}},
         },
     })

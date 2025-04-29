@@ -1,5 +1,5 @@
 import { getMyCart } from "@/lib/actions/cart.actions";
-import { ShippingAddress } from "@/types";
+import { CartItem, ShippingAddress } from "@/types";
 import {Metadata} from "next";
 import {redirect} from 'next/navigation'
 import { getUserById } from "@/lib/actions/user.actions";
@@ -95,7 +95,7 @@ const PlaceOrderPage = async () => {
                             </TableRow>
                         </TableHeader>
                             <TableBody>
-                                {cart.items.map((item)=>(
+                                {cart.items.map((item:CartItem)=>(
                                     <TableRow key={item.slug}>
                                         <TableCell>
                                             <Link href={`/product/${item.slug}`} className='flex items-center'>
