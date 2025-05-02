@@ -47,7 +47,7 @@ import { createPayPalOrder, approvePayPalOrder } from "@/lib/actions/order.actio
                 variant:res.success ? 'default' : 'destructive',
                 description:res.message
             });
-        }
+        };
 
     return (
     <>
@@ -183,7 +183,12 @@ import { createPayPalOrder, approvePayPalOrder } from "@/lib/actions/order.actio
                                     <div>
                                         <PayPalScriptProvider options={{clientId: paypalClientId}}>
                                             <PrintLoadingState />
-                                        <PayPalButtons createOrder={handleCreatePaypalOrder} onApprove={handleApprovePayPalOrder}/>
+                                        {/*<PayPalButtons createOrder={handleCreatePaypalOrder} onApprove={handleApprovePayPalOrder}/>*/}
+                                        <PayPalButtons createOrder={handleCreatePaypalOrder} onApprove={async (data) => {
+    // data.orderID is the PayPal-generated order ID
+    
+    await handleApprovePayPalOrder({ orderId: data.orderID });
+  }}/>
                                         </PayPalScriptProvider>
                                     </div>
                                 )}

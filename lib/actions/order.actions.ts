@@ -142,14 +142,14 @@ export async function createPayPalOrder(orderId: string){
 
 
 //Approve paypal order and update order to paid
-export async function approvePayPalOrder(orderId:string, data: {orderID: string}) {
+export async function approvePayPalOrder(orderId:string, data: {orderId: string}) {
     try{
      const order = await prisma.order.findFirst({
         where: {id:orderId},
      });
      if(!order) throw new Error('Order not found');
 
-     const captureData = await paypalUtils.capturePayment(data.orderID);
+     const captureData = await paypalUtils.capturePayment(data.orderId);
      //Matching id that we got in ppal toi the one in our paymentResult, if they don't match then we just error
      if(!captureData || captureData.id !== (order.paymentResult as PaymentResult)?.id || captureData.status !== 'COMPLETED'){
         throw new ErrorEvent('Error in Paypal payment');
@@ -195,7 +195,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
     if(order.isPaid) throw new Error('Order is already paid');
 
     //Transaction to update order and account for product stock.
-    await prisma.$transaction(async (tx)=>{
+    await prisma.$transaction(async (tx: PrismaClient)=>{
         //iterate over the products and update the stock.
         for(const item of order.orderItems){
             await tx.product.update({
