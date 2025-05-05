@@ -2,6 +2,8 @@ import CartTable from "./cart-table";
 import { getMyCart } from "@/lib/actions/cart.actions";
 
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title:'Carrito',
 }

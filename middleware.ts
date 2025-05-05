@@ -61,7 +61,7 @@ export async function middleware(req: NextRequest) {
         //sanitize full url
         const fullUrl = req.nextUrl.toString();
         const callbackUrl =isSafeRedirect(fullUrl) ? fullUrl : '/';
-        const signInUrl = new URL('/sign-ign', req.url);
+        const signInUrl = new URL('/sign-in', req.url);
         signInUrl.searchParams.set('callbackUrl', callbackUrl);
         return NextResponse.redirect(signInUrl);
       }
