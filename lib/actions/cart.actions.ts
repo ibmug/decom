@@ -72,7 +72,7 @@ export async function addItemToCart(data: CartItem) {
     })
 
     // 2) build updated items array
-    let items: CartItem[] = guestCart
+    const items: CartItem[] = guestCart
       ? JSON.parse(JSON.stringify(guestCart.items))
       : []
 
