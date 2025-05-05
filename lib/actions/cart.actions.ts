@@ -73,8 +73,24 @@ export async function addItemToCart(data: CartItem) {
 
     // 2) build updated items array
     const items: CartItem[] = guestCart
-      ? JSON.parse(JSON.stringify(guestCart.items))
-      : []
+  ? (() => {
+      // deep-clone existing.items
+      const arr = JSON.parse(JSON.stringify(guestCart.items)) as CartItem[];
+      const found = arr.find(x => x.productId === item.productId);
+      if (found) {
+        if (product.stock < found.qty + 1) {
+          throw new Error('Not enough stock');
+        }
+        found.qty += 1;
+      } else {
+        if (product.stock < 1) {
+          throw new Error('Not enough stock');
+        }
+        arr.push(item);
+      }
+      return arr;
+    })()
+  : [item];
 
     const found = items.find((x) => x.productId === item.productId)
     if (found) {
