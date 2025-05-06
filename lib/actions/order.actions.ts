@@ -13,6 +13,7 @@ import { PrismaClient } from "@prisma/client";
 import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
+import { PAGE_SIZE } from "../constants";
 
 
 //create order and create the order items
@@ -227,4 +228,25 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
 
         if(!updateOrder) throw new Error('Order was not found!')
 
+    }
+
+    //get users orders
+    export async function getMyOrders({limit=PAGE_SIZE, page}: {limit?:number; page:number}){
+        const session = await await  getServerSession(authOptions);
+        if(!session) throw new Error('User is not authorized')
+
+        const data = await prisma.order.findMany({
+            where:{userId: session.user.id!},
+            ordereBy:{ createdAt:'desc'},
+            take: limit,
+            skip:(page -1 )* limit
+        });
+        const dataCount = await prisma.order.count({
+            where:{userId: session.user.id!}
+        });
+
+        return {
+            data,
+            totalPages:Math.ceil(dataCount / limit)
+        }
     }

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import OrderDetailsCard from "./order-details-card";
 import { ShippingAddress } from "@/types";
 
+
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata= {
     title: 'Order Details'
 };
