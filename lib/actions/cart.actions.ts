@@ -107,79 +107,7 @@ export async function addItemToCart(data: CartItem) {
   }
 }
 
-
-
 /** Add one item (or bump qty) in your cart */
-// export async function addItemToCart(data: CartItem) {
-//   console.log('addItemToCart called[server] for', data.productId);
-//   try {
-//     const { sessionCartId, userId } = await getCartIdentifiers()
-//     const item    = cartItemSchema.parse(data)
-//     const product = await prisma.product.findUnique({ where: { id: item.productId } })
-//     if (!product) throw new Error('Product not found')
-
-//     // 1) pull guest cart (if any) so we can merge quantities
-//     const guestCart = await prisma.cart.findUnique({
-//       where: { sessionCartId },
-//       select: { items: true },
-//     })
-
-//     // 2) build updated items array
-//     const items: CartItem[] = guestCart
-//   ? (() => {
-//       // deep-clone existing.items
-//       const arr = JSON.parse(JSON.stringify(guestCart.items)) as CartItem[];
-//       const found = arr.find(x => x.productId === item.productId);
-//       if (found) {
-//         if (product.stock < found.qty + 1) {
-//           throw new Error('Not enough stock');
-//         }
-//         found.qty += 1;
-//       } else {
-//         if (product.stock < 1) {
-//           throw new Error('Not enough stock');
-//         }
-//         arr.push(item);
-//       }
-//       return arr;
-//     })()
-//   : [item];
-
-//     const found = items.find((x) => x.productId === item.productId)
-//     if (found) {
-//       if (product.stock < found.qty + 1) throw new Error('Not enough stock')
-//       found.qty += 1
-//     } else {
-//       if (product.stock < 1) throw new Error('Not enough stock')
-//       items.push(item)
-//     }
-
-//     // 3) upsert into cart
-//     const pricing = calcPrice(items)
-//     await prisma.cart.upsert({
-//       where:  { sessionCartId },
-//       create: {
-//         userId,
-//         sessionCartId,
-//         items,
-//         ...pricing,
-//       },
-//       update: {
-//         // if the user just logged in, this also claims the guest cart
-//         userId,
-//         items,
-//         ...pricing,
-//       },
-//     })
-
-//     // 4) revalidate the product page so cart badge updates
-//     revalidatePath(`/product/${product.slug}`)
-//     return { success: true, message: `${product.name} added to cart.` }
-//   } catch (err) {
-//     return { success: false, message: formatError(err) }
-//   }
-// }
-
 /** Fetch the current cart, claiming a guest cart on login */
 export async function getMyCart() {
   const { sessionCartId, userId } = await getCartIdentifiers()
