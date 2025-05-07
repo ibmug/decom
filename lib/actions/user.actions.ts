@@ -1,4 +1,3 @@
-// File: lib/actions/user.actions.ts
 'use server';
 
 import { getServerSession } from 'next-auth/next';
@@ -42,35 +41,58 @@ export async function signOutUser() {
 }
 
 // Sign up user
-export async function signUpUser(_prevState: unknown, formData: FormData) {
+// export async function signUpUser(_prevState: unknown, formData: FormData) {
+//   try {
+//     const userData = signUpFormSchema.parse({
+//       name: formData.get('name'),
+//       email: formData.get('email'),
+//       password: formData.get('password'),
+//       confirmPassword: formData.get('confirmPassword'),
+//     });
+
+//     const raw = userData.password;
+//     userData.password = hashSync(userData.password, 10);
+
+//     await prisma.user.create({
+//       data: {
+//         name: userData.name,
+//         email: userData.email,
+//         password: userData.password,
+//       },
+//     });
+
+//     await signIn('credentials', {
+//       redirect: false,
+//       email: userData.email,
+//       password: raw,
+//     });
+
+//     return { success: true, message: 'User registered successfully' };
+//   } catch (error) {
+//     return { success: false, message: formatError(error) };
+//   }
+// }
+export async function signUpUser(_prevState:unknown, formData: FormData):Promise <{success:boolean; message:string}> {
   try {
-    const userData = signUpFormSchema.parse({
-      name: formData.get('name'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-      confirmPassword: formData.get('confirmPassword'),
-    });
+    // 1) Grab raw values from the FormData
+    const raw = {
+      name:            formData.get('name')?.toString()            ?? '',
+      email:           formData.get('email')?.toString()           ?? '',
+      password:        formData.get('password')?.toString()        ?? '',
+      confirmPassword: formData.get('confirmPassword')?.toString() ?? '',
+    }
 
-    const raw = userData.password;
-    userData.password = hashSync(userData.password, 10);
+    // 2) Validate using your existing schema
+    const { name, email, password } = signUpFormSchema.parse(raw)
 
-    await prisma.user.create({
-      data: {
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-      },
-    });
+    // 3) Hash & persist
+    const hashed = hashSync(password, 10)
+    await prisma.user.create({ data: { name, email, password: hashed } })
 
-    await signIn('credentials', {
-      redirect: false,
-      email: userData.email,
-      password: raw,
-    });
-
-    return { success: true, message: 'User registered successfully' };
-  } catch (error) {
-    return { success: false, message: formatError(error) };
+    return { success: true, message: 'Account created successfully' }
+  } catch (err) {
+    const e = formatError(err)
+    return { success: false, e }
   }
 }
 
