@@ -91,8 +91,8 @@ export async function signUpUser(_prevState:unknown, formData: FormData):Promise
 
     return { success: true, message: 'Account created successfully' }
   } catch (err) {
-    const e = formatError(err)
-    return { success: false, e }
+    const message = await formatError(err)
+    return { success: false, message }
   }
 }
 
