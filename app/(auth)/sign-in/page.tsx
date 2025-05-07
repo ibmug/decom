@@ -4,12 +4,25 @@ import Link from "next/link";
 import { Metadata } from "next";
 import Image from "next/image";
 import CredentialsSignInForm from "./credentials-signin-form";
+//import {getCsrfToken} from 'next-auth/react';;
 
 export const metadata: Metadata = {
   title: 'Sign In',
 };
 
-export default function SignInPage() {
+type Props = {
+  searchParams: Promise<{
+    callbackUrl?: string;
+  }>
+};
+
+export default async function SignInPage({searchParams}: Props) {
+   // 1) raw from URL
+  const {callbackUrl:raw} = await searchParams
+   // 2) only allow relative paths (prevents open-redirects)
+  const callbackUrl = raw && raw.startsWith('/') ? raw : '/'
+ 
+   
   return (
     <div className="w-full max-w-md mx-auto">
       <Card>
@@ -29,7 +42,7 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <CredentialsSignInForm />
+          <CredentialsSignInForm initCallbackUrl={callbackUrl}/>
         </CardContent>
       </Card>
     </div>

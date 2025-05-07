@@ -1,21 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+
+import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-export default function CredentialsSignInForm() {
+import { signIn } from 'next-auth/react'
+import {useState} from "react"
+
+export default function CredentialsSignInForm({initCallbackUrl}:{initCallbackUrl:string}) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/'
+  //const searchParams = useSearchParams()
+  //const callbackUrl = searchParams.get('callbackUrl') ?? initCallbackUrl
+  const callbackUrl = initCallbackUrl ?? '/'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,6 +30,7 @@ export default function CredentialsSignInForm() {
       redirect: false,
       email,
       password,
+      callbackUrl,
     })
     console.log(res)
     if (res?.error) {
