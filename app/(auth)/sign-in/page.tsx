@@ -19,8 +19,30 @@ type Props = {
 export default async function SignInPage({searchParams}: Props) {
    // 1) raw from URL
   const {callbackUrl:raw} = await searchParams
+
+  console.log("Callback: ", raw)
+  let callbackUrl = '/'
    // 2) only allow relative paths (prevents open-redirects)
-  const callbackUrl = raw && raw.startsWith('/') ? raw : '/'
+  //const callbackUrl = raw && raw.startsWith('/') ? raw : '/'
+  if(raw){
+    if(raw.startsWith('/')){
+      //a clean relative path
+      callbackUrl = raw
+    }else{
+      try{
+        //allow full urls that match your site
+        const base = new URL(process.env.NEXTAUTH_URL!)
+        const url = new URL(raw,base)
+        if(url.origin === base.origin){
+          //strip off origin, keep path+query+hash
+          callbackUrl = url.pathname + url.search + url.hash
+        }
+      } catch (e) {
+        //if url parsing fails, we leave callbackUrl = '/'
+        console.warn(e)
+      }
+    }
+  }
  
    
   return (

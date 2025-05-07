@@ -51,6 +51,7 @@ export const authOptions: NextAuthOptions = {
         req?: { headers?: Record<string, string> }
       ) {
         // 0) Must have credentials
+        console.warn("authorize() got credentials:", credentials)
         if (!credentials?.email || !credentials.password) return null;
     
         // 1) Rate-limit by IP
@@ -81,7 +82,10 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
         if (user && user.password && compareSync(credentials.password, user.password)) {
+          console.warn("Comparison was succesful")
           return { id: user.id, name: user.name, email: user.email, role: user.role };
+        } else {
+          console.warn("Comparison was NOT succesful")
         }
         return null;
       },

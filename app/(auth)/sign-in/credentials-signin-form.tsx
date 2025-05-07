@@ -14,6 +14,7 @@ export default function CredentialsSignInForm({initCallbackUrl}:{initCallbackUrl
   //const searchParams = useSearchParams()
   //const callbackUrl = searchParams.get('callbackUrl') ?? initCallbackUrl
   const callbackUrl = initCallbackUrl ?? '/'
+  
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,16 +28,19 @@ export default function CredentialsSignInForm({initCallbackUrl}:{initCallbackUrl
     setError(null)
 
     const res = await signIn('credentials', {
-      redirect: false,
+      //redirect: false,
       email,
       password,
       callbackUrl,
     })
-    console.log(res)
+    
     if (res?.error) {
       setError('Invalid email or password.')
-    } else {
-      router.push(callbackUrl)
+    } else if (res?.url){
+      router.push(res.url)
+    } else{
+      console.log("Fallback should never happen...")
+      router.push(initCallbackUrl)
     }
 
     setLoading(false)
