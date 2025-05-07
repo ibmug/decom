@@ -2,7 +2,6 @@
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
-import {destroyCookie} from 'nookies'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -57,8 +56,8 @@ const UserButton = () => {
           <DropdownMenuItem className="p-0 mb-1">
             <form
               action={() => {
-                destroyCookie(null,'sessionCartId')
-                signOut({ callbackUrl: '/' })}}
+                
+                signOut({ callbackUrl: '/sign-out' })}}
               className="w-full"
             >
               <Button
