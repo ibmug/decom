@@ -91,7 +91,7 @@ export async function addItemToCart(data: CartItem) {
         })()
       : [item]
 
-    const pricing = calcPrice(items)
+    const pricing = await calcPrice(items)
 
     await prisma.cart.upsert({
       where:  { sessionCartId },
