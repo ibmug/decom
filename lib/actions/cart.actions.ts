@@ -157,9 +157,10 @@ export async function removeItemFromCart(productId: string) {
     else                      items[idx].qty -= 1
 
     const pricing = calcPrice(items)
-    const where = userId ? {userId} : {sessionCartId} //update by user or guest, order is key. 
+   // const where = userId ? {userId} : {sessionCartId} //update by user or guest, order is key. 
     await prisma.cart.update({
-      where, // set atop
+      //where, // set atop
+      where:  { sessionCartId },
       data:  { items, ...pricing },
     })
 
