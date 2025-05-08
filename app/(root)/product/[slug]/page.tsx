@@ -11,6 +11,7 @@ import ProductImages from "@/components/shared/product/product-images";
 import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCart } from "@/lib/actions/cart.actions";
 
+export const dynamic = "force-dynamic";
 const ProductDetailsPage = async (props:{
     params:Promise<{slug: string}>
 }) => {

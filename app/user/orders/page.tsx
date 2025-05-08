@@ -14,7 +14,10 @@ type Props = {
 
 export default async function OrdersPage({searchParams}:Props){
     const {page} = await searchParams;
-    if(!page){throw new Error('Nothing on cart')}
+    if(!page){
+        throw new Error('No orders placed') 
+        return <p>You havent placed any orders</p>
+    }
     const orders = await getMyOrders({
         page:Number(page) || 1
     });
