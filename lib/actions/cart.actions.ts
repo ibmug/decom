@@ -11,46 +11,62 @@ import { roundtwo, formatError } from '@/lib/utils'
 
 // --- Helpers --------------------------------------------------
 
-/** Read sessionCartId cookie + optional userId */
+/** Read or create sessionCartId cookie + current userId */
 async function getCartIdentifiers() {
   const store = await cookies()
   let sessionCartId = store.get('sessionCartId')?.value
   if (!sessionCartId) {
-    // Generate new sessionCartId if missing (set cookie in your route layer)
     sessionCartId = crypto.randomUUID()
+    store.set('sessionCartId', sessionCartId, { path: '/', httpOnly: true })
   }
   const session = await getServerSession(authOptions)
-  const userId = session?.user?.id ?? undefined
+  const userId = session?.user?.id
   return { sessionCartId, userId }
 }
 
-/** Resolve the single cart record: user cart > guest cart > create new */
+/** Resolve or initialize a cart: user cart > guest cart > create new */
 async function resolveCart(sessionCartId: string, userId?: string) {
+  // 1) Return existing user cart
   if (userId) {
-    const existing = await prisma.cart.findFirst({ where: { userId } })
-    if (existing) return existing
+    const userCart = await prisma.cart.findFirst({ where: { userId } })
+    if (userCart) return userCart
   }
-  const guest = await prisma.cart.findUnique({ where: { sessionCartId } })
-  if (guest) return guest
-  return prisma.cart.create({ data: { sessionCartId, items: [] } })
+
+  // 2) Return existing guest cart
+  const guestCart = await prisma.cart.findUnique({ where: { sessionCartId } })
+  if (guestCart) return guestCart
+
+  // 3) Create new guest cart with zeroed pricing
+  const items: CartItem[] = []
+  const pricing = await calcPrice(items)
+  return prisma.cart.create({
+    data: {
+      sessionCartId,
+      items,
+      itemsPrice:   pricing.itemsPrice,
+      shippingPrice: pricing.shippingPrice,
+      taxPrice:     pricing.taxPrice,
+      totalPrice:   pricing.totalPrice,
+      ...(userId && { userId }),
+    },
+  })
 }
 
 // --- Public Actions -------------------------------------------
 
 /** Recompute all price fields */
 export async function calcPrice(items: CartItem[]) {
-  const itemsPrice = roundtwo(
-    items.reduce((sum, i) => sum + Number(i.price) * i.qty, 0)
-  )
+  const itemsValue = items.reduce((sum, i) => sum + Number(i.price) * i.qty, 0)
+  const itemsPrice = roundtwo(itemsValue)
   const shippingPrice = roundtwo(itemsPrice > 100 ? 0 : 10)
   const taxPrice = roundtwo(0.15 * itemsPrice)
-  const totalPrice = roundtwo(itemsPrice + taxPrice + shippingPrice)
+  const totalPrice = roundtwo(itemsPrice + shippingPrice + taxPrice)
 
   return {
-    itemsPrice: itemsPrice.toFixed(2),
+    itemsPrice:   itemsPrice.toFixed(2),
     shippingPrice: shippingPrice.toFixed(2),
-    taxPrice: taxPrice.toFixed(2),
-    totalPrice: totalPrice.toFixed(2),
+    taxPrice:     taxPrice.toFixed(2),
+    totalPrice:   totalPrice.toFixed(2),
   }
 }
 
@@ -58,20 +74,20 @@ export async function calcPrice(items: CartItem[]) {
 function serializeCart(record: Awaited<ReturnType<typeof prisma.cart.findUnique>>) {
   if (!record) return undefined
   return {
-    id: record.id,
-    userId: record.userId,
-    sessionCartId: record.sessionCartId,
-    items: record.items as CartItem[],
-    itemsPrice: record.itemsPrice.toString(),
-    shippingPrice: record.shippingPrice.toString(),
-    taxPrice: record.taxPrice.toString(),
-    totalPrice: record.totalPrice.toString(),
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt?.toISOString() ?? null,
+    id:             record.id,
+    userId:         record.userId ?? undefined,
+    sessionCartId:  record.sessionCartId,
+    items:          record.items as CartItem[],
+    itemsPrice:     record.itemsPrice.toString(),
+    shippingPrice:  record.shippingPrice.toString(),
+    taxPrice:       record.taxPrice.toString(),
+    totalPrice:     record.totalPrice.toString(),
+    createdAt:      record.createdAt.toISOString(),
+    updatedAt:      record.updatedAt?.toISOString() ?? null,
   }
 }
 
-/** Add a product (or bump qty) in your cart */
+/** Add a product (or increment qty) in the cart */
 export async function addItemToCart(data: CartItem) {
   try {
     const { sessionCartId, userId } = await getCartIdentifiers()
@@ -80,12 +96,11 @@ export async function addItemToCart(data: CartItem) {
     const product = await prisma.product.findUnique({ where: { id: item.productId } })
     if (!product) throw new Error('Product not found')
 
-    const cartRecord = await resolveCart(sessionCartId, userId)
-    const existingItems = cartRecord.items as CartItem[]
-    const items = [...existingItems]
+    const cart = await resolveCart(sessionCartId, userId)
+    const items = [...(cart.items as CartItem[])]
 
     const idx = items.findIndex(x => x.productId === item.productId)
-    if (idx !== -1) {
+    if (idx >= 0) {
       if (product.stock < items[idx].qty + 1) throw new Error('Not enough stock')
       items[idx].qty += 1
     } else {
@@ -95,10 +110,16 @@ export async function addItemToCart(data: CartItem) {
 
     const pricing = await calcPrice(items)
 
-    await prisma.cart.upsert({
-      where: { sessionCartId },
-      create: { userId, sessionCartId, items, ...pricing },
-      update: { userId, items, ...pricing },
+    await prisma.cart.update({
+      where: { id: cart.id },
+      data: {
+        items,
+        itemsPrice:   pricing.itemsPrice,
+        shippingPrice: pricing.shippingPrice,
+        taxPrice:     pricing.taxPrice,
+        totalPrice:   pricing.totalPrice,
+        ...(userId && { userId }),
+      },
     })
 
     revalidatePath(`/product/${product.slug}`)
@@ -108,33 +129,39 @@ export async function addItemToCart(data: CartItem) {
   }
 }
 
-/** Fetch the current cart, claiming a guest cart on login */
+/** Fetch the current cart, optionally claiming it on login */
 export async function getMyCart() {
   const { sessionCartId, userId } = await getCartIdentifiers()
-  const cartRecord = await resolveCart(sessionCartId, userId)
-  return serializeCart(cartRecord)
+  const cart = await resolveCart(sessionCartId, userId)
+  return serializeCart(cart)
 }
 
-/** Decrement or remove one item from cart */
+/** Decrement quantity or remove an item from cart */
 export async function removeItemFromCart(productId: string) {
   try {
     const { sessionCartId, userId } = await getCartIdentifiers()
     const product = await prisma.product.findUnique({ where: { id: productId } })
     if (!product) throw new Error('Product not found')
 
-    const cartRecord = await resolveCart(sessionCartId, userId)
-    const items = (cartRecord.items as CartItem[]).map(x => ({ ...x }))
+    const cart = await resolveCart(sessionCartId, userId)
+    const items = (cart.items as CartItem[]).map(x => ({ ...x }))
     const idx = items.findIndex(x => x.productId === productId)
-    if (idx === -1) throw new Error('Product not in cart')
+    if (idx < 0) throw new Error('Product not in cart')
 
-    if (items[idx].qty === 1) items.splice(idx, 1)
-    else items[idx].qty -= 1
+    if (items[idx].qty > 1) items[idx].qty--
+    else items.splice(idx, 1)
 
     const pricing = await calcPrice(items)
 
     await prisma.cart.update({
-      where: { id: cartRecord.id },
-      data: { items, ...pricing },
+      where: { id: cart.id },
+      data: {
+        items,
+        itemsPrice:   pricing.itemsPrice,
+        shippingPrice: pricing.shippingPrice,
+        taxPrice:     pricing.taxPrice,
+        totalPrice:   pricing.totalPrice,
+      },
     })
 
     revalidatePath(`/product/${product.slug}`)
