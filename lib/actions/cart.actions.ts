@@ -92,9 +92,10 @@ export async function addItemToCart(data: CartItem) {
       : [item]
 
     const pricing = await calcPrice(items)
-
+    const where = userId ? {userId} : {sessionCartId} //update by user or guest, order is key. 
     await prisma.cart.upsert({
-      where:  { sessionCartId },
+      //where:  { sessionCartId },
+      where,
       create: { userId, sessionCartId, items, ...pricing },
       update: { userId, items, ...pricing },
     })
@@ -139,7 +140,8 @@ export async function getMyCart() {
 /** Decrement or remove one item from cart */
 export async function removeItemFromCart(productId: string) {
   try {
-    const { sessionCartId } = await getCartIdentifiers()
+
+    const { sessionCartId,userId } = await getCartIdentifiers()
     const product = await prisma.product.findUnique({ where: { id: productId } })
     if (!product) throw new Error('Product not found')
 
@@ -155,8 +157,9 @@ export async function removeItemFromCart(productId: string) {
     else                      items[idx].qty -= 1
 
     const pricing = calcPrice(items)
+    const where = userId ? {userId} : {sessionCartId} //update by user or guest, order is key. 
     await prisma.cart.update({
-      where: { sessionCartId },
+      where, // set atop
       data:  { items, ...pricing },
     })
 
