@@ -24,7 +24,7 @@ async function getCartIdentifiers() {
 }
 
 /** Recompute all the price fields */
-function calcPrice(items: CartItem[]) {
+export async function calcPrice(items: CartItem[]) {
   const itemsPrice    = roundtwo(items.reduce((sum, i) => sum + Number(i.price) * i.qty, 0))
   const shippingPrice = roundtwo(itemsPrice > 100 ? 0 : 10)
   const taxPrice      = roundtwo(0.15 * itemsPrice)

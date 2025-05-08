@@ -37,6 +37,10 @@ export default function CredentialsSignInForm({initCallbackUrl}:{initCallbackUrl
     if (res?.error) {
       setError('Invalid email or password.')
     } else if (res?.url){
+
+
+      //Lets see if we can merge the guest cart, if there is.
+      await fetch('/api/cart/merge', {method:'POST'})
       router.push(res.url)
     } else{
       console.log("Fallback should never happen...")
