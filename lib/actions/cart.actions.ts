@@ -141,7 +141,7 @@ export async function getMyCart() {
 export async function removeItemFromCart(productId: string) {
   try {
 
-    const { sessionCartId,userId } = await getCartIdentifiers()
+    const { sessionCartId } = await getCartIdentifiers()
     const product = await prisma.product.findUnique({ where: { id: productId } })
     if (!product) throw new Error('Product not found')
 
