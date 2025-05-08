@@ -100,7 +100,7 @@ export async function addItemToCart(data: CartItem) {
     })
 
     revalidatePath(`/product/${product.slug}`)
-    revalidatePath('/cart')
+    
 
     return { success: true, message: `${product.name} added to cart.` }
   } catch (err) {

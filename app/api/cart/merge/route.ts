@@ -56,7 +56,7 @@ export async function POST() {
   // If no guest cart or it’s already tied to a user, just clear the cookie
   if (!guestCart || guestCart.userId) {
     const res = NextResponse.json({ ok: false })
-    res.cookies.delete('sessionCartId')
+    res.cookies.delete({name:'sessionCartId', path: '/'})
     return res
   }
 
@@ -76,6 +76,5 @@ export async function POST() {
 
   // 7) Build the response and clear the cookie
   const res = NextResponse.json({ ok: true })
-  res.cookies.delete('sessionCartId')
-  return res
+  res.cookies.delete({name:'sessionCartId', path:'/'})
 }
