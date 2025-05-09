@@ -237,7 +237,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
 
         const data = await prisma.order.findMany({
             where:{userId: session.user.id!},
-            ordereBy:{ createdAt:'desc'},
+            orderBy:{ createdAt:'desc'},
             take: limit,
             skip:(page -1 )* limit
         });
