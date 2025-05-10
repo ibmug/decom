@@ -63,6 +63,13 @@ const UserButton = () => {
             Order History
             </Link>
           </DropdownMenuItem>
+          {session?.user.role === 'admin' && (
+            <DropdownMenuItem>
+            <Link href='/admin/dashboard' className='w-full'>
+            Dashboard
+            </Link>
+          </DropdownMenuItem>
+          )}
           <DropdownMenuItem className="p-0 mb-1">
             <form
               action={() => {
