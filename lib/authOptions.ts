@@ -95,13 +95,21 @@ export const authOptions: NextAuthOptions = {
     async redirect({url, baseUrl}: {url: string; baseUrl: string}): Promise<string> {
       return isSafeRedirect(url) ? url : baseUrl;
     },
-    async jwt({ token, user }: { token: JWT; user?: { id: string; name: string; email: string; role: string } }
-    ): Promise<JWT>{
+    async jwt({ token, user,trigger,session }: {
+      token: JWT
+      user?: { id: string; name: string; email: string; role: string }
+      trigger?: 'signIn' | 'signUp' | 'update'
+      session?: Partial<Session>
+    } ): Promise<JWT>{
       if (user) {
         token.sub   = user.id;
         token.name  = user.name;
         token.email = user.email;
         token.role  = user.role;
+      }
+      if(session?.user && trigger === 'update'){
+        token.name = session.user.name as string
+        token.email = session.user.email as string
       }
       return token;
     },

@@ -39,39 +39,6 @@ export async function signInWithCredentials(_prevState: unknown, formData: FormD
 export async function signOutUser() {
   await signOut({ redirect: false });
 }
-
-// Sign up user
-// export async function signUpUser(_prevState: unknown, formData: FormData) {
-//   try {
-//     const userData = signUpFormSchema.parse({
-//       name: formData.get('name'),
-//       email: formData.get('email'),
-//       password: formData.get('password'),
-//       confirmPassword: formData.get('confirmPassword'),
-//     });
-
-//     const raw = userData.password;
-//     userData.password = hashSync(userData.password, 10);
-
-//     await prisma.user.create({
-//       data: {
-//         name: userData.name,
-//         email: userData.email,
-//         password: userData.password,
-//       },
-//     });
-
-//     await signIn('credentials', {
-//       redirect: false,
-//       email: userData.email,
-//       password: raw,
-//     });
-
-//     return { success: true, message: 'User registered successfully' };
-//   } catch (error) {
-//     return { success: false, message: formatError(error) };
-//   }
-// }
 export async function signUpUser(_prevState:unknown, formData: FormData):Promise <{success:boolean; message:string}> {
   try {
     // 1) Grab raw values from the FormData
@@ -163,4 +130,32 @@ export async function requireShippingAddress(): Promise<ShippingAddress> {
   }
 
   return parsed.data;
+}
+
+
+///Update the user profile
+
+export async function updateProfile(user: {name: string, email: string}) {
+  try{
+    const session = await getServerSession(authOptions);
+    const currentUser = await prisma.user.findFirst({
+      where:{
+        id:session?.user?.id
+      }
+    });
+    if(!currentUser) throw new Error('user not found, please login')
+
+    await prisma.user.update({
+      where:{
+        id: currentUser.id
+      },
+       data:{
+        name:user.name
+      }
+    });
+
+    return {success:true, message: 'User Updated Succesfully'}
+    }catch(err){
+    return {success:false, message: formatError(err)}
+  }
 }
