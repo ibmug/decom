@@ -20,7 +20,7 @@ export default async function SignInPage({searchParams}: Props) {
    // 1) raw from URL
   const {callbackUrl:raw} = await searchParams
 
-  console.log("Callback: ", raw)
+  
   let callbackUrl = '/'
    // 2) only allow relative paths (prevents open-redirects)
   //const callbackUrl = raw && raw.startsWith('/') ? raw : '/'

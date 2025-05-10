@@ -4,7 +4,7 @@ import { generateAccessToken, paypalUtils } from "../lib/paypalUtils";
 //Test to generate access token from payopal
 test('Generates a token from Paypal', async()=>{
     const tokenResponse = await generateAccessToken();
-    console.log(tokenResponse);
+    
     expect(typeof tokenResponse).toBe('string');
     expect(tokenResponse.length).toBeGreaterThan(0);
 });
@@ -16,7 +16,7 @@ test('Creates a paypal order', async ()=>{
     const price = 1.0;
 
     const orderResponse = await paypalUtils.createOrder(price);
-    console.log(orderResponse)
+    
 
     expect(orderResponse).toHaveProperty('id');
     expect(orderResponse).toHaveProperty('status');

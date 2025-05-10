@@ -52,17 +52,17 @@ export default function AddToCart({ cart, item }: AddToCartProps) {
 //       })
 //   }
 const handleAdd = () => {
-    console.log('handle add invoked')
+    
     setLoading('add');
   
     // Only this sync callback goes into React's transition
     startTransition(() => {
       // Fire the server action exactly once
-      console.log('startTransition callback handleadd')
+      
       addItemToCart(item)
         .then((res) => {
           // schedule UI updates in a low-priority transition
-          console.log('additemtocart resolved')
+          
           startTransition(() => {
             if (!res.success) {
               toast({ variant: 'destructive', description: res.message });
