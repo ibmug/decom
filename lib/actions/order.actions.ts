@@ -280,11 +280,13 @@ export async function getOrderSummary(){
     //Get latest sales
     const latestSales = await prisma.order.findMany({
         orderBy: {createdAt: 'desc'},
+        take: 15,
+
         include: {
             user: {
                 select:{name:true}
             },
-            take: 15,
+            orderItems:true
         }
     });
 
@@ -298,3 +300,5 @@ export async function getOrderSummary(){
     }
 
 }
+
+export type GetOrderSummaryReturn = Awaited<ReturnType<typeof getOrderSummary>>

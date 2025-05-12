@@ -72,6 +72,14 @@ export async function middleware(req: NextRequest) {
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    //logged in but not an admin
+
+    if(pathname.startsWith('/admin') && token.role !=='admin'){
+      console.log(`[${new Date().toISOString()}] Unauthorized admin access by: ${token.name ?? 'unknown'}`)
+      const homeUrl = new URL('/', req.url)
+      return NextResponse.redirect(homeUrl)
+    }
+
   }
 
   return res;
