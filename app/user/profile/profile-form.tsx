@@ -61,7 +61,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input disabled placeholder="Email" {...field} />
+                <Input placeholder="Email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -76,7 +76,7 @@ export async function middleware(req: NextRequest) {
 
     if(pathname.startsWith('/admin') && token.role !=='admin'){
       console.log(`[${new Date().toISOString()}] Unauthorized admin access by: ${token.name ?? 'unknown'}`)
-      const homeUrl = new URL('/', req.url)
+      const homeUrl = new URL('/unauthorized', req.url)
       return NextResponse.redirect(homeUrl)
     }
 
