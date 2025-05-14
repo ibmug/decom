@@ -14,6 +14,11 @@ import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
+//import { Order } from "@prisma/client";
+
+export type OrderWithUser = Prisma.OrderGetPayload<{
+    include: { user: { select: { name: true } } }
+  }>
 
 
 //create order and create the order items
@@ -312,7 +317,7 @@ export async function getAllOrders ({
 }: {
     limit?: number;
     page: number;
-}) {
+}): Promise<{ data: OrderWithUser[]; totalPages: number }>{
     const data = await prisma.order.findMany({
         orderBy: {createdAt: 'desc'},
         take: limit,
@@ -330,12 +335,54 @@ export async function getAllOrders ({
 
 
 //delete an order
-export async function deleteOrder (orderToDelete:string) {
+export async function deleteOrder (id:string): Promise<{ success: boolean; message: string }> {
     try{
-        await prisma.order.delete({where:{orderToDelete}})
+        await prisma.order.delete({where:{id}})
         revalidatePath('/admin/ordes')
         return {success:true, message: 'Order Deleted Succesfully.'}
     }catch (err){
         return {success:false, message: formatError(err)}
     } 
+}
+
+
+//update order to paid
+export async function updateOrderToPaidManual(orderId: string): Promise<{ success: boolean; message: string }>{
+    try{
+       await updateOrderPaid({orderId});
+       
+       revalidatePath(`/order/${orderId}`);
+
+       return {success: true, message: 'Order marked as paid'}
+    }catch(err){
+        return {success:false, message:formatError(err)}
+    }
+}
+
+//Update order to delivered (manually)
+//update order to paid
+export async function updateOrderToDeliveredManual(orderId: string): Promise<{ success: boolean; message: string }>{
+    try{
+       
+        const order = await prisma.order.findFirst({
+            where:{
+                id:orderId
+            },
+        })
+       if(!order) throw new Error('order not found')
+        if(!order.isPaid) throw new Error ('Order is not paid')
+
+       revalidatePath(`/order/${orderId}`);
+        await prisma.order.update({
+            where:{id:orderId},
+            data:{
+                isDelivered:true,
+                deliveredAt: new Date(),
+            },
+        })
+        revalidatePath(`/order/${orderId}`);
+       return {success: true, message: 'Order marked as paid'}
+    }catch(err){
+        return {success:false, message:formatError(err)}
+    }
 }

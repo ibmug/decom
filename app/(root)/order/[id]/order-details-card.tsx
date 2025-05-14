@@ -12,10 +12,11 @@ import { CartItem } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 //import { Cart } from "@prisma/client";
 import {PayPalButtons,PayPalScriptProvider,usePayPalScriptReducer} from '@paypal/react-paypal-js';
-import { createPayPalOrder, approvePayPalOrder } from "@/lib/actions/order.actions";
+import { createPayPalOrder, approvePayPalOrder, updateOrderToDeliveredManual, updateOrderToPaidManual } from "@/lib/actions/order.actions";
+import { useTransition } from "react";
+import { Button } from "@/components/ui/button";
 
-
-    const  OrderDetailsCard = ({order, paypalClientId}: {order: Order,paypalClientId: string}) => {
+    const  OrderDetailsCard = ({order, paypalClientId,isAdmin}: {order: Order,paypalClientId: string, isAdmin: boolean}) => {
         const {shippingAddress,orderItems,itemsPrice,shippingPrice,taxPrice,totalPrice,paymentMethod,isPaid,isDelivered,id,paidAt,deliveredAt} = order;
         const {toast} = useToast();
         const PrintLoadingState = () =>{
@@ -48,6 +49,30 @@ import { createPayPalOrder, approvePayPalOrder } from "@/lib/actions/order.actio
                 description:res.message
             });
         };
+
+        const MarkAsPaidButton = () => {
+            const [isPending, startTransition] = useTransition();
+            const {toast} = useToast();
+
+            return (<Button type="button" disabled={isPending} onClick={()=> startTransition(async () => { 
+                const res = await updateOrderToPaidManual(order.id);
+                toast({variant:res.success ? 'default' : 'destructive', description: res.message})
+            })}>
+                {isPending ? 'processing...' : 'Marked as Paid'}
+            </Button>)
+        }
+
+        const MarkAsDeliveredButton= () => {
+            const [isPending, startTransition] = useTransition();
+            const {toast} = useToast();
+
+            return (<Button type="button" disabled={isPending} onClick={()=> startTransition(async () => { 
+                const res = await updateOrderToDeliveredManual(order.id);
+                toast({variant:res.success ? 'default' : 'destructive', description: res.message})
+            })}>
+                {isPending ? 'processing...' : 'Marked as Delivered'}
+            </Button>)
+        }
 
     return (
     <>
@@ -192,8 +217,16 @@ import { createPayPalOrder, approvePayPalOrder } from "@/lib/actions/order.actio
                                         </PayPalScriptProvider>
                                     </div>
                                 )}
+                    {/* Cash on Delivery*/}
+                    {isAdmin && paymentMethod==='CashOnPickup' && (
+                        <MarkAsPaidButton />
+                    )}
+                    {isAdmin && !isDelivered && (
+                        <MarkAsDeliveredButton />
+                    )}
             </CardContent>
         </Card>
+
         </div>
         </div>
     </>

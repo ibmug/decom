@@ -1,17 +1,14 @@
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { deleteOrder, getAllOrders } from "@/lib/actions/order.actions";
+//import { getServerSession } from "next-auth";
+//import { authOptions } from "@/lib/authOptions";
+import { deleteOrder, getAllOrders, OrderWithUser } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BadgeDollarSign, CreditCardIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime,formatId } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
-
 
 
 export const metadata : Metadata = {
@@ -25,7 +22,7 @@ const AdminOrdersPage = async (props: {
     searchParams: Promise<{page: string}>
 }) => {
     const {page = '1'} = await props.searchParams;
-    const session = getServerSession(authOptions);
+    //const session = getServerSession(authOptions);
 
 
 
@@ -56,7 +53,7 @@ const AdminOrdersPage = async (props: {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {orders.data.map((order)=>(
+                            {orders.data.map((order: OrderWithUser)=>(
                                 <TableRow key={order.id}>
                                     <TableCell>
                                         {formatId(order.id)}
@@ -68,10 +65,10 @@ const AdminOrdersPage = async (props: {
                                         {formatDateTime(order.createdAt).dateOnly}
                                     </TableCell>
                                     <TableCell>
-                                        {order?.shippingAddress.shippingMethod}
+                                        {order?.shippingAddress?.shippingMethod}
                                     </TableCell>
                                     <TableCell className=''>
-                                        {order?.shippingAddress.shippingMethod==='PICKUP' ? (order?.shippingAddress.storeName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
+                                        {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.storeName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
                                     </TableCell>
                                     <TableCell>
                                         {formatCurrency(order.totalPrice)}
@@ -80,7 +77,7 @@ const AdminOrdersPage = async (props: {
                                         {order.isPaid ? ('Order has been paid') : ('Order has not been paid')}
                                     </TableCell>
                                     <TableCell>
-                                        {order.isDelivered ? ('Order has been delievered') : ('Order has not been delievered')}
+                                        {order.isDelivered ? ('Order has been delivered') : ('Order has not been delivered')}
                                     </TableCell>
                                     
                                     <TableCell>
