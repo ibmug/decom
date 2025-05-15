@@ -27,7 +27,7 @@ export function formatNumberWithDecimal(num: string | number): string {
 
 //Format Errors
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function formatError(error: any) {
+export function formatError(error: any) {
   if(error.name ==='ZodError'){
     //Handle Zod Error
     //errors is the object which contains type/includisve/exact/message..., we get the value 'message' from all the errors shown and pass them over as a joined string.

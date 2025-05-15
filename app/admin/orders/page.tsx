@@ -1,7 +1,7 @@
 
 //import { getServerSession } from "next-auth";
 //import { authOptions } from "@/lib/authOptions";
-import { deleteOrder, getAllOrders, OrderWithUser } from "@/lib/actions/order.actions";
+import { deleteOrder, getAllOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime,formatId } from "@/lib/utils";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
+import { shippingAddressSchema } from "@/lib/validators";
 
 
 export const metadata : Metadata = {
@@ -33,6 +34,16 @@ const AdminOrdersPage = async (props: {
         limit: 10
     });
 
+    const viewOrders = orders.data.map(order => {
+        // parse+validate shippingAddress, throws if invalid
+        const sa = shippingAddressSchema.parse(order.shippingAddress)
+    
+        return {
+          ...order,
+          shippingAddress: sa,        // now strongly typed
+        }
+      })
+
 
     return (<div className="space-y-2">
         <h2 className="h2-bold">Orders</h2>
@@ -53,7 +64,8 @@ const AdminOrdersPage = async (props: {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {orders.data.map((order: OrderWithUser)=>(
+                            {viewOrders.map((order)=>(
+                                
                                 <TableRow key={order.id}>
                                     <TableCell>
                                         {formatId(order.id)}
@@ -71,7 +83,7 @@ const AdminOrdersPage = async (props: {
                                         {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.storeName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
                                     </TableCell>
                                     <TableCell>
-                                        {formatCurrency(order.totalPrice)}
+                                        {formatCurrency(order.totalPrice.toNumber())}
                                     </TableCell>
                                     <TableCell>
                                         {order.isPaid ? ('Order has been paid') : ('Order has not been paid')}
