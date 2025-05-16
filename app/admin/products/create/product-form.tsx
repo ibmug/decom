@@ -17,7 +17,15 @@ import { createProduct, updateProduct } from "@/lib/actions/product.actions";
 import { UploadButton } from "@/lib/uploadthing";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from 'next/image'
+import { Resolver } from "react-hook-form";
+
 //import { Upload } from "lucide-react";
+
+
+type ProductFormValues = z.infer<typeof insertProductSchema> & {
+    id?: string
+}
+
 
 
 interface ProductFormProps {
@@ -35,11 +43,15 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
     ? updateProductSchema.parse(product)
     : productDefaultValues
 
+    const resolver = (
+        type === 'UPDATE'
+          ? zodResolver(updateProductSchema)
+          : zodResolver(insertProductSchema)
+      ) as Resolver<ProductFormValues>
+    
+
     const form = useForm({
-        resolver: 
-            type === 'UPDATE' 
-            ? zodResolver(updateProductSchema) 
-            : zodResolver(insertProductSchema),
+        resolver,
         defaultValues,
     });
 

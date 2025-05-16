@@ -17,11 +17,11 @@ export const signUpDefaultValues = {
 };
 
 export const shippingAddressDefaultValues = {
-    fullName:'Nombre',
-    streetAddress:'123 Insurgentes Sur',
-    city: 'Ciudad de Mexico',
+    fullName:'Nombre de ubicacion',
+    streetAddress:'Nombre de tu Calle, Delegacion y Colonia',
+    city: 'Nombre de tu Ciudad',
     postalCode: '01234',
-    country: 'Mexico'
+    country: 'Tu Pais'
 }
 
 
@@ -38,7 +38,7 @@ export const productDefaultValues = {
     brand: '',
     description: '',
     price: '0',
-    stock: '0',
+    stock: 0,
     rating: '0',
     numReviews: '0',
     isFeatured: false,
