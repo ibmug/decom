@@ -70,7 +70,8 @@ export async function getAllProducts({
 
     const dataCount = await prisma.product.count();
 
-    
+    const helper = {query, category}
+    console.log(helper)
 
     return {
         data,

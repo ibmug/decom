@@ -83,7 +83,7 @@ const AdminOrdersPage = async (props: {
                                         {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.storeName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
                                     </TableCell>
                                     <TableCell>
-                                        {formatCurrency(order.totalPrice.toNumber())}
+                                        {formatCurrency(order.totalPrice.toString())}
                                     </TableCell>
                                     <TableCell>
                                         {order.isPaid ? ('Order has been paid') : ('Order has not been paid')}
