@@ -56,10 +56,12 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
     });
 
 
-    const onSubmitCustom: SubmitHandler<z.infer<typeof insertProductSchema>> = async (values) => {
+    const onSubmitCustom: SubmitHandler<ProductFormValues> = async (values) => {
         //On Create
         if (type==='CREATE'){
-            const res = await createProduct(values);
+
+            const dataToCreate = insertProductSchema.parse(values)
+            const res = await createProduct(dataToCreate)
 
             if(!res.success) {
                 toast({
@@ -82,7 +84,8 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
             return;
             }
 
-            const res = await updateProduct(values);
+            const dataToUpdate = updateProductSchema.parse(values)
+            const res = await updateProduct(dataToUpdate);
 
             if(!res.success) {
                 toast({

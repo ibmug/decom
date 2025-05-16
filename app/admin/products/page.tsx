@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
+import { Product } from "@/types";
 
 
 const AdminProductsPage = async (props: {
@@ -46,7 +47,7 @@ const AdminProductsPage = async (props: {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {products.data.map((product)=>(
+                {products.data.map((product: Product)=>(
                     <TableRow key={product.id}>
                         <TableCell>{formatId(product.id)}</TableCell>
                         <TableCell>{product.name}</TableCell>

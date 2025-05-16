@@ -15,6 +15,9 @@ export type Product = z.infer<typeof insertProductSchema> & {
   rating: string;
   numReviews: number;
   createdAt: string | Date;
+
+  isFeatured: boolean
+  banner: string | null
 };
 
 // Shipping method enum

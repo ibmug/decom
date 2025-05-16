@@ -5,7 +5,8 @@ import { LATEST_PRODUCTS_LIMIT } from "../constants";
 import { Product } from "@/types";
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
-//import { Product } from "@/types";
+import {z} from 'zod'
+
 
 export async function getLatestProducts() {
 
