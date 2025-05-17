@@ -51,7 +51,7 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
       ) as Resolver<ProductFormValues>
     
 
-    const form = useForm({
+    const form = useForm<ProductFormValues>({
         resolver,
         defaultValues,
     });
