@@ -48,6 +48,15 @@ export async function getSingleProductBySlug(slug: string) {
     });
 }
 
+//get product by id
+export async function getSingleProductById(productId: string) {
+    
+    const data = await prisma.product.findFirst({
+        where:{id: productId},
+    }) 
+    return convertToPlainObject(data);
+}
+
 
 
 //get all products
@@ -137,3 +146,4 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>){
         return {success: false, message: formatError(err)}
     }
 }
+
