@@ -17,7 +17,18 @@ import { formatError } from '@/lib/utils';
 import type { ShippingAddress } from '@/types';
 import { PAGE_SIZE } from '../constants';
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
+
+
+//These are the options provided by the params in the admin user page.
+interface GetUserOpts {
+  page:number
+  limit: number
+  query?: string
+  category?: string
+  orderBy: keyof User
+  order?: "asc" | "desc"
+}
 
 // Sign in the user with credentials
 export async function signInWithCredentials(_prevState: unknown, formData: FormData) {
@@ -190,48 +201,45 @@ export async function getAllUsers({
 
 //get All filtered users:
 export async function getAllFilteredUsers({
-    query = '',
-    page = 1,
-    limit = PAGE_SIZE,
-    category,
-  }: {
-    query?: string;
-    page?: number;
-    limit?: number;
-    category?: string;
-  }) {
-    // 1) Build dynamic "where"
-    const where: Prisma.ProductWhereInput = {};
-  
-    if (category) {
-      where.category = category;
-    }
-  
-    if (query) {
-      where.OR = [
-        { name:        { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { slug:        { contains: query, mode: 'insensitive' } },
-      ];
-    }
-  
-    // 2) Fetch both the page of data and the total count in a single transaction
-    const [data, total] = await prisma.$transaction([
-      prisma.user.findMany({
-        where,
-        skip:  (page - 1) * limit,
-        take:  limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.user.count({ where }),
-    ]);
-  
-    // 3) Compute total pages
-    const totalPages = Math.ceil(total / limit);
-  
-    return { data, totalPages };
+  query     = "",
+  page      = 1,
+  limit     = PAGE_SIZE,
+  category,                   // optional, if you still need it
+  orderBy   = "name",         // default sort field
+  order     = "asc",          // default sort order
+}: GetUserOpts) {
+  // 1) Build a proper UserWhereInput
+  const where: Prisma.UserWhereInput = {}
+
+  if (category) {
+    // if you still want to filter by category—though
+    // your User model probably doesn’t have `category`.
+    Object.assign(where, { role: category })
   }
 
+  if (query) {
+    where.OR = [
+      { name:  { contains: query, mode: "insensitive" } },
+      { email: { contains: query, mode: "insensitive" } },
+    ]
+  }
+
+  // 2) Run the transaction with dynamic orderBy
+  const [data, total] = await prisma.$transaction([
+    prisma.user.findMany({
+      where,
+      skip:  (page - 1) * limit,
+      take:  limit,
+      orderBy: { [orderBy]: order },
+    }),
+    prisma.user.count({ where }),
+  ])
+
+  // 3) Compute total pages
+  const totalPages = Math.ceil(total / limit)
+
+  return { data, totalPages }
+}
 
 
 export async function deleteUser(id:string): Promise<{ success: boolean; message: string }> {

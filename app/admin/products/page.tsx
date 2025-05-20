@@ -6,34 +6,61 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
 import { Product } from "@/types";
+import SortSelector from "@/components/admin/sort-control";
+import { SortOption } from "@/components/admin/sortselector.types";
+import { PAGE_SIZE } from "@/lib/constants";
+
+
+const productSortOptions: SortOption[] = [
+    { value: 'id',       label: 'ID' },
+    { value: 'name',     label: 'Name' },
+    { value: 'price',    label: 'Price' },
+    { value: 'category', label: 'Category' },
+    { value: 'stock',    label: 'Stock' },
+    { value: 'rating',   label: 'Rating' },
+  ]
 
 
 const AdminProductsPage = async (props: {
     searchParams: Promise<{
         page:string;
-        query:string;
-        category:string;
+        query?:string;
+        category?:string;
+        orderby?: keyof Product;
+        order?: 'asc'| 'desc'
     }>
 }) => {
-    const searchParams = await props.searchParams;
-    const page = Number(searchParams.page || 1);
-    const searchText = searchParams.query || '';
-    const category = searchParams.category || '';
+    const {
+        page:   pageStr = "1",
+        query    = "",
+        category = "",
+        orderby: ob = "createdAt",
+        order    = "desc",
+      } = await props.searchParams
+      const page = Number(pageStr)
 
     const products = await getAllFilteredProducts({
-        query:searchText,
         page,
-        category
+        query,
+        limit: PAGE_SIZE,
+        category,
+        orderBy: ob,
+        order,
     })
 
 
     return (<div className="space--y-2">
         <div className="flex-between">
             <h1 className="h2-bold">Products</h1>
+            
+                    <div className='text-justify'>Sort by:</div>
+                    <SortSelector options={productSortOptions} />
+                  
             <Button asChild variant='default'>
                 <Link href='/admin/products/create'>Create Product</Link>
             </Button>
         </div>
+        
         <Table>
             <TableHeader>
                 <TableRow>
