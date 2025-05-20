@@ -162,3 +162,9 @@ const NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
 export function formatNumber(number: number) {
   return NUMBER_FORMATTER.format(number)
 }
+
+
+//check if the value is indeed a uuid.
+export function isUuid(v: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+}

@@ -11,20 +11,36 @@ import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
 import { shippingAddressSchema } from "@/lib/validators";
 import {z} from 'zod'
-// 1️⃣ Pull in the real return type of your fetch helper
+import { SortOption } from "@/components/admin/sortselector.types";
+import { Order} from "@prisma/client"
+import SortSelector from "@/components/admin/sort-control";
+// Pull in the real return type of your fetch helper
 type OrdersData = Awaited<ReturnType<typeof getAllFilteredOrders>>;
 
-// 2️⃣ Extract the single‐item type from the `data` array
+//  Extract the single‐item type from the `data` array
 //    (if getAllFilteredOrders returns `{ data: T[]; totalPages: number }`)
 type RawOrder = OrdersData["data"][number];
 
-// 3️⃣ Infer the parsed address shape from your Zod schema
+// Infer the parsed address shape from your Zod schema
 type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
-// 4️⃣ Build the “view” type you actually render
+//  Build the “view” type you actually render
 type ViewOrder = Omit<RawOrder, "shippingAddress"> & {
   shippingAddress: ShippingAddress;
 };
+
+///Sort Filters
+
+// 1) Define the fields you can sort by
+const orderSortOptions: SortOption[] = [
+    { value: "createdAt",   label: "Date"            },
+    { value: "totalPrice",  label: "Total Price"    },
+    { value: "isPaid",      label: "Paid Status"    },
+    { value: "isDelivered", label: "Delivery Status"},
+    { value: "name", label: "Comprador"},
+  ]
+
+
 export const metadata : Metadata = {
     title: 'Admin Orders',
 }
@@ -35,11 +51,13 @@ const AdminOrdersPage = async (props: {
     searchParams: Promise<{
         page?: string
         query?: string
+        orderby?: keyof Order
+        order?: 'asc' | 'desc'
     }>
 }) => {
-    const {page = '1', query=''} = await props.searchParams;
+    const {page:pageStr = '1', query='', orderby='createdAt',order='desc'} = await props.searchParams;
     
-
+    const page = Number(pageStr)
 
 
 
@@ -47,7 +65,9 @@ const AdminOrdersPage = async (props: {
     const orders = await getAllFilteredOrders({
         page: Number(page),
         limit: 10,
-        query
+        query,
+        orderBy: orderby,
+        order,
     });
 
     console.log(orders.data[0])
@@ -65,7 +85,9 @@ const AdminOrdersPage = async (props: {
     return (<div className="space-y-2">
         <h2 className="h2-bold">Orders</h2>
         <div className="overflow-x-auto">
-       
+            <div className="flex items-center justify-between">
+                <SortSelector options={orderSortOptions} />
+            </div>
                     <Table className=''>
                         <TableHeader>
                             <TableRow>

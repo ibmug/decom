@@ -50,17 +50,16 @@ const AdminProductsPage = async (props: {
 
 
     return (<div className="space--y-2">
-        <div className="flex-between">
-            <h1 className="h2-bold">Products</h1>
-            
-                    <div className='text-justify'>Sort by:</div>
-                    <SortSelector options={productSortOptions} />
-                  
-            <Button asChild variant='default'>
-                <Link href='/admin/products/create'>Create Product</Link>
-            </Button>
-        </div>
         
+            <h1 className="h2-bold">Products</h1>
+            <div className='overflow-x-auto'>
+                        <div className="flex items-center justify-between">
+                            <SortSelector options={productSortOptions} />
+                            <Button asChild variant='default'>
+                                <Link href='/admin/products/create'>Create Product</Link>
+                            </Button>
+                        </div>
+
         <Table>
             <TableHeader>
                 <TableRow>
@@ -93,9 +92,11 @@ const AdminProductsPage = async (props: {
                 ))}
             </TableBody>
         </Table>
+        
         {products?.totalPages && products.totalPages > 1 && (
             <Pagination page={page} totalPages = {products.totalPages} />
         )}
+        </div>
     </div>  );
 }
  

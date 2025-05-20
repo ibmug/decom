@@ -50,9 +50,8 @@ const UserAdminPage = async (props: {
         <h2 className="h2-bold">Users</h2>
         <div className="overflow-x-auto">
         <div className="flex items-center justify-between">
-        <div>Sort by:</div>
         <SortSelector options={userSortOptions} />
-      </div>
+        </div>
   
        
                     <Table className=''>

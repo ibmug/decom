@@ -20,12 +20,6 @@ export const metadata: Metadata = {
 
 const AdminDashboardPage = async () => {
 
-    //const session = await getServerSession(authOptions)
-
-    // if(session?.user?.role !=='admin'){
-    //     throw new Error ('El usuario no esta permitido.')
-
-    // }
 
     const summary = await getOrderSummary();
 

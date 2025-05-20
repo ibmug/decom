@@ -14,7 +14,20 @@ import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
-//import { Order } from "@prisma/client";
+import { Order } from "@prisma/client";
+import { isUuid } from "../utils";
+
+
+export interface GetOrderOpts {
+    query?:    string
+    page?:     number
+    limit?:    number
+    orderBy?:  keyof Order      // e.g. "createdAt", "totalPrice", "isPaid", …
+    order?:    "asc" | "desc"
+
+  }
+
+
 
 export type OrderWithUser = Prisma.OrderGetPayload<{
     include: { user: { select: { name: true } } }
@@ -335,104 +348,67 @@ export async function getAllOrders ({
 
 //get all filtered orders:
 export async function getAllFilteredOrders({
-    query = '',
-    page  = 1,
-    limit = PAGE_SIZE,
-  }: {
-    query?: string
-    page?: number
-    limit?: number
-  }) {
+    query    = "",
+    page     = 1,
+    limit    = PAGE_SIZE,
+    orderBy  = "createdAt",
+    order    = "desc",
+  }: GetOrderOpts) {
     const where: Prisma.OrderWhereInput = {}
+    const OR:    Prisma.OrderWhereInput[] = []
   
     if (query) {
-      const OR: Prisma.OrderWhereInput[] = []
+      const q = query.trim().toLowerCase()
   
-      // — 1) Order ID (exact match) — using a UuidFilter
-      if (query) {
-        OR.push({ id: { equals: query } })
+      // 0) Paid / not paid
+      if (["pagado","paid","true"].includes(q))      OR.push({ isPaid: true })
+      if (["!pagado","sin pagar","no pagado","unpaid","false"].includes(q)) 
+        OR.push({ isPaid: false })
+  
+      // 1) Delivered / not delivered
+      if (["entregado","delivered","true"].includes(q)) 
+        OR.push({ isDelivered: true })
+      if (["!entregado","sin entregar","no entregado","undelivered","false"].includes(q)) 
+        OR.push({ isDelivered: false })
+  
+      // 2) UUID match
+      if (isUuid(q)) {
+        OR.push({ id: q })
       }
-      // — 2) Buyer’s name (string contains) —
+  
+      // 3) Buyer name
       OR.push({
-        user: { name: { contains: query, mode: 'insensitive' } }
+        user: { name: { contains: query, mode: "insensitive" } },
       })
   
-      // — 3) createdAt date equality (single-day range) —
-      const ts = Date.parse(query)
-      if (!isNaN(ts)) {
-        const start = new Date(ts)
-        const end   = new Date(start)
-        end.setDate(end.getDate() + 1)
-        OR.push({ createdAt: { gte: start, lt: end } })
-      }
-  
-      // — 4) shippingMethod exact match —
+      // 4) JSON fields (e.g. storeName, city)
       OR.push({
-        shippingAddress: {
-          path:   ['shippingMethod'],
-          equals: query.toUpperCase(),
-        },
+        shippingAddress: { path: ["storeName"], string_contains: query },
+      })
+      OR.push({
+        shippingAddress: { path: ["address","city"], string_contains: query },
       })
   
-      // — 5) any JSON field in address or storeName/storeAddress —
-      const jsonPaths: string[][] = [
-        ['address','fullName'],
-        ['address','streetName'],
-        ['address','city'],
-        ['address','postalCode'],
-        ['storeName'],
-        ['storeAddress'],
-      ]
-      for (const p of jsonPaths) {
-        OR.push({
-          shippingAddress: {
-            path:            p,
-            string_contains: query,
-          },
-        })
-      }
-  
-      // — 6) totalPrice numeric equality —
-      const num = parseFloat(query)
-      if (!isNaN(num)) {
-        OR.push({ totalPrice: num })
-      }
-  
-      // — 7) boolean flags —
-      const ql = query.toLowerCase()
-      const paidTrueTerms     = ['paid','true','pagado'];
-      const paidFalseTerms    = ['unpaid','false','sin pagar'];
-      const deliveredTrueTerms  = ['delivered','true','entregado'];
-      const deliveredFalseTerms = ['undelivered','false','sin entregar'];
-
-      if (paidTrueTerms.includes(ql))     OR.push({ isPaid:     true  });
-      if (paidFalseTerms.includes(ql))    OR.push({ isPaid:     false });
-      if (deliveredTrueTerms.includes(ql))  OR.push({ isDelivered: true  });
-      if (deliveredFalseTerms.includes(ql)) OR.push({ isDelivered: false });
-      // Only assign if we actually have filters
-      if (OR.length) {
-        where.OR = OR
-      }
+      where.OR = OR
     }
   
-    // Fetch paged results + count
     const [data, total] = await prisma.$transaction([
       prisma.order.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
         skip:    (page - 1) * limit,
         take:    limit,
-        include: { user: { select: { name: true } } },
+        orderBy: { [orderBy]: order },
+        include: {
+            user: {
+                select: {name: true}
+            }
+        }
       }),
       prisma.order.count({ where }),
     ])
   
-    return {
-      data,
-      totalPages: Math.ceil(total / limit),
-    }
+    return { data, totalPages: Math.ceil(total / limit) }
   }
-
 
 //delete an order
 export async function deleteOrder (id:string): Promise<{ success: boolean; message: string }> {
