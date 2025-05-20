@@ -1,7 +1,7 @@
 
 //import { getServerSession } from "next-auth";
 //import { authOptions } from "@/lib/authOptions";
-import { deleteOrder, getAllOrders } from "@/lib/actions/order.actions";
+import { deleteOrder, getAllFilteredOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime,formatId } from "@/lib/utils";
@@ -10,31 +10,48 @@ import { Button } from "@/components/ui/button";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
 import { shippingAddressSchema } from "@/lib/validators";
+import {z} from 'zod'
+// 1️⃣ Pull in the real return type of your fetch helper
+type OrdersData = Awaited<ReturnType<typeof getAllFilteredOrders>>;
 
+// 2️⃣ Extract the single‐item type from the `data` array
+//    (if getAllFilteredOrders returns `{ data: T[]; totalPages: number }`)
+type RawOrder = OrdersData["data"][number];
 
+// 3️⃣ Infer the parsed address shape from your Zod schema
+type ShippingAddress = z.infer<typeof shippingAddressSchema>;
+
+// 4️⃣ Build the “view” type you actually render
+type ViewOrder = Omit<RawOrder, "shippingAddress"> & {
+  shippingAddress: ShippingAddress;
+};
 export const metadata : Metadata = {
     title: 'Admin Orders',
 }
 
 
 
-
 const AdminOrdersPage = async (props: {
-    searchParams: Promise<{page: string}>
+    searchParams: Promise<{
+        page?: string
+        query?: string
+    }>
 }) => {
-    const {page = '1'} = await props.searchParams;
-    //const session = getServerSession(authOptions);
+    const {page = '1', query=''} = await props.searchParams;
+    
 
 
 
 
 
-    const orders = await getAllOrders({
+    const orders = await getAllFilteredOrders({
         page: Number(page),
-        limit: 10
+        limit: 10,
+        query
     });
 
-    const viewOrders = orders.data.map(order => {
+    console.log(orders.data[0])
+    const viewOrders: ViewOrder[] = orders.data.map((order: RawOrder) => {
         // parse+validate shippingAddress, throws if invalid
         const sa = shippingAddressSchema.parse(order.shippingAddress)
     

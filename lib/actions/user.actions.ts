@@ -9,11 +9,15 @@ import {
   signInFormSchema,
   signUpFormSchema,
   paymentMethodSchema,
+  updateUserSchema,
 } from '@/lib/validators';
 import { hashSync } from 'bcrypt-ts-edge';
 import { prisma } from '@/db/prisma';
 import { formatError } from '@/lib/utils';
 import type { ShippingAddress } from '@/types';
+import { PAGE_SIZE } from '../constants';
+import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 
 // Sign in the user with credentials
 export async function signInWithCredentials(_prevState: unknown, formData: FormData) {
@@ -156,6 +160,109 @@ export async function updateProfile(user: {name: string, email: string}) {
 
     return {success:true, message: 'User Updated Succesfully'}
     }catch(err){
+    return {success:false, message: formatError(err)}
+  }
+}
+
+//get all users
+
+export async function getAllUsers({
+  limit = PAGE_SIZE,
+  page
+}:{
+  limit?: number;
+  page: number;
+}){
+  const data = await prisma.user.findMany({
+    orderBy:{createdAt: 'desc'},
+    take: limit,
+    skip: (page - 1) * limit,
+  });
+
+  const dataCount = await prisma.user.count();
+
+  return {
+    totalPages:Math.ceil(dataCount/limit),
+    data,
+  }
+}
+
+
+//get All filtered users:
+export async function getAllFilteredUsers({
+    query = '',
+    page = 1,
+    limit = PAGE_SIZE,
+    category,
+  }: {
+    query?: string;
+    page?: number;
+    limit?: number;
+    category?: string;
+  }) {
+    // 1) Build dynamic "where"
+    const where: Prisma.ProductWhereInput = {};
+  
+    if (category) {
+      where.category = category;
+    }
+  
+    if (query) {
+      where.OR = [
+        { name:        { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+        { slug:        { contains: query, mode: 'insensitive' } },
+      ];
+    }
+  
+    // 2) Fetch both the page of data and the total count in a single transaction
+    const [data, total] = await prisma.$transaction([
+      prisma.user.findMany({
+        where,
+        skip:  (page - 1) * limit,
+        take:  limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.count({ where }),
+    ]);
+  
+    // 3) Compute total pages
+    const totalPages = Math.ceil(total / limit);
+  
+    return { data, totalPages };
+  }
+
+
+
+export async function deleteUser(id:string): Promise<{ success: boolean; message: string }> {
+    try{
+        await prisma.users.delete({where:{id}})
+        revalidatePath('/admin/users')
+        return {success:true, message: 'User Deleted Succesfully.'}
+    }catch (err){
+        return {success:false, message: formatError(err)}
+    } 
+}
+
+
+//update the user
+
+export async function updateUser(user: z.infer<typeof updateUserSchema>){
+  try{
+
+    await prisma.user.update({
+      where:{id: user.id},
+      data:{
+        name: user.name,
+        role: user.role
+      }
+    })
+
+    revalidatePath('/admin/users')
+
+    return {success:true, message: 'User updated succesfully!'}
+
+  }catch(err){
     return {success:false, message: formatError(err)}
   }
 }

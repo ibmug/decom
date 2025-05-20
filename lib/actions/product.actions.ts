@@ -1,11 +1,12 @@
 'use server';
 import { prisma } from "@/db/prisma";
 import { convertToPlainObject, formatError } from "../utils";
-import { LATEST_PRODUCTS_LIMIT } from "../constants";
+import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
 import { Product } from "@/types";
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import {z} from 'zod'
+import { Prisma } from "@prisma/client";
 
 
 export async function getLatestProducts() {
@@ -88,6 +89,51 @@ export async function getAllProducts({
         totalPages: Math.ceil(dataCount / limit),
     };
 }
+
+
+///get all 'filtered' products:
+export async function getAllFilteredProducts({
+    query = '',
+    page = 1,
+    limit = PAGE_SIZE,
+    category,
+  }: {
+    query?: string;
+    page?: number;
+    limit?: number;
+    category?: string;
+  }) {
+    // 1) Build dynamic "where"
+    const where: Prisma.ProductWhereInput = {};
+  
+    if (category) {
+      where.category = category;
+    }
+  
+    if (query) {
+      where.OR = [
+        { name:        { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+        { slug:        { contains: query, mode: 'insensitive' } },
+      ];
+    }
+  
+    // 2) Fetch both the page of data and the total count in a single transaction
+    const [data, total] = await prisma.$transaction([
+      prisma.product.findMany({
+        where,
+        skip:  (page - 1) * limit,
+        take:  limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.product.count({ where }),
+    ]);
+  
+    // 3) Compute total pages
+    const totalPages = Math.ceil(total / limit);
+  
+    return { data, totalPages };
+  }
 
 
 //delete a product

@@ -333,12 +333,112 @@ export async function getAllOrders ({
     };
 }
 
+//get all filtered orders:
+export async function getAllFilteredOrders({
+    query = '',
+    page  = 1,
+    limit = PAGE_SIZE,
+  }: {
+    query?: string
+    page?: number
+    limit?: number
+  }) {
+    const where: Prisma.OrderWhereInput = {}
+  
+    if (query) {
+      const OR: Prisma.OrderWhereInput[] = []
+  
+      // — 1) Order ID (exact match) — using a UuidFilter
+      if (query) {
+        OR.push({ id: { equals: query } })
+      }
+      // — 2) Buyer’s name (string contains) —
+      OR.push({
+        user: { name: { contains: query, mode: 'insensitive' } }
+      })
+  
+      // — 3) createdAt date equality (single-day range) —
+      const ts = Date.parse(query)
+      if (!isNaN(ts)) {
+        const start = new Date(ts)
+        const end   = new Date(start)
+        end.setDate(end.getDate() + 1)
+        OR.push({ createdAt: { gte: start, lt: end } })
+      }
+  
+      // — 4) shippingMethod exact match —
+      OR.push({
+        shippingAddress: {
+          path:   ['shippingMethod'],
+          equals: query.toUpperCase(),
+        },
+      })
+  
+      // — 5) any JSON field in address or storeName/storeAddress —
+      const jsonPaths: string[][] = [
+        ['address','fullName'],
+        ['address','streetName'],
+        ['address','city'],
+        ['address','postalCode'],
+        ['storeName'],
+        ['storeAddress'],
+      ]
+      for (const p of jsonPaths) {
+        OR.push({
+          shippingAddress: {
+            path:            p,
+            string_contains: query,
+          },
+        })
+      }
+  
+      // — 6) totalPrice numeric equality —
+      const num = parseFloat(query)
+      if (!isNaN(num)) {
+        OR.push({ totalPrice: num })
+      }
+  
+      // — 7) boolean flags —
+      const ql = query.toLowerCase()
+      const paidTrueTerms     = ['paid','true','pagado'];
+      const paidFalseTerms    = ['unpaid','false','sin pagar'];
+      const deliveredTrueTerms  = ['delivered','true','entregado'];
+      const deliveredFalseTerms = ['undelivered','false','sin entregar'];
+
+      if (paidTrueTerms.includes(ql))     OR.push({ isPaid:     true  });
+      if (paidFalseTerms.includes(ql))    OR.push({ isPaid:     false });
+      if (deliveredTrueTerms.includes(ql))  OR.push({ isDelivered: true  });
+      if (deliveredFalseTerms.includes(ql)) OR.push({ isDelivered: false });
+      // Only assign if we actually have filters
+      if (OR.length) {
+        where.OR = OR
+      }
+    }
+  
+    // Fetch paged results + count
+    const [data, total] = await prisma.$transaction([
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip:    (page - 1) * limit,
+        take:    limit,
+        include: { user: { select: { name: true } } },
+      }),
+      prisma.order.count({ where }),
+    ])
+  
+    return {
+      data,
+      totalPages: Math.ceil(total / limit),
+    }
+  }
+
 
 //delete an order
 export async function deleteOrder (id:string): Promise<{ success: boolean; message: string }> {
     try{
         await prisma.order.delete({where:{id}})
-        revalidatePath('/admin/ordes')
+        revalidatePath('/admin/orders')
         return {success:true, message: 'Order Deleted Succesfully.'}
     }catch (err){
         return {success:false, message: formatError(err)}

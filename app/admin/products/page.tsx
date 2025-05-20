@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllProducts,deleteProduct } from "@/lib/actions/product.actions";
+import { deleteProduct, getAllFilteredProducts } from "@/lib/actions/product.actions";
 import { formatCurrency, formatId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,7 +20,7 @@ const AdminProductsPage = async (props: {
     const searchText = searchParams.query || '';
     const category = searchParams.category || '';
 
-    const products = await getAllProducts({
+    const products = await getAllFilteredProducts({
         query:searchText,
         page,
         category
