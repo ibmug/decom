@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import qs from 'query-string'
-import { Product } from "@/types";
+
 import type {Product as RawProduct} from '@prisma/client'
 
 export function cn(...inputs: ClassValue[]) {
@@ -171,9 +171,16 @@ export function isUuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
 }
 
+
+export type BasicProduct = {
+  id:     string;
+  slug:   string;
+  name:   string;
+  banner: string;
+};
 //function to serrialize the product, this is for the carousel
 //serialize products, function to help turn the product into a json-safe object.
-export function serializeProduct(p: RawProduct): Product {
+export function serializeProduct(p: RawProduct): BasicProduct {
   return {
     id:          p.id,
     slug:        p.slug,

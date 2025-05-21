@@ -1,5 +1,6 @@
 import ProductCard from "@/components/shared/product/productCard";
-import { getAllProducts } from "@/lib/actions/product.actions";
+import { getAllProducts, UIProduct } from "@/lib/actions/product.actions";
+
 
 const SearchPage = async (props: {
     searchParams: Promise<{
@@ -36,7 +37,7 @@ const SearchPage = async (props: {
         <div className="md:col-span-4 space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {products.data.length=== 0 && <div>No products found</div>}
-                {products.data.map((product)=>(
+                {products.data.map((product:UIProduct)=>(
                     <ProductCard key={product.id} product={product}/>
                 ))}
             </div>

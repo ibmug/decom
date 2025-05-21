@@ -18,7 +18,7 @@ const CategoryDrawer = async () => {
             <DrawerHeader>
                 <DrawerTitle>Select a category:</DrawerTitle>
                 <div className="space-y-1 mt-2">
-                    {categories.map((x)=> (
+                    {categories.map((x:{category:string, _count:number})=> (
                         <Button variant='ghost' className='w-full justify-start' key={x.category} asChild>
                             <DrawerClose asChild>
                                 <Link href={`/search?category=${x.category}`}>

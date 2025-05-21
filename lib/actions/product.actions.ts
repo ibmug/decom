@@ -7,7 +7,30 @@ import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import {z} from 'zod'
 import { Prisma } from "@prisma/client";
-import { takeCoverage } from "v8";
+
+
+/**
+ * UIProduct is exactly like Prisma’s Product, except
+ * price & rating have been turned into strings.
+ */
+export type UIProduct = Omit<Product, "price" | "rating"> & {
+  price:  string;
+  rating: string;
+};
+
+export interface GetAllProductsResult {
+  data:  UIProduct[];
+  totalPages: number;
+}
+
+interface GetAllProductsParams {
+  query:    string;
+  page:     number;
+  category: string;
+  rating:   string;
+  price:    string;
+  sort:     string;
+}
 
 //These are the options provided by the params in the admin user page.
 interface GetProductOpts {
@@ -72,29 +95,17 @@ export async function getSingleProductById(productId: string) {
 
 //get all products
 
-export async function getAllProducts({
-    query,
-    limit=PAGE_SIZE,
-    page,
-    category,
-    rating,
-    price,
-    sort
-}: {
-    query: string;
-    limit?: number;
-    page: number;
-    category?: string;
-    price?: string;
-    rating?: string;
-    sort?: string;
-}){
+export async function getAllProducts(
+    params: GetAllProductsParams
+):Promise<GetAllProductsResult> {
+
+    const {query, category, price, rating, sort, page} = params;
 
     //query Filter
     const queryFilter: Prisma.ProductWhereInput = query && query !== 'all' ? {
         name: {contains: query, mode: 'insensitive'},
         
-    } as Prisma.StringFilter : {};
+    } as Prisma.ProductWhereInput : {};
 
     //Category Filter
     const categoryFilter = category && category !== 'all' ? {category} : {};
@@ -109,6 +120,7 @@ export async function getAllProducts({
         gte:Number(price.split('-')[0]),
         lte:Number(price.split('-')[1])
     }} : {};
+    console.log(sort)
 
 
     const data = await prisma.product.findMany({
@@ -119,15 +131,23 @@ export async function getAllProducts({
             ...priceFilter,
             ...ratingFilter
         },
-        skip:(page-1) * limit,
-        take: limit
+        skip:(page-1) * PAGE_SIZE,
+        take: PAGE_SIZE
     });
+
+    ///This is to change it so that the UI can accept it.
+    const rawRows : Product[] = data;
+    const theData: UIProduct[] = rawRows.map((p)=>({
+        ...p,
+        price:p.price.toString(),
+        rating:p.rating.toString()
+    }))
 
     const dataCount = await prisma.product.count();
 
     return {
-        data,
-        totalPages: Math.ceil(dataCount / limit),
+        data: theData,
+        totalPages: Math.ceil(dataCount / PAGE_SIZE),
     };
 }
 

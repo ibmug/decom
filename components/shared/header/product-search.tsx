@@ -16,7 +16,7 @@ const ProductSearch = async () => {
             </SelectTrigger>
             <SelectContent>
                 <SelectItem key='All' value="all">All</SelectItem>
-                {categories.map((x)=>(<SelectItem key={x.category} value={x.category}>{x.category}</SelectItem>))}
+                {categories.map((x:{category:string})=>(<SelectItem key={x.category} value={x.category}>{x.category}</SelectItem>))}
             </SelectContent>
         </Select>
         <Input name='q' type='text' placeholder='Search a product...' className='md:w-[100px] lg:w-[300px]'/>
