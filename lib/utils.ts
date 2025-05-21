@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import qs from 'query-string'
+import { Product } from "@/types";
+import type {Product as RawProduct} from '@prisma/client'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -167,4 +169,22 @@ export function formatNumber(number: number) {
 //check if the value is indeed a uuid.
 export function isUuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+}
+
+//function to serrialize the product, this is for the carousel
+//serialize products, function to help turn the product into a json-safe object.
+export function serializeProduct(p: RawProduct): Product {
+  return {
+    id:          p.id,
+    slug:        p.slug,
+    name:        p.name,
+    banner:      p.banner!,
+    // Convert any Dates/Decimals to primitives if your DTO includes them:
+    // createdAt: p.createdAt.toISOString(),
+    // price:     p.price.toNumber(),
+    // rating:    p.rating.toNumber(),
+
+    // If your front-end Product type only includes the above four fields,
+    // skip mapping the rest entirely and leave them off.
+  }
 }

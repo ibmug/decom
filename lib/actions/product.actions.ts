@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import {z} from 'zod'
 import { Prisma } from "@prisma/client";
+import { takeCoverage } from "v8";
 
 //These are the options provided by the params in the admin user page.
 interface GetProductOpts {
@@ -73,25 +74,56 @@ export async function getSingleProductById(productId: string) {
 
 export async function getAllProducts({
     query,
-    //limit = PAGE_SIZE,
-    limit=10,
+    limit=PAGE_SIZE,
     page,
-    category
+    category,
+    rating,
+    price,
+    sort
 }: {
     query: string;
     limit?: number;
     page: number;
     category?: string;
+    price?: string;
+    rating?: string;
+    sort?: string;
 }){
+
+    //query Filter
+    const queryFilter: Prisma.ProductWhereInput = query && query !== 'all' ? {
+        name: {contains: query, mode: 'insensitive'},
+        
+    } as Prisma.StringFilter : {};
+
+    //Category Filter
+    const categoryFilter = category && category !== 'all' ? {category} : {};
+
+    //Rating Filter
+    const ratingFilter = rating && rating !=='all' ? {rating:{
+        gte:Number(rating)
+    }} : {}
+
+    //Price Filter
+    const priceFilter = price && price !== 'all' ? {price:{
+        gte:Number(price.split('-')[0]),
+        lte:Number(price.split('-')[1])
+    }} : {};
+
+
     const data = await prisma.product.findMany({
+        orderBy: {createdAt: 'desc'},
+        where: {
+            ...queryFilter,
+            ...categoryFilter,
+            ...priceFilter,
+            ...ratingFilter
+        },
         skip:(page-1) * limit,
         take: limit
     });
 
     const dataCount = await prisma.product.count();
-
-    const helper = {query, category}
-    console.log(helper)
 
     return {
         data,
@@ -195,4 +227,28 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>){
         return {success: false, message: formatError(err)}
     }
 }
+
+//get all categories
+
+export async function getAllCats() {
+    const data = await prisma.product.groupBy({
+        by:['category'],
+        _count:true
+    })
+    
+    return data
+}
+
+
+///get featured products
+export async function getFeaturedProducts(){
+    const data = await prisma.product.findMany({
+        where: {isFeatured: true},
+        orderBy: {createdAt:'desc'},
+        take: 4,
+    });
+
+    return data 
+}
+
 

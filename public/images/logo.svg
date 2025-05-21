@@ -1,23 +1,69 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Creator: CorelDRAW X5 -->
-<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="2048px" height="2048px" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
-viewBox="0 0 2048 2048"
- xmlns:xlink="http://www.w3.org/1999/xlink">
- <defs>
-  <style type="text/css">
-   <![CDATA[
-    .fil0 {fill:#FFCA28}
-    .fil1 {fill:#FFFFFE;fill-rule:nonzero}
-   ]]>
-  </style>
- </defs>
- <g id="Layer_x0020_1">
-  <metadata id="CorelCorpID_0Corel-Layer"/>
-  <rect class="fil0" width="2048" height="2048" rx="256" ry="256"/>
-  <g id="_617655424">
-   <path class="fil1" d="M1601 765l28 0 5 28 158 688 0 182 -1536 0 0 -189 159 -682 5 -28 28 0 206 0c-17,64 -28,130 -31,192 -1,28 -4,58 15,81 13,15 31,22 50,22 46,0 65,-33 67,-74 0,-8 0,-16 1,-24 4,-63 17,-132 37,-197l461 0c24,75 38,155 38,228 0,37 30,67 67,67 37,0 67,-30 67,-67 0,-74 -11,-152 -32,-228l209 0z"/>
-   <path class="fil1" d="M688 1032c-39,0 -34,-41 -32,-67 6,-102 35,-232 88,-340 58,-120 146,-215 261,-225 16,-1 30,-1 46,1 90,12 169,85 229,185 69,116 112,272 112,412 0,18 -15,33 -33,33 -18,0 -33,-15 -33,-33 0,-128 -40,-271 -103,-378 -48,-80 -108,-139 -172,-152 -14,-3 -30,-3 -44,-2 -86,9 -154,88 -202,187 -48,99 -76,218 -81,312 -1,25 5,66 -34,66z"/>
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Inverted (sagging) hanging string -->
+  <path d="M20,30 C100,55 300,55 380,30" stroke="#333" stroke-width="2" fill="none"></path>
+
+  <!-- Flag 1: Bull skull (red) -->
+  <g transform="translate(30,30)">
+    <rect width="60" height="60" rx="5" fill="#E63946"></rect>
+    <g fill="#fff">
+      <!-- Skull base -->
+      <ellipse cx="30" cy="30" rx="15" ry="18"></ellipse>
+      <!-- Horns -->
+      <path d="M5,25 C0,0 25,10 20,25 Z"></path>
+      <path d="M55,25 C60,0 35,10 40,25 Z"></path>
+      <!-- Eyes -->
+      <circle cx="22" cy="30" r="3"></circle>
+      <circle cx="38" cy="30" r="3"></circle>
+    </g>
   </g>
- </g>
+
+  <!-- Flag 2: Sugar skull (orange) -->
+  <g transform="translate(120,30)">
+    <rect width="60" height="60" rx="5" fill="#F4A261"></rect>
+    <g fill="#fff">
+      <!-- Skull outline -->
+      <path d="
+        M30,12 
+        C20,12 12,28 20,38 
+        C12,48 20,60 30,60 
+        C40,60 48,48 40,38 
+        C48,28 40,12 30,12 Z"></path>
+      <!-- Eyes & nose -->
+      <circle cx="24" cy="34" r="4"></circle>
+      <circle cx="36" cy="34" r="4"></circle>
+      <path d="M30,45 L30,55" stroke="#fff" stroke-width="2" stroke-linecap="round"></path>
+    </g>
+  </g>
+
+  <!-- Flag 3: Heart (yellow) -->
+  <g transform="translate(210,30)">
+    <rect width="60" height="60" rx="5" fill="#E9C46A"></rect>
+    <path fill="#fff" d="
+      M30,20
+      c-7,-6 -20,2 -20,12
+      c0,10 13,18 20,25
+      c7,-7 20,-15 20,-25
+      c0,-10 -13,-6 -20,-12
+      z"></path>
+  </g>
+
+  <!-- Flag 4: Flower (green) -->
+  <g transform="translate(300,30)">
+    <rect width="60" height="60" rx="5" fill="#2A9D8F"></rect>
+    <g fill="#fff">
+      <!-- Center -->
+      <circle cx="30" cy="30" r="6"></circle>
+      <!-- Four main petals -->
+      <ellipse cx="30" cy="15" rx="6" ry="10"></ellipse>
+      <ellipse cx="30" cy="45" rx="6" ry="10"></ellipse>
+      <ellipse cx="15" cy="30" rx="10" ry="6"></ellipse>
+      <ellipse cx="45" cy="30" rx="10" ry="6"></ellipse>
+      <!-- Diagonal petals -->
+      <ellipse cx="18" cy="18" rx="5" ry="8" transform="rotate(-45,18,18)"></ellipse>
+      <ellipse cx="42" cy="18" rx="5" ry="8" transform="rotate(45,42,18)"></ellipse>
+      <ellipse cx="18" cy="42" rx="5" ry="8" transform="rotate(45,18,42)"></ellipse>
+      <ellipse cx="42" cy="42" rx="5" ry="8" transform="rotate(-45,42,42)"></ellipse>
+    </g>
+  </g>
 </svg>
