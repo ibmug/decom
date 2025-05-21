@@ -9,7 +9,8 @@ const ProductSearch = async () => {
 
     return (<>
     <form action="/search" method="GET">
-    <div className="flex w-full max-w-sm items-center space-x-2">
+    <div className="flex flex-wrap w-full  items-center space-x-2">
+        <div className='hidden md:block'>
         <Select name='category'>
             <SelectTrigger className='w-[180px]'>
                 <SelectValue placeholder='All' />
@@ -19,8 +20,10 @@ const ProductSearch = async () => {
                 {categories.map((x:{category:string})=>(<SelectItem key={x.category} value={x.category}>{x.category}</SelectItem>))}
             </SelectContent>
         </Select>
-        <Input name='q' type='text' placeholder='Search a product...' className='md:w-[100px] lg:w-[300px]'/>
-        <Button><SearchIcon/></Button>
+        
+        </div>
+        <Input name='q' type='text' placeholder='Search a product...' className='w-full md:w-[100px] lg:w-[300px]'/>
+        <Button className='hidden md:block'><SearchIcon/></Button>
     </div>
     </form>
     </>  );
