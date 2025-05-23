@@ -9,7 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Table,TableBody, TableHead, TableHeader, TableRow,TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/utils";
 import { Card,CardContent } from "@/components/ui/card";
 
 

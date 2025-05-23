@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { deleteUser, getAllFilteredUsers } from "@/lib/actions/user.actions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatId } from "@/lib/utils";
+import { formatId } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import DeleteDialog from "@/components/shared/delete-dialog";

@@ -6,7 +6,7 @@ import { prisma } from '@/db/prisma';
 import { compareSync } from 'bcrypt-ts-edge';
 import type { JWT }     from 'next-auth/jwt';
 import type { Session } from 'next-auth';
-import { isSafeRedirect } from './utils';
+import { isSafeRedirect } from './utils/utils';
 import type { NextAuthOptions } from 'next-auth';
 
 

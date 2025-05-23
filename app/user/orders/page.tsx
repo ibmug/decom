@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { getMyOrders } from '@/lib/actions/order.actions'
 import { Table,TableHead,TableBody,TableRow,TableHeader,TableCell } from '@/components/ui/table'
-import { formatCurrency, formatDateTime, formatId } from '@/lib/utils'
+import { formatCurrency, formatDateTime, formatId } from '@/lib/utils/utils'
 import Pagination from '@/components/shared/pagination'
 
 export const metadata: Metadata = {

@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Button } from "../ui/button";
-import { formUrlQuery } from "@/lib/utils";
+import { formUrlQuery } from "@/lib/utils/utils";
 
 
 type PagiantionProps = {

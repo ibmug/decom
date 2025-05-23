@@ -4,7 +4,7 @@
 import { deleteOrder, getAllFilteredOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDateTime,formatId } from "@/lib/utils";
+import { formatCurrency, formatDateTime,formatId } from "@/lib/utils/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/shared/pagination";
@@ -70,7 +70,7 @@ const AdminOrdersPage = async (props: {
         order,
     });
 
-    console.log(orders.data[0])
+    //console.log(orders.data[0])
     const viewOrders: ViewOrder[] = orders.data.map((order: RawOrder) => {
         // parse+validate shippingAddress, throws if invalid
         const sa = shippingAddressSchema.parse(order.shippingAddress)

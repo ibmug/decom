@@ -1,13 +1,13 @@
 'use client'
 
 import { Order } from "@/types";
-import { formatDateTime, formatId } from "@/lib/utils";
+import { formatDateTime, formatId } from "@/lib/utils/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
 import Image from "next/image";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/utils";
 import { CartItem } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 //import { Cart } from "@prisma/client";

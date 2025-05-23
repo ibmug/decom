@@ -1,6 +1,6 @@
 'use server';
 import { prisma } from "@/db/prisma";
-import { convertToPlainObject, formatError } from "../utils";
+import { convertToPlainObject, formatError } from "../utils/utils";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
 import { Product } from "@/types";
 import { revalidatePath } from "next/cache";
@@ -93,6 +93,7 @@ export async function getSingleProductById(productId: string) {
 
 
 
+
 //get all products
 
 export async function getAllProducts(
@@ -100,6 +101,9 @@ export async function getAllProducts(
 ):Promise<GetAllProductsResult> {
 
     const {query, category, price, rating, sort, page} = params;
+  console.log(sort)
+
+    
 
     //query Filter
     const queryFilter: Prisma.ProductWhereInput = query && query !== 'all' ? {
@@ -120,7 +124,7 @@ export async function getAllProducts(
         gte:Number(price.split('-')[0]),
         lte:Number(price.split('-')[1])
     }} : {};
-    console.log(sort)
+    //console.log(sort)
 
 
     const data = await prisma.product.findMany({
@@ -272,3 +276,110 @@ export async function getFeaturedProducts(){
 }
 
 
+///Lets start talking cards...
+export interface EnrichedProduct {
+  id:            string;
+  cardName:      string;
+  stock:         number;
+  price:         string;
+  setCode:       string;
+  collectorNum:  string;
+  oracleText:    string;
+  colorIdentity: string[];
+  imageUrl:      string;
+}
+
+export interface GetAllProductsResult {
+  data:       EnrichedProduct[];
+  totalPages: number;
+}
+
+interface FilterParams {
+  name:     string;
+  color:    string;
+  manaCost: string;
+  price:    string;
+  set:      string;
+  rarity:   string;
+  page:     number;
+}
+
+export async function getAllProductsEnriched({
+  name, color, manaCost, price, set, rarity, page,
+}: FilterParams): Promise<GetAllProductsResult> {
+  // build your individual filters
+  const nameFilter     = name     !== "all" ? { contains: name, mode: "insensitive" } : undefined;
+  const colorFilter    = color    !== "all" ? { has: color } : undefined;
+  // …similar for manaCost, set, rarity…
+  console.log(name,color,manaCost,price,set,rarity)
+
+  const priceFilter    = price !== "all"
+    ? {
+        gte: Number(price.split("-")[0]),
+        lte: Number(price.split("-")[1]),
+      }
+    : undefined;
+
+  const PAGE_SIZE = 20;
+  const skip      = (page - 1) * PAGE_SIZE;
+  const take      = PAGE_SIZE;
+
+  // fetch products joined with metadata
+  const raws = await prisma.cardProduct.findMany({
+    include: { metadata: true },
+    where: {
+      // price & stock lives on cardProduct
+      price: priceFilter,
+      // metadata‐based filters:
+      metadata: {
+        ...(nameFilter     && { name: nameFilter }),
+        ...(colorFilter    && { colorIdentity: colorFilter }),
+        // …
+      },
+    },
+    orderBy: { metadata: { name: "desc" } },
+    skip,
+    take,
+  });
+
+  // map to your EnrichedProduct
+  const data: EnrichedProduct[] = raws.map((p) => ({
+    id:            p.id,
+    cardName:      p.metadata.name,
+    stock:         p.stock,
+    price:         p.price.toString(),
+    setCode:       p.metadata.setCode,
+    collectorNum:  p.metadata.collectorNum,
+    oracleText:    p.metadata.oracleText ?? "",
+    colorIdentity: p.metadata.colorIdentity,
+    imageUrl:      p.metadata.imageUrl,
+  }));
+
+  // total count for pagination
+  const total = await prisma.cardProduct.count({
+    where: {
+      price: priceFilter,
+      metadata: {
+        ...(nameFilter     && { name: nameFilter }),
+        ...(colorFilter    && { colorIdentity: colorFilter }),
+        // …
+      },
+    },
+  });
+
+  return {
+    data,
+    totalPages: Math.ceil(total / PAGE_SIZE),
+  };
+}
+
+
+export async function getSingleCardBySlug(slug: string) {
+  return await prisma.cardProduct.findFirst({
+    where: { slug },
+    include: {
+      metadata: true,  // brings in id, scryfallId, name, setCode, collectorNum,
+                       // oracleText, colorIdentity, imageUrl, *rarity*, *type*, etc.
+    },
+  });
+}

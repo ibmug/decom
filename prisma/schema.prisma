@@ -143,3 +143,34 @@ model OrderItem {
 
   @@id([orderId, productId], map: "orderitems_orderId_productId_pk")
 }
+
+///Lets start thinking cards.
+model CardMetadata {
+  id             String        @id @default(uuid())
+  scryfallId     String        @unique // e.g. "c1e8b3a3-..." 
+  name           String
+  setCode        String
+  setName        String
+  manaCost       String
+  collectorNum   String
+  oracleText     String?
+  colorIdentity  String[]
+  imageUrl       String
+  rarity         String?
+  type           String?
+  cardKingdomUri String?
+  usdPrice       Float?
+  usdFoilPrice   Float?
+  // remote art URL
+  // …any other fields you care about (rarity, typeLine, etc.)…
+  products       CardProduct[] @relation("ProductToMetadata")
+}
+
+model CardProduct {
+  id         String       @id @default(uuid())
+  metadata   CardMetadata @relation("ProductToMetadata", fields: [metadataId], references: [id])
+  metadataId String
+  stock      Int
+  slug       String? @unique
+  price      Decimal
+}

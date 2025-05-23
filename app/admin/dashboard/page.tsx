@@ -4,7 +4,7 @@ import { getOrderSummary } from '@/lib/actions/order.actions';
 import { BadgeDollarSign, BarcodeIcon, CreditCardIcon, Users } from 'lucide-react';
 import {Metadata} from 'next';
 //import { getServerSession } from 'next-auth';
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/utils';
+import { formatCurrency, formatDateTime, formatNumber } from '@/lib/utils/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import Charts from './charts';

@@ -2,19 +2,32 @@
 import { PrismaClient } from '@prisma/client';
 
 declare global {
-  // Tell TS there *might* be a __db_prisma__ on globalThis
+  // Cache separate Prisma clients across HMR
   // @ts-ignore
-  var __db_prisma__: PrismaClient | undefined;
+  var __DB__: {
+    raw?: PrismaClient;
+    extended?: PrismaClient;
+  };
 }
 
-// Use the cast to any when accessing globalThis
-const _prisma =
-  (globalThis as any).__db_prisma__ ??
-  new PrismaClient().$extends({
+// 1) Raw (legacy) Prisma client
+const rawPrisma: PrismaClient =
+  globalThis.__DB__?.raw ??
+  new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.__DB__ = globalThis.__DB__ || {};
+  globalThis.__DB__.raw = rawPrisma;
+}
+
+// 2) Extended Prisma client with compute hooks
+const extendedPrisma: PrismaClient =
+  globalThis.__DB__?.extended ??
+  rawPrisma.$extends({
     result: {
       product: {
-        price:   { compute(p) { return p.price.toString(); } },
-        rating:  { compute(p) { return p.rating.toString(); } },
+        price:   { compute(p) { return p.price != null ? p.price.toString() : null; } },
+        rating:  { compute(p) { return p.rating != null ? p.rating.toString() : null; } },
       },
       cart: {
         itemsPrice:    { needs: { itemsPrice: true },    compute(c) { return c.itemsPrice.toString(); } },
@@ -34,9 +47,9 @@ const _prisma =
     },
   });
 
-// In development, attach to globalThis so HMR reuses the same client
 if (process.env.NODE_ENV !== 'production') {
-  (globalThis as any).__db_prisma__ = _prisma;
+  globalThis.__DB__.extended = extendedPrisma;
 }
 
-export const prisma = _prisma;
+export const legacyPrisma = rawPrisma;
+export const prisma = extendedPrisma;

@@ -43,7 +43,7 @@ export default function CredentialsSignInForm({initCallbackUrl}:{initCallbackUrl
       await fetch('/api/cart/merge', {method:'POST'})
       router.push(res.url)
     } else{
-      console.log("Fallback should never happen...")
+      //console.log("Fallback should never happen...")
       router.push(initCallbackUrl)
     }
 

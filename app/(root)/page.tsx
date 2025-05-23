@@ -3,7 +3,7 @@ import ProductList from '@/components/shared/product/product-list';
 import {getFeaturedProducts, getLatestProducts} from '@/lib/actions/product.actions';
 import ProductCarousel from '@/components/shared/product/product-carousel';
 import { Product } from '@/types';
-import { serializeProduct } from '@/lib/utils';
+import { serializeProduct } from '@/lib/utils/utils';
 import ViewAllProductsButton from '@/components/view-all-products-button';
 export const dynamic = "force-dynamic";
 

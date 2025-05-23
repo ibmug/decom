@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatNumberWithDecimal } from "./utils";
+import { formatNumberWithDecimal } from "./utils/utils";
 import { PAYMENT_METHODS } from "./constants";
 
 //The following regex after (value)=> /^\d+(\.\d{2})?$ means 

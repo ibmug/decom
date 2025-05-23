@@ -13,7 +13,7 @@ import {
 } from '@/lib/validators';
 import { hashSync } from 'bcrypt-ts-edge';
 import { prisma } from '@/db/prisma';
-import { formatError } from '@/lib/utils';
+import { formatError } from '@/lib/utils/utils';
 import type { ShippingAddress } from '@/types';
 import { PAGE_SIZE } from '../constants';
 import { revalidatePath } from 'next/cache';

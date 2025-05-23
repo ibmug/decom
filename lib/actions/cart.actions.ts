@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/authOptions'
 import { prisma } from '@/db/prisma'
 import { CartItem } from '@/types'
 import { cartItemSchema } from '@/lib/validators'
-import { roundtwo, formatError } from '@/lib/utils'
+import { roundtwo, formatError } from '@/lib/utils/utils'
 
 // --- Helpers --------------------------------------------------
 

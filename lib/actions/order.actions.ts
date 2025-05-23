@@ -1,7 +1,7 @@
 'use server'
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"
-import { convertToPlainObject, formatError } from "../utils"
+import { convertToPlainObject, formatError } from "../utils/utils"
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
 import { getMyCart } from "./cart.actions";
@@ -15,8 +15,23 @@ import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
 import { Order } from "@prisma/client";
-import { isUuid } from "../utils";
+import { isUuid } from "../utils/utils";
+//import { StringValidation } from "zod";
 
+
+export interface Order{
+    userId: string;
+    itemsPrice: string;
+    shippingPrice: string;
+    taxPrice: string;
+    totalPrice: string;
+    orderItems:Array<{
+        productId:string;
+        price:string;
+        qty:number;
+    }>;
+    //otherfields
+}
 
 export interface GetOrderOpts {
     query?:    string
@@ -113,13 +128,26 @@ export async function createOrder(){
 
 //get order by id
 export async function getorderById(orderId: string){
-    const data = await prisma.order.findFirst({
+    const res = await prisma.order.findFirst({
         where:{id: orderId},
         include: {
             orderItems: true,
             user: { select: {name: true, email: true}},
         },
     })
+
+    const data = {
+        userId: res?.userId,
+        itemsPrice: res?.itemsPrice.toString(),
+        shippingPrice: res?.shippingPrice.toString(),
+        taxPrice: res?.taxPrice.toString(),
+        totalPrice: res?.totalPrice.toString(),
+        orderItems: res?.orderItems.map((oi=>({
+            productId: oi.productId,
+            price: oi.price.toString(),
+            qty: oi.qty
+        })))
+    }
 
     return convertToPlainObject(data);
 }
