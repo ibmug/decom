@@ -1,37 +1,22 @@
 'use server'
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"
-import { convertToPlainObject, formatError } from "../utils/utils"
+import { formatError } from "../utils/utils"
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
 import { getMyCart } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
-import { CartItem } from "@/types";
-import { PrismaClient,Prisma } from "@prisma/client";
+import { CartItem, ShippingAddress,Order } from "@/types";
 import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
-import { Order } from "@prisma/client";
 import { isUuid } from "../utils/utils";
-//import { StringValidation } from "zod";
+import { Prisma } from "@prisma/client";
 
 
-export interface Order{
-    userId: string;
-    itemsPrice: string;
-    shippingPrice: string;
-    taxPrice: string;
-    totalPrice: string;
-    orderItems:Array<{
-        productId:string;
-        price:string;
-        qty:number;
-    }>;
-    //otherfields
-}
 
 export interface GetOrderOpts {
     query?:    string
@@ -89,7 +74,7 @@ export async function createOrder(){
         });
         /// create transaction to create oredr and order items in db.
 
-        const insertedOrderId = await prisma.$transaction(async (tx:PrismaClient)=>{
+        const insertedOrderId = await prisma.$transaction(async (tx)=>{
             const insertedOrder = await tx.order.create({data: order})
             //create oorder items from the cart items
             for(const item of cart.items as CartItem[]){
@@ -127,31 +112,49 @@ export async function createOrder(){
 
 
 //get order by id
-export async function getorderById(orderId: string){
-    const res = await prisma.order.findFirst({
-        where:{id: orderId},
-        include: {
-            orderItems: true,
-            user: { select: {name: true, email: true}},
-        },
-    })
+export async function getOrderById(
+  orderId: string
+): Promise<Order | null> {
+  const res = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      user:       { select: { name: true, email: true } },
+      orderItems: true,
+    },
+  })
+  if (!res) return null
 
-    const data = {
-        userId: res?.userId,
-        itemsPrice: res?.itemsPrice.toString(),
-        shippingPrice: res?.shippingPrice.toString(),
-        taxPrice: res?.taxPrice.toString(),
-        totalPrice: res?.totalPrice.toString(),
-        orderItems: res?.orderItems.map((oi=>({
-            productId: oi.productId,
-            price: oi.price.toString(),
-            qty: oi.qty
-        })))
-    }
+  if(!res.user){ throw new Error ("Order has no associated user")}
 
-    return convertToPlainObject(data);
+  // Reconstruct the typed ShippingAddress
+  const shippingAddress = res.shippingAddress as ShippingAddress;
+
+  // Build and return exactly the shared `Order` shape
+  return {
+    id:             res.id,
+    user:           res.user,
+    userId: res.userId,                   // { name, email }
+    shippingAddress,
+    paymentMethod:  res.paymentMethod,
+    itemsPrice:     res.itemsPrice.toString(),
+    shippingPrice:  res.shippingPrice.toString(),
+    taxPrice:       res.taxPrice.toString(),
+    totalPrice:     res.totalPrice.toString(),
+    isPaid:         res.isPaid,
+    paidAt:         res.paidAt,
+    isDelivered:    res.isDelivered,
+    deliveredAt:    res.deliveredAt,
+    createdAt:      res.createdAt,
+    orderItems:     res.orderItems.map((oi) => ({
+      productId: oi.productId,
+      name:      oi.name!,
+      slug:      oi.slug!,
+      price:     oi.price.toString(),
+      qty:       oi.qty,
+      image:     oi.image!,
+    })) as CartItem[],
+  }
 }
-
 
 //create a new paypalorder
 export async function createPayPalOrder(orderId: string){
@@ -242,7 +245,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
     if(order.isPaid) throw new Error('Order is already paid');
 
     //Transaction to update order and account for product stock.
-    await prisma.$transaction(async (tx: PrismaClient)=>{
+    await prisma.$transaction(async (tx)=>{
         //iterate over the products and update the stock.
         for(const item of order.orderItems){
             await tx.product.update({

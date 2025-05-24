@@ -2,11 +2,11 @@ import Image from 'next/image';
 import type { FC } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import type { CardDetail } from '@/lib/actions/card.actions';
+import type { CardItem } from '@/types'
 
 
 interface CardDisplayProps {
-  product: CardDetail;
+  product: CardItem;
 }
 
 const CardDisplay: FC<CardDisplayProps> = ({ product }) => {

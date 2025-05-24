@@ -3,6 +3,7 @@ import { getMyOrders } from '@/lib/actions/order.actions'
 import { Table,TableHead,TableBody,TableRow,TableHeader,TableCell } from '@/components/ui/table'
 import { formatCurrency, formatDateTime, formatId } from '@/lib/utils/utils'
 import Pagination from '@/components/shared/pagination'
+import { PAGE_SIZE } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'My Orders',
@@ -26,10 +27,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const pageNumber = pageParam ? Number(pageParam) : 1
 
   // Fetch orders for the current user (paginated response)
-  const { data: orders, totalPages } = await getMyOrders({ page: pageNumber })
+  const { data: orderList, totalPages } = await getMyOrders({ page: pageNumber, limit:PAGE_SIZE })
+  
 
   // Render empty state if no orders
-  if (!orders || orders.length === 0) {
+  if (!orderList || orderList.length === 0) {
     return (
       <div className="p-4 text-center">
         <h1 className="text-2xl font-semibold mb-2">My Orders</h1>
@@ -56,11 +58,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {orders.map((order: OrderItem) => (
+                {orderList.map((order: OrderItem) => (
               <TableRow key={order.id}>
                 <TableCell>{formatId(order.id)}</TableCell>
                 <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
-                <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
+                <TableCell>{formatCurrency(order.totalPrice.toNumber())}</TableCell>
                 <TableCell>{order.isPaid ? `Paid at, ${order.paidAt}` : 'Not paid yet'}</TableCell>
                 <TableCell>{order.isDelivered ? `Delivered on, ${order.deliveredAt}` : 'Not delivered yet'}</TableCell>
                 <TableCell>
@@ -75,8 +77,9 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             </Table>
             {
                 totalPages > 1 && (
-                    <Pagination page={Number(page)|| 1} totalPages={orders?.totalPages}/>
+                    <Pagination page={Number(page)|| 1} totalPages={totalPages}/>
                 )}
+
         </div>
     </div>
   )

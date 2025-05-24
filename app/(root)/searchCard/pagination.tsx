@@ -1,4 +1,3 @@
-// components/shared/pagination.tsx
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 

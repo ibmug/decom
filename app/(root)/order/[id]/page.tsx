@@ -1,8 +1,7 @@
 import { Metadata } from "next";
-import { getorderById } from "@/lib/actions/order.actions";
+import { getOrderById } from "@/lib/actions/order.actions";
 import { notFound } from "next/navigation";
 import OrderDetailsCard from "./order-details-card";
-import { ShippingAddress } from "@/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
@@ -20,13 +19,15 @@ const OrderDetailsPage = async  (props: {
 
     const session = await getServerSession(authOptions)
 
-    const order = await getorderById(id);
+    const order = await getOrderById(id);
     if(!order) notFound();
 
-    return (<OrderDetailsCard order={{
-        ...order,
-        shippingAddress: order.shippingAddress as ShippingAddress
-    }} paypalClientId={process.env.PAYPAL_CLIENT_ID ||'sb' } isAdmin={session?.user?.role==='admin' || false}/>  );
-}
- 
+  return (
+    <OrderDetailsCard
+      order={order}
+      paypalClientId={process.env.PAYPAL_CLIENT_ID ?? "sb"}
+      isAdmin={session?.user?.role === "admin"}
+    />
+  );
+} 
 export default OrderDetailsPage;

@@ -18,9 +18,17 @@ const AdminProductUpdatePage = async (props: {
 }) => {
 
     const {id} = await props.params;
-    const productToUpdate = await getSingleProductById(id);
+    const productRaw = await getSingleProductById(id);
 
-    if (!productToUpdate) return notFound();
+
+
+    if (!productRaw) return notFound();
+
+    const productToUpdate= {
+        ...productRaw,
+        price: productRaw.price.toString(),
+        rating: productRaw.rating.toString(),
+    }
 
     return ( <div className="space-y-8 max-w-5xl mx-auto">
             <h1 className = "h2-bold"> Update Product</h1>

@@ -83,7 +83,7 @@ function serializeCart(record: Awaited<ReturnType<typeof prisma.cart.findUnique>
     taxPrice:       record.taxPrice.toString(),
     totalPrice:     record.totalPrice.toString(),
     createdAt:      record.createdAt.toISOString(),
-    updatedAt:      record.updatedAt?.toISOString() ?? null,
+    //updatedAt:      record.updatedAt?.toISOString() ?? null,
   }
 }
 

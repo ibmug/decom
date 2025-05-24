@@ -105,7 +105,7 @@ const AdminDashboardPage = async () => {
                                         {formatDateTime(order.createdAt).dateOnly}
                                     </TableCell>
                                     <TableCell>
-                                        {formatCurrency(order.totalPrice)}
+                                        {formatCurrency(order.totalPrice.toNumber())}
                                     </TableCell>
                                     <TableCell>
                                         <Link href={`/order/${order.id}`}>

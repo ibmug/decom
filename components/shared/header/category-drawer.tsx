@@ -21,7 +21,8 @@ const CategoryDrawer = async () => {
                     {categories.map((x:{category:string, _count:number})=> (
                         <Button variant='ghost' className='w-full justify-start' key={x.category} asChild>
                             <DrawerClose asChild>
-                                <Link href={`/search?category=${x.category}`}>
+                                {/* <Link href={`/search?category=${x.category}`}> */}
+                                <Link href={`/search?category=${encodeURIComponent(x.category)}`}>
                                 {x.category}({x._count})
                                 </Link>
                             </DrawerClose>

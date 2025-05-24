@@ -1,7 +1,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSingleCardBySlug } from "@/lib/actions/card.actions";  // <-- your card lookup
+import { getSingleCardBySlug } from "@/lib/actions/card.actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProductPrice from "@/components/shared/product/productPrice";    // if you want price styling
@@ -44,7 +44,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
             <li><strong>Type:</strong> {card.type}</li>
             <li><strong>Rarity:</strong> {card.rarity}</li>
             <li><strong>Mana Cost:</strong> {<ManaCost cost={card.manaCost} size={18}/>}</li>
-            <li><strong>Text:</strong> {<OracleText text={card.oracleText} iconSize={14}/>}</li>
+            <li><strong>Text:</strong> {<OracleText text={card.oracleText ?? "No Oracle Text."} iconSize={14}/>}</li>
             {/* …and so on */}
           </ul>
         </div>

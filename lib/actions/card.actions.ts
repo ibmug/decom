@@ -1,48 +1,83 @@
 // lib/actions/card.actions.ts
+
 import { prisma } from "@/db/prisma";
+import type { CardItem } from "@/types";
+import { Prisma } from "@prisma/client";
 
-export interface CardDetail {
-  id: string;
-  slug: string;
-  stock: number;
-  usdPrice: number | null;
-  usdFoilPrice: number | null;
-  name: string;
-  setCode: string;
-  setName: string;
-  manaCost: string;
-  collectorNum: string;
-  oracleText: string;
-  colorIdentity: string[];
-  imageUrl: string;
-  rarity: string;
-  type: string;
+export async function searchCards({
+  query = "",
+  page  = 1,
+  limit = 12,
+}: {
+  query?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  data:        CardItem[];
+  totalPages:  number;
+  currentPage: number;
+}> {
+  const terms = query.trim().split(/\s+/).filter(Boolean);
+
+  const where: Prisma.CardProductWhereInput = {};
+  if (terms.length) {
+    where.OR = terms.flatMap((term) => [
+      { metadata: { name:       { contains: term, mode: "insensitive" } } },
+      { metadata: { type:       { contains: term, mode: "insensitive" } } },
+      { metadata: { oracleText: { contains: term, mode: "insensitive" } } },
+    ]);
+  }
+
+  const total = await prisma.cardProduct.count({ where });
+  const rows  = await prisma.cardProduct.findMany({
+    where,
+    include: { metadata: true },
+    skip:  (page - 1) * limit,
+    take:  limit,
+  });
+
+  const data: CardItem[] = rows.map((row) => {
+    const m = row.metadata;
+    return {
+      id:             m.id,
+      name:           m.name,
+      setCode:        m.setCode,
+      setName:        m.setName,
+      manaCost:       m.manaCost      ?? "",
+      collectorNum:   m.collectorNum,
+      oracleText:     m.oracleText    ?? undefined,
+      colorIdentity:  m.colorIdentity,
+      imageUrl:       m.imageUrl,
+      rarity:         m.rarity        ?? undefined,
+      type:           m.type          ?? undefined,
+      cardKingdomUri: m.cardKingdomUri ?? undefined,
+      usdPrice:       m.usdPrice      ?? undefined,
+      usdFoilPrice:   m.usdFoilPrice  ?? undefined,
+
+      stock:          row.stock,
+      slug:           row.slug         ?? "",
+      price:          row.price.toString(),
+    };
+  });
+
+  const totalPages = Math.ceil(total / limit);
+  return { data, totalPages, currentPage: page };
 }
 
 
-function normalizeSlug(raw: string) {
-  return raw
-    .toLowerCase()
-    .replace(/’/g, "")              // strip fancy apostrophes
-    .replace(/['"]/g, "")           // strip straight quotes
-    .replace(/[\s\W-]+/g, "-")      // spaces & non-word → hyphens
-    .replace(/^-+|-+$/g, "");       // trim leading/trailing hyphens
-}
-
-
-/**
- * Fetch a single card product by its slug, including enriched metadata and prices.
- */
 export async function getSingleCardBySlug(
   rawSlug: string
-): Promise<CardDetail | null> {
-
-  // 1) decode any %20 etc.
+): Promise<CardItem | null> {
+  // 1) normalize incoming slug
   const decoded = decodeURIComponent(rawSlug);
+  const slug = decoded
+    .toLowerCase()
+    .replace(/’/g, "")
+    .replace(/['"]/g, "")
+    .replace(/[\s\W-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-  // 2) normalize exactly as seed did
-  const slug = normalizeSlug(decoded);
-  
+  // 2) fetch with metadata
   const row = await prisma.cardProduct.findFirst({
     where: { slug },
     include: { metadata: true },
@@ -52,74 +87,20 @@ export async function getSingleCardBySlug(
   const m = row.metadata;
   return {
     id:            row.id,
-    slug:          row.slug   ,
+    slug:          row.slug        ?? "",
+    price:         row.price.toString(),
     stock:         row.stock,
-    usdPrice:      m.usdPrice,
-    usdFoilPrice:  m.usdFoilPrice,
-    manaCost: m.manaCost ?? "",
+    usdPrice:      m.usdPrice      ?? undefined,
+    usdFoilPrice:  m.usdFoilPrice  ?? undefined,
     name:          m.name,
     setCode:       m.setCode,
-    setName: m.setName,
+    setName:       m.setName,
+    manaCost:      m.manaCost      ?? "",
     collectorNum:  m.collectorNum,
-    oracleText:    m.oracleText ?? "",
+    oracleText:    m.oracleText    ?? "",
     colorIdentity: m.colorIdentity,
     imageUrl:      m.imageUrl,
-    rarity:        m.rarity ?? "",
-    type:          m.type ?? "",
+    rarity:        m.rarity        ?? "",
+    type:          m.type          ?? "",
   };
-}
-
-/**
- * Fetch paginated card products, mapping each to CardDetail and returning total pages.
- */
-export async function getAllCardProducts(
-  page: number = 1,
-  limit: number = 20
-): Promise<{ data: CardDetail[]; totalPages: number }> {
-  const totalCount = await prisma.cardProduct.count();
-  const totalPages = Math.ceil(totalCount / limit);
-
-  const rows = await prisma.cardProduct.findMany({
-    include: { metadata: true },
-    skip:  (page - 1) * limit,
-    take:  limit,
-    orderBy: { slug: "desc" },
-  });
-
-  const data = rows.map(row => {
-    const m = row.metadata;
-    return {
-      id:            row.id,
-      slug:          row.slug,
-      stock:         row.stock,
-      usdPrice:      m.usdPrice,
-      usdFoilPrice:  m.usdFoilPrice,
-      manacost: m.manaCost,
-      name:          m.name,
-      setCode:       m.setCode,
-      setName: m.setName,
-      collectorNum:  m.collectorNum,
-      oracleText:    m.oracleText ?? "",
-      colorIdentity: m.colorIdentity,
-      imageUrl:      m.imageUrl,
-      rarity:        m.rarity,
-      type:          m.type,
-    };
-  });
-
-  return { data, totalPages };
-}
-
-
-// lib/actions/card.actions.ts
-export async function getAllSets() {
-  const groups = await prisma.cardMetadata.groupBy({
-    by: ["setName"],              // group on the metadata’s setName
-    _count: { setName: true },     // gives you how many cards per set
-  });
-
-  return groups.map(g => ({
-    setName: g.setName,
-    count:   g._count.setName,
-  }));
 }

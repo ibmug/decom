@@ -37,8 +37,17 @@ const orderSortOptions: SortOption[] = [
     { value: "totalPrice",  label: "Total Price"    },
     { value: "isPaid",      label: "Paid Status"    },
     { value: "isDelivered", label: "Delivery Status"},
-    { value: "name", label: "Comprador"},
   ]
+
+ // Create a literal union type of those values:
+const ALLOWED_ORDER_FIELDS = [
+  "createdAt",
+  "totalPrice",
+  "isPaid",
+  "isDelivered",
+] as const;
+type AllowedOrderField = typeof ALLOWED_ORDER_FIELDS[number];
+
 
 
 export const metadata : Metadata = {
@@ -55,20 +64,37 @@ const AdminOrdersPage = async (props: {
         order?: 'asc' | 'desc'
     }>
 }) => {
-    const {page:pageStr = '1', query='', orderby='createdAt',order='desc'} = await props.searchParams;
+    const {page:pageStr = '1', query='', orderby:rawOrderBy = 'createdAt',order: rawOrder ='desc'} = await props.searchParams;
     
     const page = Number(pageStr)
 
 
 
 
-    const orders = await getAllFilteredOrders({
-        page: Number(page),
-        limit: 10,
-        query,
-        orderBy: orderby,
-        order,
-    });
+    // const orders = await getAllFilteredOrders({
+    //     page: Number(page),
+    //     limit: 10,
+    //     query,
+    //     //orderBy: orderby,
+    //     orderby?: string;
+    //     order,
+    // });
+
+       // 2) Narrow and validate the `orderby` field:
+  const orderByField: AllowedOrderField = ALLOWED_ORDER_FIELDS.includes(
+     rawOrderBy as AllowedOrderField
+   )
+     ? (rawOrderBy as AllowedOrderField)
+     : 'createdAt';
+   // 3) Ensure `order` is 'asc' | 'desc'
+   const orderDir = rawOrder === 'asc' ? 'asc' : 'desc';
+   const orders = await getAllFilteredOrders({
+     page,
+     limit: 10,
+     query,
+     orderBy: orderByField,
+     order:   orderDir,
+   });
 
     //console.log(orders.data[0])
     const viewOrders: ViewOrder[] = orders.data.map((order: RawOrder) => {

@@ -49,3 +49,48 @@ export type Order = z.infer<typeof insertOrderSchema> & {
 
 export type PaymentResult = z.infer<typeof paymentResultSchema>
 
+export interface CardItem {
+  // from CardMetadata
+  id:             string;
+  name:           string;
+  setCode:        string;
+  setName:        string;
+  manaCost:       string;
+  collectorNum:   string;
+  oracleText?:    string;
+  colorIdentity:  string[];
+  imageUrl:       string;
+  rarity?:        string;
+  type?:          string;
+  cardKingdomUri?:string;
+  usdPrice?:      number;
+  usdFoilPrice?:  number;
+
+  // from CardProduct
+  stock:          number;
+  slug?:          string;
+  // if you want price as a string:
+  price:          string;
+}
+
+export interface CardItem {
+  id:             string;
+  name:           string;
+  setCode:        string;
+  setName:        string;
+  manaCost:       string;
+  collectorNum:   string;
+  oracleText?:    string;
+  colorIdentity:  string[];
+  imageUrl:       string;
+  rarity?:        string;
+  type?:          string;
+  cardKingdomUri?:string;
+  usdPrice?:      number;
+  usdFoilPrice?:  number;
+  stock:          number;
+  slug:           string;
+  price:          string;
+}
+
+

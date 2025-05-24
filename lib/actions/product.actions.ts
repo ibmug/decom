@@ -1,12 +1,12 @@
 'use server';
 import { prisma } from "@/db/prisma";
-import { convertToPlainObject, formatError } from "../utils/utils";
+import { convertToPlainObject, formatError, serializeProduct } from "../utils/utils";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
 import { Product } from "@/types";
 import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import {z} from 'zod'
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 
 /**
@@ -18,19 +18,24 @@ export type UIProduct = Omit<Product, "price" | "rating"> & {
   rating: string;
 };
 
-export interface GetAllProductsResult {
-  data:  UIProduct[];
+export interface GetAllProductsResult {   // for your regular products
+  data: UIProduct[];
   totalPages: number;
 }
 
-interface GetAllProductsParams {
-  query:    string;
-  page:     number;
-  category: string;
-  rating:   string;
-  price:    string;
-  sort:     string;
+export interface GetAllEnrichedProductsResult { // for card-enriched “products”
+  data: EnrichedProduct[];
+  totalPages: number;
 }
+
+// interface GetAllProductsParams {
+//   query:    string;
+//   page:     number;
+//   category: string;
+//   rating:   string;
+//   price:    string;
+//   sort:     string;
+// }
 
 //These are the options provided by the params in the admin user page.
 interface GetProductOpts {
@@ -45,35 +50,39 @@ interface GetProductOpts {
 export async function getLatestProducts() {
 
 
-    const data = await prisma.product.findMany({
-        take: LATEST_PRODUCTS_LIMIT,
-        orderBy: { createdAt: 'desc'}
-    });
+    const rows = await prisma.product.findMany({
+  where:      { /* … */ },
+  orderBy:    { createdAt: 'desc' },
+  take: LATEST_PRODUCTS_LIMIT,
+});
 
-    const newData = convertToPlainObject(data) as Product[];
-    return newData.map((product) => ({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        category: product.category,
-        brand: product.brand,
-        description: product.description,
-        stock: product.stock,
-        images: product.images,
-        isFeatured: product.isFeatured,
-        banner: product.banner ?? null,
-        price: product.price.toString(),
-        rating: product.rating.toString(),
-        numReviews: product.numReviews,
-        createdAt: typeof product.createdAt === "string"
-        ? product.createdAt
-        : product.createdAt.toISOString()
-      }));
-    }
-
-
-    //return convertToPlainObject(data);
-//}
+    const products: Product[] = rows.map((p) => ({
+  id:          p.id,
+  name:        p.name,
+  slug:        p.slug,
+  category:    p.category,
+  brand:       p.brand,
+  description: p.description,
+  stock:       p.stock,
+  images:      p.images,
+  isFeatured:  p.isFeatured,
+  banner:      p.banner,
+  
+  // Convert Decimal → string explicitly:
+  price:       p.price.toString(),
+  rating:      p.rating.toString(),
+  
+  numReviews:  p.numReviews,
+  
+  // Convert Date → string if your UI expects a string:
+  createdAt:   p.createdAt.toISOString(),
+}));
+  const totalPages = await prisma.product.count()/LATEST_PRODUCTS_LIMIT
+    return {
+      data: products,
+      totalPages: totalPages
+    };
+  }
 
 //get single product
 export async function getSingleProductBySlug(slug: string) {
@@ -96,64 +105,64 @@ export async function getSingleProductById(productId: string) {
 
 //get all products
 
-export async function getAllProducts(
-    params: GetAllProductsParams
-):Promise<GetAllProductsResult> {
+// export async function getAllProducts(
+//     params: GetAllProductsParams
+// ):Promise<GetAllProductsResult> {
 
-    const {query, category, price, rating, sort, page} = params;
-  console.log(sort)
+//     const {query, category, price, rating, sort, page} = params;
+//   console.log(sort)
 
     
 
-    //query Filter
-    const queryFilter: Prisma.ProductWhereInput = query && query !== 'all' ? {
-        name: {contains: query, mode: 'insensitive'},
+//     //query Filter
+//     const queryFilter: Prisma.ProductWhereInput = query && query !== 'all' ? {
+//         name: {contains: query, mode: 'insensitive'},
         
-    } as Prisma.ProductWhereInput : {};
+//     } as Prisma.ProductWhereInput : {};
 
-    //Category Filter
-    const categoryFilter = category && category !== 'all' ? {category} : {};
+//     //Category Filter
+//     const categoryFilter = category && category !== 'all' ? {category} : {};
 
-    //Rating Filter
-    const ratingFilter = rating && rating !=='all' ? {rating:{
-        gte:Number(rating)
-    }} : {}
+//     //Rating Filter
+//     const ratingFilter = rating && rating !=='all' ? {rating:{
+//         gte:Number(rating)
+//     }} : {}
 
-    //Price Filter
-    const priceFilter = price && price !== 'all' ? {price:{
-        gte:Number(price.split('-')[0]),
-        lte:Number(price.split('-')[1])
-    }} : {};
-    //console.log(sort)
+//     //Price Filter
+//     const priceFilter = price && price !== 'all' ? {price:{
+//         gte:Number(price.split('-')[0]),
+//         lte:Number(price.split('-')[1])
+//     }} : {};
+//     //console.log(sort)
 
 
-    const data = await prisma.product.findMany({
-        orderBy: {createdAt: 'desc'},
-        where: {
-            ...queryFilter,
-            ...categoryFilter,
-            ...priceFilter,
-            ...ratingFilter
-        },
-        skip:(page-1) * PAGE_SIZE,
-        take: PAGE_SIZE
-    });
+//     const data = await prisma.product.findMany({
+//         orderBy: {createdAt: 'desc'},
+//         where: {
+//             ...queryFilter,
+//             ...categoryFilter,
+//             ...priceFilter,
+//             ...ratingFilter
+//         },
+//         skip:(page-1) * PAGE_SIZE,
+//         take: PAGE_SIZE
+//     });
 
-    ///This is to change it so that the UI can accept it.
-    const rawRows : Product[] = data;
-    const theData: UIProduct[] = rawRows.map((p)=>({
-        ...p,
-        price:p.price.toString(),
-        rating:p.rating.toString()
-    }))
+//     ///This is to change it so that the UI can accept it.
+//     const rawRows : Product[] = data;
+//     const theData: UIProduct[] = rawRows.map((p)=>({
+//         ...p,
+//         price:p.price.toString(),
+//         rating:p.rating.toString()
+//     }))
 
-    const dataCount = await prisma.product.count();
+//     const dataCount = await prisma.product.count();
 
-    return {
-        data: theData,
-        totalPages: Math.ceil(dataCount / PAGE_SIZE),
-    };
-}
+//     return {
+//         data: theData,
+//         totalPages: Math.ceil(dataCount / PAGE_SIZE),
+//     };
+// }
 
 
 ///get all 'filtered' products:
@@ -289,10 +298,10 @@ export interface EnrichedProduct {
   imageUrl:      string;
 }
 
-export interface GetAllProductsResult {
-  data:       EnrichedProduct[];
-  totalPages: number;
-}
+// export interface GetAllProductsResult {
+//   data:       EnrichedProduct[];
+//   totalPages: number;
+// }
 
 interface FilterParams {
   name:     string;
@@ -306,10 +315,10 @@ interface FilterParams {
 
 export async function getAllProductsEnriched({
   name, color, manaCost, price, set, rarity, page,
-}: FilterParams): Promise<GetAllProductsResult> {
+}: FilterParams): Promise<GetAllEnrichedProductsResult> {
   // build your individual filters
-  const nameFilter     = name     !== "all" ? { contains: name, mode: "insensitive" } : undefined;
-  const colorFilter    = color    !== "all" ? { has: color } : undefined;
+  const nameFilter: Prisma.StringFilter | undefined     = name     !== "all" ? { contains: name, mode: "insensitive" } : undefined;
+  const colorFilter:  Prisma.StringNullableListFilter | undefined  = color    !== "all" ? { has: color } : undefined;
   // …similar for manaCost, set, rarity…
   console.log(name,color,manaCost,price,set,rarity)
 
@@ -332,9 +341,11 @@ export async function getAllProductsEnriched({
       price: priceFilter,
       // metadata‐based filters:
       metadata: {
-        ...(nameFilter     && { name: nameFilter }),
-        ...(colorFilter    && { colorIdentity: colorFilter }),
-        // …
+        is:{
+          ...(nameFilter     && { name: nameFilter }),
+          ...(colorFilter    && { colorIdentity: colorFilter }),
+          // …
+        }
       },
     },
     orderBy: { metadata: { name: "desc" } },
@@ -374,12 +385,79 @@ export async function getAllProductsEnriched({
 }
 
 
-export async function getSingleCardBySlug(slug: string) {
-  return await prisma.cardProduct.findFirst({
-    where: { slug },
-    include: {
-      metadata: true,  // brings in id, scryfallId, name, setCode, collectorNum,
-                       // oracleText, colorIdentity, imageUrl, *rarity*, *type*, etc.
-    },
+export async function getAllProducts({
+  query    = "",
+  category = "all",
+  price    = "all",
+  rating   = "all",
+  sort     = "newest",
+  page     = 1,
+  limit    = PAGE_SIZE,
+}: {
+  query?: string;
+  category?: string;
+  price?: string;
+  rating?: string;
+  sort?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  data: UIProduct[];
+  totalPages: number;
+  currentPage: number;
+}> {
+  // 1) Text search: split into terms
+  const terms = query
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t);
+
+  // 2) Build the where clause
+  const where: Prisma.ProductWhereInput = {};
+
+  if (terms.length) {
+    where.OR = terms.flatMap((term) => [
+      { name:        { contains: term, mode: "insensitive" } },
+      { description: { contains: term, mode: "insensitive" } },
+      { category:    { contains: term, mode: "insensitive" } },
+      { brand:       { contains: term, mode: "insensitive" } },
+    ]);
+  }
+
+  if (category !== "all") {
+    where.category = category;
+  }
+
+  if (price !== "all") {
+    const [min, max] = price.split("-").map(Number);
+    where.price = { gte: min, lte: max };
+  }
+
+  if (rating !== "all") {
+    where.rating = { gte: Number(rating) };
+  }
+
+  // 3) Determine sort order
+  const orderBy =
+    sort === "newest"
+      ? { createdAt: "desc" as const }
+      : { createdAt: "asc" as const };
+
+  // 4) Count + fetch
+  const totalCount = await prisma.product.count({ where });
+  const rows = await prisma.product.findMany({
+    where,
+    orderBy,
+    skip:  (page - 1) * limit,
+    take:  limit,
   });
+
+  // 5) Serialize to UI shape
+  const data = rows.map(serializeProduct);
+
+  return {
+    data,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }

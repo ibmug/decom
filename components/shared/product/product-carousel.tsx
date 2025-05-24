@@ -1,16 +1,16 @@
 'use client'
 
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Product } from "@/types";
+import { BasicProduct } from "@/lib/utils/utils";
 import Autoplay from 'embla-carousel-autoplay'
 import Link from "next/link";
 import Image from "next/image";
 
 
-const ProductCarousel = ({data}: {data:Product[]}) => {
+const ProductCarousel = ({data}: {data:BasicProduct[]}) => {
     return (<Carousel className='w-full mb-12' opts={{loop: true}} plugins={[Autoplay({delay:10000, stopOnInteraction:true, stopOnMouseEnter:true})]}>
         <CarouselContent>
-            {data.map((featuredProduct: Product)=>(
+            {data.map((featuredProduct: BasicProduct)=>(
                 <CarouselItem key={featuredProduct.id}>
                     <Link href={`/product/${featuredProduct.slug}`}>
                     <div className="relative mx-auto">

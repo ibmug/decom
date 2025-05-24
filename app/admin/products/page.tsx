@@ -48,6 +48,11 @@ const AdminProductsPage = async (props: {
         order,
     })
 
+    const viewProducts : Product[] = products.data.map((p)=>({
+        ...p,
+        price: p.price.toString(),
+        rating: p.rating.toString(),
+    }));
 
     return (<div className="space--y-2">
         
@@ -73,7 +78,7 @@ const AdminProductsPage = async (props: {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {products.data.map((product: Product)=>(
+                {viewProducts.map((product: Product)=>(
                     <TableRow key={product.id}>
                         <TableCell>{formatId(product.id)}</TableCell>
                         <TableCell>{product.name}</TableCell>
