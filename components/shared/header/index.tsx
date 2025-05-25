@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { APP_NAME } from '@/lib/constants';
 import Menu from "./menu"
 import CategoryDrawer from './category-drawer';
-import ProductSearch from './product-search';
+//import ProductSearch from './product-search';
+import CardSearchInput from '../cardComponents/CardSearchInput';
+
 
 const Header = () => {
 
@@ -19,7 +21,7 @@ const Header = () => {
             </div>
             
             <div className="">
-                    <ProductSearch/>
+                   <CardSearchInput/>
                 </div>
             <Menu></Menu>
         </div>
