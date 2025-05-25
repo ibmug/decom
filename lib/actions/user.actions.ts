@@ -16,8 +16,8 @@ import { prisma } from '@/db/prisma';
 import { formatError } from '@/lib/utils/utils';
 import type { ShippingAddress } from '@/types';
 import { PAGE_SIZE } from '../constants';
-import { revalidatePath } from 'next/cache';
 import { Prisma, User } from '@prisma/client';
+import { revalidatePage } from './server/product.server.actions';
 
 
 //These are the options provided by the params in the admin user page.
@@ -244,8 +244,8 @@ export async function getAllFilteredUsers({
 
 export async function deleteUser(id:string): Promise<{ success: boolean; message: string }> {
     try{
-        await prisma.users.delete({where:{id}})
-        revalidatePath('/admin/users')
+        await prisma.user.delete({where:{id}})
+        revalidatePage('/admin/users')
         return {success:true, message: 'User Deleted Succesfully.'}
     }catch (err){
         return {success:false, message: formatError(err)}
@@ -266,7 +266,7 @@ export async function updateUser(user: z.infer<typeof updateUserSchema>){
       }
     })
 
-    revalidatePath('/admin/users')
+    revalidatePage('/admin/users')
 
     return {success:true, message: 'User updated succesfully!'}
 

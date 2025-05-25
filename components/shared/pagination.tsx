@@ -5,13 +5,13 @@ import { Button } from "../ui/button";
 import { formUrlQuery } from "@/lib/utils/utils";
 
 
-type PagiantionProps = {
+type PaginationProps = {
     page: number| string;
     totalPages: number;
     urlParamName?: string;
 }
 
-const Pagination = ({page, totalPages, urlParamName}: PagiantionProps) => {
+const Pagination = ({page, totalPages, urlParamName}: PaginationProps) => {
 
     const router = useRouter();
     const searchParams = useSearchParams();

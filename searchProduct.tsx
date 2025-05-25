@@ -66,6 +66,7 @@ export default function SearchPage({
   currentPage,
   filters: { q, category, price, rating, sort, page },
 }: SearchProps) {
+  console.log(category,price,rating,sort,page)
   return (
     <div className="space-y-6">
       {/* --- Products Grid --- */}
@@ -78,20 +79,10 @@ export default function SearchPage({
       </div>
 
       {/* --- Pagination Controls --- */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        getPageLink={(pg) =>
-          `/search?${new URLSearchParams({
-            q,
-            category,
-            price,
-            rating,
-            sort,
-            page: String(pg),
-          }).toString()}`
-        }
-      />
+     <Pagination
+  page={currentPage}
+  totalPages={totalPages}
+/>
     </div>
   );
 }

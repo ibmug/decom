@@ -1,12 +1,13 @@
-'use server';
+'use client'
 import { prisma } from "@/db/prisma";
 import { convertToPlainObject, formatError, serializeProduct } from "../utils/utils";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
 import { Product } from "@/types";
-import { revalidatePath } from "next/cache";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import {z} from 'zod'
 import type { Prisma } from "@prisma/client";
+import { revalidatePage } from "./server/product.server.actions";
+
 
 
 /**
@@ -215,7 +216,7 @@ export async function deleteProduct(id:string){
 
         await prisma.product.delete({where:{id}});
 
-        revalidatePath('/admin/products');
+        await revalidatePage('/admin/products')
         
 
         return {success: true, message: 'Deleted succesfully'} 
@@ -233,7 +234,10 @@ export async function createProduct(data: z.infer<typeof insertProductSchema>){
         const product = insertProductSchema.parse(data);
         await prisma.product.create({data: product})
 
-        revalidatePath('/admin/products')
+        //revalidatePath('/admin/products')
+
+        await revalidatePage('/admin/products');
+
         return {success:true, message: 'Product created succesfully.'}
 
     }catch(err){
@@ -253,7 +257,9 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>){
             data: product
         });
 
-        revalidatePath('/admin/products')
+        //revalidatePath('/admin/products')
+        await revalidatePage('/admin/products');
+
         return {success:true, message: 'Product updated succesfully.'}
 
     }catch(err){

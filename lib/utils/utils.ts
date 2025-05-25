@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import qs from 'query-string'
-
-import type {Product as RawProduct} from '@prisma/client'
+import { Product } from "@prisma/client"
+import { UIProduct } from "../actions/product.actions"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -176,22 +176,25 @@ export type BasicProduct = {
   id:     string;
   slug:   string;
   name:   string;
-  banner: string;
+  banner: string | null;
 };
 //function to serrialize the product, this is for the carousel
 //serialize products, function to help turn the product into a json-safe object.
-export function serializeProduct(p: RawProduct): BasicProduct {
+export function serializeProduct(product: Product): UIProduct {
   return {
-    id:          p.id,
-    slug:        p.slug,
-    name:        p.name,
-    banner:      p.banner!,
-    // Convert any Dates/Decimals to primitives if your DTO includes them:
-    // createdAt: p.createdAt.toISOString(),
-    // price:     p.price.toNumber(),
-    // rating:    p.rating.toNumber(),
-
-    // If your front-end Product type only includes the above four fields,
-    // skip mapping the rest entirely and leave them off.
-  }
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    category: product.category,
+    brand: product.brand,
+    description: product.description,
+    stock: product.stock,
+    images: product.images,
+    isFeatured: product.isFeatured,
+    banner: product.banner,
+    price: product.price.toString(),
+    rating: product.rating.toString(),
+    numReviews: product.numReviews,
+    createdAt: product.createdAt.toISOString(),
+  };
 }

@@ -98,8 +98,8 @@ export async function getSingleCardBySlug(
     manaCost:      m.manaCost      ?? "",
     collectorNum:  m.collectorNum,
     oracleText:    m.oracleText    ?? "",
-    colorIdentity: m.colorIdentity,
-    imageUrl:      m.imageUrl,
+    colorIdentity: m.colorIdentity ?? "",
+    imageUrl:      m.imageUrl ?? "./cardPlaceholder.png",
     rarity:        m.rarity        ?? "",
     type:          m.type          ?? "",
   };
