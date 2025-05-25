@@ -146,38 +146,39 @@ model OrderItem {
 
 ///Lets start thinking cards.
 model StoreProduct {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   type        ProductType
-  cardId      String?  @unique
-  accessoryId String?  @unique
+  cardId      String?     @unique
+  accessoryId String?     @unique
 
-  card        CardProduct?    @relation(fields: [cardId], references: [id])
-  accessory   AccessoryProduct? @relation(fields: [accessoryId], references: [id])
+  card      CardProduct?      @relation(fields: [cardId], references: [id])
+  accessory AccessoryProduct? @relation(fields: [accessoryId], references: [id])
 
-  stock       Int
-  price       Decimal
-  slug        String? @unique
-  createdAt   DateTime @default(now())
+  stock     Int
+  price     Decimal
+  slug      String?  @unique
+  createdAt DateTime @default(now())
 
-  @@check(
-    // enforce only one of cardId or accessoryId is filled
-    "(cardId IS NOT NULL AND accessoryId IS NULL) OR (cardId IS NULL AND accessoryId IS NOT NULL)"
-  )
+  // @@check(
+  //   // enforce only one of cardId or accessoryId is filled
+  //   "(cardId IS NOT NULL AND accessoryId IS NULL) OR (cardId IS NULL AND accessoryId IS NOT NULL)"
+  // )
 }
 
 enum ProductType {
   CARD
   ACCESSORY
 }
-model AccessoryProduct {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  brand       String?
-  imageUrl    String?
-  category    String    // e.g., sleeves, dice, mats
-}
 
+model AccessoryProduct {
+  id           String        @id @default(uuid())
+  name         String
+  description  String?
+  brand        String?
+  imageUrl     String?
+  category     String // e.g., sleeves, dice, mats
+  StoreProduct StoreProduct?
+}
 
 model CardMetadata {
   id             String        @id @default(uuid())
@@ -199,10 +200,11 @@ model CardMetadata {
 }
 
 model CardProduct {
-  id         String       @id @default(uuid())
-  metadata   CardMetadata @relation("ProductToMetadata", fields: [metadataId], references: [id])
-  metadataId String
-  stock      Int
-  slug       String      @unique
-  price      Decimal
+  id           String        @id @default(uuid())
+  metadata     CardMetadata  @relation("ProductToMetadata", fields: [metadataId], references: [id])
+  metadataId   String
+  stock        Int
+  slug         String        @unique
+  price        Decimal
+  StoreProduct StoreProduct?
 }
