@@ -36,29 +36,25 @@ export async function searchCards({
     take:  limit,
   });
 
-  const data: CardItem[] = rows.map((row) => {
-    const m = row.metadata;
-    return {
-      id:             m.id,
-      name:           m.name,
-      setCode:        m.setCode,
-      setName:        m.setName,
-      manaCost:       m.manaCost      ?? "",
-      collectorNum:   m.collectorNum,
-      oracleText:     m.oracleText    ?? undefined,
-      colorIdentity:  m.colorIdentity,
-      imageUrl:       m.imageUrl,
-      rarity:         m.rarity        ?? undefined,
-      type:           m.type          ?? undefined,
-      cardKingdomUri: m.cardKingdomUri ?? undefined,
-      usdPrice:       m.usdPrice      ?? undefined,
-      usdFoilPrice:   m.usdFoilPrice  ?? undefined,
-
-      stock:          row.stock,
-      slug:           row.slug         ?? "",
-      price:          row.price.toString(),
-    };
-  });
+  const data: CardItem[] = rows.map((row) => ({
+    id: row.id,
+    name: row.metadata.name,
+    setCode: row.metadata.setCode,
+    setName: row.metadata.setName,
+    manaCost: row.metadata.manaCost ?? '',
+    collectorNum: row.metadata.collectorNum,
+    oracleText: row.metadata.oracleText ?? '',
+    colorIdentity: row.metadata.colorIdentity,
+    imageUrl: row.metadata.imageUrl,
+    rarity: row.metadata.rarity ?? '',
+    type: row.metadata.type ?? '',
+    cardKingdomUri: row.metadata.cardKingdomUri ?? undefined,
+    usdPrice: row.metadata.usdPrice ?? undefined,
+    usdFoilPrice: row.metadata.usdFoilPrice ?? undefined,
+    stock: row.stock,
+    slug: row.slug ?? '',
+    price: row.price.toString(),
+}));
 
   const totalPages = Math.ceil(total / limit);
   return { data, totalPages, currentPage: page };

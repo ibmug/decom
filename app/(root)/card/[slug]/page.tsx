@@ -43,7 +43,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
           <ul className="space-y-2">
             <li><strong>Type:</strong> {card.type}</li>
             <li><strong>Rarity:</strong> {card.rarity}</li>
-            <li><strong>Mana Cost:</strong> {<ManaCost cost={card.manaCost} size={18}/>}</li>
+            <li><strong>Mana Cost:</strong> {<ManaCost cost={card.manaCost ?? "No Mana Cost"} size={18}/>}</li>
             <li><strong>Text:</strong> {<OracleText text={card.oracleText ?? "No Oracle Text."} iconSize={14}/>}</li>
             {/* …and so on */}
           </ul>

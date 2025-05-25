@@ -145,13 +145,47 @@ model OrderItem {
 }
 
 ///Lets start thinking cards.
+model StoreProduct {
+  id          String   @id @default(uuid())
+  type        ProductType
+  cardId      String?  @unique
+  accessoryId String?  @unique
+
+  card        CardProduct?    @relation(fields: [cardId], references: [id])
+  accessory   AccessoryProduct? @relation(fields: [accessoryId], references: [id])
+
+  stock       Int
+  price       Decimal
+  slug        String? @unique
+  createdAt   DateTime @default(now())
+
+  @@check(
+    // enforce only one of cardId or accessoryId is filled
+    "(cardId IS NOT NULL AND accessoryId IS NULL) OR (cardId IS NULL AND accessoryId IS NOT NULL)"
+  )
+}
+
+enum ProductType {
+  CARD
+  ACCESSORY
+}
+model AccessoryProduct {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  brand       String?
+  imageUrl    String?
+  category    String    // e.g., sleeves, dice, mats
+}
+
+
 model CardMetadata {
   id             String        @id @default(uuid())
-  scryfallId     String        @unique // e.g. "c1e8b3a3-..." 
+  scryfallId     String        @unique
   name           String
   setCode        String
   setName        String
-  manaCost       String
+  manaCost       String?
   collectorNum   String
   oracleText     String?
   colorIdentity  String[]
@@ -161,8 +195,6 @@ model CardMetadata {
   cardKingdomUri String?
   usdPrice       Float?
   usdFoilPrice   Float?
-  // remote art URL
-  // …any other fields you care about (rarity, typeLine, etc.)…
   products       CardProduct[] @relation("ProductToMetadata")
 }
 
@@ -171,6 +203,6 @@ model CardProduct {
   metadata   CardMetadata @relation("ProductToMetadata", fields: [metadataId], references: [id])
   metadataId String
   stock      Int
-  slug       String? @unique
+  slug       String      @unique
   price      Decimal
 }

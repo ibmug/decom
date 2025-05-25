@@ -1,4 +1,4 @@
-'use client'
+
 import { prisma } from "@/db/prisma";
 import { convertToPlainObject, formatError, serializeProduct } from "../utils/utils";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
