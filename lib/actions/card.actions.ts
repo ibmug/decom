@@ -19,14 +19,20 @@ export async function searchCards({
 }> {
   const terms = query.trim().split(/\s+/).filter(Boolean);
 
-  const where: Prisma.CardProductWhereInput = {};
-  if (terms.length) {
-    where.OR = terms.flatMap((term) => [
-      { metadata: { name:       { contains: term, mode: "insensitive" } } },
-      { metadata: { type:       { contains: term, mode: "insensitive" } } },
-      { metadata: { oracleText: { contains: term, mode: "insensitive" } } },
-    ]);
-  }
+ // ✅ If no search terms, skip WHERE clause and return all cards paginated
+  const where: Prisma.CardProductWhereInput | undefined = terms.length
+    ? {
+        metadata: {
+          OR: terms.map((term) => ({
+            OR: [
+              { name:       { contains: term, mode: "insensitive" } },
+              { type:       { contains: term, mode: "insensitive" } },
+              { oracleText: { contains: term, mode: "insensitive" } },
+            ],
+          })),
+        },
+      }
+    : undefined;
 
   const total = await prisma.cardProduct.count({ where });
   const rows  = await prisma.cardProduct.findMany({
@@ -35,26 +41,32 @@ export async function searchCards({
     skip:  (page - 1) * limit,
     take:  limit,
   });
+  const test = await prisma.cardProduct.findMany({
+  include: { metadata: true },
+  take: 1,
+});
+console.log("TEST")
+  console.log(test)
 
   const data: CardItem[] = rows.map((row) => ({
-    id: row.id,
-    name: row.metadata.name,
-    setCode: row.metadata.setCode,
-    setName: row.metadata.setName,
-    manaCost: row.metadata.manaCost ?? '',
-    collectorNum: row.metadata.collectorNum,
-    oracleText: row.metadata.oracleText ?? '',
-    colorIdentity: row.metadata.colorIdentity,
-    imageUrl: row.metadata.imageUrl,
-    rarity: row.metadata.rarity ?? '',
-    type: row.metadata.type ?? '',
+    id:             row.id,
+    name:           row.metadata.name,
+    setCode:        row.metadata.setCode,
+    setName:        row.metadata.setName,
+    manaCost:       row.metadata.manaCost ?? '',
+    collectorNum:   row.metadata.collectorNum,
+    oracleText:     row.metadata.oracleText ?? '',
+    colorIdentity:  row.metadata.colorIdentity,
+    imageUrl:       row.metadata.imageUrl,
+    rarity:         row.metadata.rarity ?? '',
+    type:           row.metadata.type ?? '',
     cardKingdomUri: row.metadata.cardKingdomUri ?? undefined,
-    usdPrice: row.metadata.usdPrice ?? undefined,
-    usdFoilPrice: row.metadata.usdFoilPrice ?? undefined,
-    stock: row.stock,
-    slug: row.slug ?? '',
-    price: row.price.toString(),
-}));
+    usdPrice:       row.metadata.usdPrice ?? undefined,
+    usdFoilPrice:   row.metadata.usdFoilPrice ?? undefined,
+    stock:          row.stock,
+    slug:           row.slug ?? '',
+    price:          row.price.toString(),
+  }));
 
   const totalPages = Math.ceil(total / limit);
   return { data, totalPages, currentPage: page };
