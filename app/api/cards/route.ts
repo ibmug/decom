@@ -7,6 +7,8 @@ export async function GET(req: Request) {
   const page = Number(url.searchParams.get('page') ?? '1');
   const limit= Number(url.searchParams.get('limit')?? '12');
 
+  console.time("searchCards")
   const result = await searchCards({ query: q, page, limit });
+  console.timeEnd("searchCards")
   return NextResponse.json(result);
 }
