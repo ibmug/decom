@@ -1,7 +1,6 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSingleCardBySlug } from "@/lib/actions/card.actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProductPrice from "@/components/shared/product/productPrice";    // if you want price styling
@@ -9,6 +8,7 @@ import ProductPrice from "@/components/shared/product/productPrice";    // if yo
 import ManaCost from "@/components/shared/manacost";
 import Image from "next/image";
 import OracleText from "@/components/shared/oracletext";
+import { getSingleCardBySlug} from "@/lib/actions/card.actions";
 
 
 export const dynamic = "force-dynamic";
@@ -17,8 +17,8 @@ export const dynamic = "force-dynamic";
 
 export default async function CardDetailsPage(props: {params: Promise<{slug: string}>}) {
   const { slug } = await props.params;
-  const card = await getSingleCardBySlug(slug);
-
+  const res = await getSingleCardBySlug(slug);
+  const card = res.card
   if (!card) notFound();
 
   const imageUrl = card.imageUrl ?? "/images/cardPlaceholder.png";
