@@ -1,7 +1,8 @@
+'use client'
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateStock } from "@/lib/actions/store-product.actions";
 
 interface AddStockProps {
   cardProductId: string;
@@ -17,10 +18,16 @@ export default function AddStock({ cardProductId, initialStock }: AddStockProps)
     if (!input || input <= 0) return;
     setLoading(true);
     try {
-      const result = await updateStock({
-        storeProductId: cardProductId,
-        newStock: stock + input,
+      const res = await fetch("/api/stock/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeProductId: cardProductId,
+          newStock: stock + input,
+        }),
       });
+
+      const result = await res.json();
       if (result.success) {
         setStock(stock + input);
         setInput(0);
