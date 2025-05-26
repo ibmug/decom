@@ -154,10 +154,12 @@ model StoreProduct {
   card      CardMetadata?     @relation("MetadataToStoreProduct", fields: [cardId], references: [id])
   accessory AccessoryProduct? @relation(fields: [accessoryId], references: [id])
 
-  stock     Int
-  price     Decimal
-  slug      String?  @unique
-  createdAt DateTime @default(now())
+  stock      Int
+  price      Decimal
+  slug       String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  customName String?
 
   // @@check(
   //   // enforce only one of cardId or accessoryId is filled
