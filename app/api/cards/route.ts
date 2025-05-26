@@ -42,11 +42,14 @@ export async function GET(req: Request) {
     console.timeEnd("searchCards");
 
     return NextResponse.json(result);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.timeEnd("searchCards");
 
-    console.error("searchCards error:", err?.message ?? err);
-
+   if (err instanceof Error) {
+    console.error("searchCards error:", err.message);
+  } else {
+    console.error("searchCards unknown error:", err);
+  }
     return NextResponse.json(
       { error: "Search failed or timed out." },
       { status: 500 }
