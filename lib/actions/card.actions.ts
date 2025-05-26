@@ -4,7 +4,7 @@ import { prisma } from "@/db/prisma";
 import type { CardItem } from "@/types";
 import { Prisma } from "@prisma/client";
 
-export async function searchCards({
+export async function searchCardsAction({
   query = "",
   page  = 1,
   limit = 12,
@@ -42,10 +42,16 @@ export async function searchCards({
     take: limit,
   });
 
-  const data: CardItem[] = rows.map((row) => {
-    const m = row.card!;
+  const data: CardItem[] = rows
+  .filter((r) => r.card) // only check for presence of card
+  .map((r) => {
+    const m = r.card!; // card is already CardMetadata
     return {
-      id:             row.id,
+      id:             r.id,
+      slug:           r.slug ?? '',
+      stock:          r.stock,
+      price:          r.price.toString(),
+
       name:           m.name,
       setCode:        m.setCode,
       setName:        m.setName,
@@ -59,9 +65,6 @@ export async function searchCards({
       cardKingdomUri: m.cardKingdomUri ?? undefined,
       usdPrice:       m.usdPrice ?? undefined,
       usdFoilPrice:   m.usdFoilPrice ?? undefined,
-      stock:          row.stock,
-      slug:           row.slug ?? '',
-      price:          row.price.toString(),
     };
   });
 

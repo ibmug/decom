@@ -3,13 +3,17 @@ import type { FC } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import type { CardItem } from '@/types'
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authOptions';
+import AddStock from '../add-stock-component';
 
 
 interface CardDisplayProps {
   product: CardItem;
+  session: Session | null;
 }
 
-const CardDisplay: FC<CardDisplayProps> = ({ product }) => {
+const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className='p-0 items-center'>
@@ -25,6 +29,9 @@ const CardDisplay: FC<CardDisplayProps> = ({ product }) => {
           <p><strong>Colors:</strong> {product.colorIdentity.length ? product.colorIdentity.join(', ') : 'Colorless'}</p>
           <p><strong>Price:</strong> ${product.usdPrice?.toString() || 'n/a'}</p>
           <p><strong>Stock:</strong> {product.stock}</p>
+          {session?.user?.role === 'admin' && (
+  <AddStock cardProductId={product.id} initialStock={product.stock} />
+)}
         </div>
       </CardContent>
     </Card>

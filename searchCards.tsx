@@ -63,7 +63,7 @@ export async function searchCards({
       usdFoilPrice:   m.usdFoilPrice ?? undefined,
     };
   });
-
+  
   return {
     data,
     totalPages: Math.ceil(total / limit),

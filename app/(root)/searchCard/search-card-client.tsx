@@ -13,7 +13,7 @@ interface SearchResult {
   currentPage: number;
 }
 
-export default function SearchCardClient() {
+export default function SearchCardClient({session}:{session: Session | null}) {
   const sp   = useSearchParams();
   const q    = sp.get('q')    ?? '';
   const page = Number(sp.get('page') ?? '1');
@@ -38,7 +38,7 @@ export default function SearchCardClient() {
           <p>No cards found for “{q}”.</p>
         ) : (
           results.data.map((card: CardItem) => (
-            <CardDisplay key={card.id} product={card} />
+            <CardDisplay key={card.id} product={card} session={session}/>
           ))
         )}
       </div>
