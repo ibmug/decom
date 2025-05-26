@@ -66,7 +66,7 @@ export interface CardItem {
   usdPrice?:      number;
   usdFoilPrice?:  number;
 
-  // From CardProduct
+  // From storeProduct
   stock:          number;
   slug:           string;
   price:          string; // stringified decimal for client use

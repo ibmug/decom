@@ -11,7 +11,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "seed:metadata": "ts-node ./db/seed-metadata.ts",
-    "seed:cards": "ts-node ./db/seed-card-products.ts"
+    "seed:cards": "ts-node ./db/seed-store-products.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

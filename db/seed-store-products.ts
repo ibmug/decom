@@ -1,7 +1,8 @@
-#!/usr/bin/env ts-node
+// db/seed-store-products.ts\
+
+
 import { PrismaClient } from "@prisma/client";
 
-// slugify helper (you can tweak to taste)
 function toSlug(str: string) {
   return str
     .toLowerCase()
@@ -13,31 +14,32 @@ function toSlug(str: string) {
 async function main() {
   const prisma = new PrismaClient();
 
-  // 1) Pull every metadata id + name + setCode
   const metas = await prisma.cardMetadata.findMany({
     select: { id: true, name: true, setCode: true },
   });
 
-  // 2) Upsert (or createMany) per metadata, slug includes setCode
-  for (const { id: metadataId, name, setCode } of metas) {
-    const slug = toSlug(`${name} ${setCode}`);  // e.g. "forest war"
-    await prisma.cardProduct.upsert({
+  for (const { id: cardId, name, setCode } of metas) {
+    const slug = toSlug(`${name} ${setCode}`);
+    await prisma.storeProduct.upsert({
       where: { slug },
       create: {
-        metadataId,
+        type: "CARD",
+        cardId,
         stock: 0,
         price: "0",
         slug,
       },
-      update: {},  // no-op if it already exists
+      update: {
+        cardId
+      },
     });
   }
 
-  console.log(`✅ Seeded ${metas.length} CardProduct rows`);
+  console.log(`✅ Seeded ${metas.length} StoreProduct entries from CardMetadata`);
   await prisma.$disconnect();
 }
 
 main().catch((e) => {
-  console.error(e);
+  console.error("❌ StoreProduct seeding failed:", e);
   process.exit(1);
 });

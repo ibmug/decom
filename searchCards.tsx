@@ -16,37 +16,38 @@ export async function searchCards({
   const metadataWhere: Prisma.CardMetadataWhereInput = {};
   if (terms.length) {
     metadataWhere.OR = terms.flatMap(term => [
-      { name: { contains: term, mode: 'insensitive' } },
-      { type: { contains: term, mode: 'insensitive' } },
+      { name:       { contains: term, mode: 'insensitive' } },
+      { type:       { contains: term, mode: 'insensitive' } },
       { oracleText: { contains: term, mode: 'insensitive' } },
     ]);
   }
 
-  const where: Prisma.CardProductWhereInput = {
-    metadata: {
-      is: metadataWhere,
-    },
-  };
+ const where: Prisma.StoreProductWhereInput = {
+  card: {
+    is: metadataWhere,
+  },
+};
 
-  const total = await prisma.cardProduct.count({ where });
 
-  const rows = await prisma.cardProduct.findMany({
+  const total = await prisma.storeProduct.count({ where });
+
+  const rows = await prisma.storeProduct.findMany({
     where,
-    include: { metadata: true },
+    include: { card: true},
     skip: (page - 1) * limit,
     take: limit,
   });
 
-  const data: CardItem[] = rows.map((r) => {
-    const m = r.metadata;
+  const data: CardItem[] = rows
+  .filter((r) => r.card) // only check for presence of card
+  .map((r) => {
+    const m = r.card!; // card is already CardMetadata
     return {
-      // Store-specific (CardProduct)
       id:             r.id,
       slug:           r.slug ?? '',
       stock:          r.stock,
       price:          r.price.toString(),
 
-      // Card info (CardMetadata)
       name:           m.name,
       setCode:        m.setCode,
       setName:        m.setName,

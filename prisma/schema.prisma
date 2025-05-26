@@ -151,7 +151,7 @@ model StoreProduct {
   cardId      String?     @unique
   accessoryId String?     @unique
 
-  card      CardProduct?      @relation(fields: [cardId], references: [id])
+  card      CardMetadata?     @relation("MetadataToStoreProduct", fields: [cardId], references: [id])
   accessory AccessoryProduct? @relation(fields: [accessoryId], references: [id])
 
   stock     Int
@@ -181,8 +181,8 @@ model AccessoryProduct {
 }
 
 model CardMetadata {
-  id             String        @id @default(uuid())
-  scryfallId     String        @unique
+  id             String         @id @default(uuid())
+  scryfallId     String         @unique
   name           String
   setCode        String
   setName        String
@@ -196,15 +196,5 @@ model CardMetadata {
   cardKingdomUri String?
   usdPrice       Float?
   usdFoilPrice   Float?
-  products       CardProduct[] @relation("ProductToMetadata")
-}
-
-model CardProduct {
-  id           String        @id @default(uuid())
-  metadata     CardMetadata  @relation("ProductToMetadata", fields: [metadataId], references: [id])
-  metadataId   String
-  stock        Int
-  slug         String        @unique
-  price        Decimal
-  StoreProduct StoreProduct?
+  products       StoreProduct[] @relation("MetadataToStoreProduct")
 }

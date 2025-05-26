@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 import { PrismaClient } from "@prisma/client";
 
-const placeholder = "/cardPlaceholder.png";
+const placeholder = "/images/cardPlaceholder.png";
 
 async function main() {
   const prisma = new PrismaClient();

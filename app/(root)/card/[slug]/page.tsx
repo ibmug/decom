@@ -10,6 +10,7 @@ import ManaCost from "@/components/shared/manacost";
 import Image from "next/image";
 import OracleText from "@/components/shared/oracletext";
 
+
 export const dynamic = "force-dynamic";
 
 
@@ -20,7 +21,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
 
   if (!card) notFound();
 
-  const imageUrl = card.imageUrl ?? "/cardPlaceholder.png";
+  const imageUrl = card.imageUrl ?? "/images/cardPlaceholder.png";
   console.log(card.oracleText)
 
   return (
