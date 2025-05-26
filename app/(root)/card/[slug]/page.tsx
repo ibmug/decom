@@ -15,10 +15,10 @@ export const dynamic = "force-dynamic";
 
 
 
+
 export default async function CardDetailsPage(props: {params: Promise<{slug: string}>}) {
   const { slug } = await props.params;
-  const res = await getSingleCardBySlug(slug);
-  const card = res.card
+  const card = await getSingleCardBySlug(slug);
   if (!card) notFound();
 
   const imageUrl = card.imageUrl ?? "/images/cardPlaceholder.png";
@@ -29,7 +29,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
         {/* Images */}
         <div className="col-span-2">
-          <Link href={`/card/${card.slug}`}>
+          <Link href={`/card/${slug}`}>
           
               <Image src={imageUrl}  alt='product image' width={1000} height={1000} className='min-h-[300px] object-cover object-center'/>
           </Link>
@@ -64,19 +64,9 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
                   ? <Badge variant="outline">In Stock</Badge>
                   : <Badge variant="destructive">Sold Out</Badge>}
               </div>
+
               {card.stock > 0 && (
                 <div className="text-center">
-                  {/* <AddToCart
-                    cart={cart}
-                    item={{
-                      productId: card.id,
-                      name: card.name,
-                      slug: card.slug,
-                      price: card.price.toString(),
-                      qty: 1,
-                      image: card.images[0],
-                    }}
-                  /> */}
                 </div>
               )}
             </CardContent>

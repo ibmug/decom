@@ -3,9 +3,8 @@ import type { FC } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import type { CardItem } from '@/types'
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
 import AddStock from '../add-stock-component';
+import { Session } from 'next-auth';
 
 
 interface CardDisplayProps {

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import CardDisplay from '@/components/shared/CardDisplay/card-display';
 import Pagination from './pagination';
 import type {CardItem} from '@/types'
+import { Session } from 'next-auth';
 
 
 interface SearchResult {
@@ -13,7 +14,11 @@ interface SearchResult {
   currentPage: number;
 }
 
-export default function SearchCardClient({session}:{session: Session | null}) {
+interface SearchCardClientProps{
+  session: Session | null
+}
+
+export default function SearchCardClient({session}:SearchCardClientProps) {
   const sp   = useSearchParams();
   const q    = sp.get('q')    ?? '';
   const page = Number(sp.get('page') ?? '1');

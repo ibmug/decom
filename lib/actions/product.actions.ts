@@ -196,6 +196,7 @@ export async function getAllProductsEnriched({
       type: "CARD",
       price: priceFilter,
       card: {
+        isNot:null,
         is: {
           ...(nameFilter && { name: nameFilter }),
           ...(colorFilter && { colorIdentity: colorFilter }),
@@ -207,19 +208,23 @@ export async function getAllProductsEnriched({
     take,
   });
 
+  function hasCard(p: typeof raws[number]): p is typeof p & { card: NonNullable<typeof p.card> } {
+    return p.card !== null;
+  }
+
   const data: EnrichedProduct[] = raws
-  .filter((p) => p.card !== null)
-  .map((p) => ({
-    id:            p.id,
-    cardName:      p.card!.name,
-    stock:         p.stock,
-    price:         p.price.toString(),
-    setCode:       p.card!.setCode,
-    collectorNum:  p.card!.collectorNum,
-    oracleText:    p.card!.oracleText ?? "",
-    colorIdentity: p.card!.colorIdentity,
-    imageUrl:      p.card!.imageUrl,
-  }));
+    .filter(hasCard)
+    .map((p) => ({
+      id:           p.id,
+      cardName:     p.card.name,
+      stock:        p.stock,
+      price:        p.price.toString(),
+      setCode:      p.card.setCode,
+      collectorNum: p.card.collectorNum,
+      oracleText:   p.card.oracleText ?? '',
+      colorIdentity: p.card.colorIdentity,
+      imageUrl:     p.card.imageUrl,
+    }));
 
   const total = await prisma.storeProduct.count({
     where: {
@@ -301,3 +306,4 @@ export async function getAllProducts({
     currentPage: page,
   };
 }
+
