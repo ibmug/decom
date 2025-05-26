@@ -4,27 +4,6 @@ export const SERVER_URL = process.env.PUBLIC_SERVER_URL || 'http://localhost:300
 export const LATEST_PRODUCTS_LIMIT = Number(process.env.LATEST_PRODUCTS_LIMIT) || 4;
 
 
-export const signInDefaultValues = {
-    email:'',
-    password:''
-};
-
-export const signUpDefaultValues = {
-    email:'',
-    password:'',
-    name:'',
-    confirmPassword:'',
-};
-
-export const shippingAddressDefaultValues = {
-    fullName:'Nombre de ubicacion',
-    streetAddress:'Nombre de tu Calle, Delegacion y Colonia',
-    city: 'Nombre de tu Ciudad',
-    postalCode: '01234',
-    country: 'Tu Pais'
-}
-
-
 export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', '): ['PayPal', 'Stripe','CashOnPickup'];
 export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD
 

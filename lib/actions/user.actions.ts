@@ -2,11 +2,10 @@
 
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
-import { signIn, signOut }   from 'next-auth/react';
 import { z } from 'zod';
 import {
   shippingAddressSchema,
-  signInFormSchema,
+  
   signUpFormSchema,
   paymentMethodSchema,
   updateUserSchema,
@@ -30,30 +29,7 @@ interface GetUserOpts {
   order?: "asc" | "desc"
 }
 
-// Sign in the user with credentials
-export async function signInWithCredentials(_prevState: unknown, formData: FormData) {
-  try {
-    const creds = signInFormSchema.parse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
 
-    await signIn('credentials', {
-      redirect: false,
-      email: creds.email,
-      password: creds.password,
-    });
-
-    return { success: true, message: 'Signed in successfully' };
-  } catch {
-    return { success: false, message: 'Invalid credentials' };
-  }
-}
-
-// Sign user out
-export async function signOutUser() {
-  await signOut({ redirect: false });
-}
 export async function signUpUser(_prevState:unknown, formData: FormData):Promise <{success:boolean; message:string}> {
   try {
     // 1) Grab raw values from the FormData
