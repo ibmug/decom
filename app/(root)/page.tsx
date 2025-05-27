@@ -10,12 +10,13 @@ const Homepage = async () => {
   const latestProducts = await getLatestProducts();
   const rawfeaturedProducts = await getFeaturedProducts();
   const featuredProducts: BasicProduct[] = rawfeaturedProducts.map(serializeProduct) 
-  return (<>
+  return (<div>
     {featuredProducts.length > 0 && <ProductCarousel data={featuredProducts}/>}
+    {latestProducts &&
     <ProductList data={latestProducts.data} title="New Arrivals"
-    limit={4}/>
+    limit={4}/>}
     <ViewAllProductsButton/>
-    </>
+    </div>
    );
 }
  

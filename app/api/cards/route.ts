@@ -51,8 +51,11 @@ export async function GET(req: Request) {
     console.error("searchCards unknown error:", err);
   }
     return NextResponse.json(
-      { error: "Search failed or timed out." },
-      { status: 500 }
+      {
+        maintenance: true,
+        message: 'Search is temporarily unavailable while we update the system.',
+      },
+      { status: 503 }
     );
   }
 }

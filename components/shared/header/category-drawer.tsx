@@ -16,9 +16,9 @@ const CategoryDrawer = async () => {
         </DrawerTrigger>
         <DrawerContent className='h-full max-w-sm'>
             <DrawerHeader>
-                <DrawerTitle>Select a category:</DrawerTitle>
+                <DrawerTitle>Filters:</DrawerTitle>
                 <div className="space-y-1 mt-2">
-                    {categories.map((x:{category:string, _count:number})=> (
+                    {categories ? categories.map((x:{category:string, _count:number})=> (
                         <Button variant='ghost' className='w-full justify-start' key={x.category} asChild>
                             <DrawerClose asChild>
                                 {/* <Link href={`/search?category=${x.category}`}> */}
@@ -27,7 +27,7 @@ const CategoryDrawer = async () => {
                                 </Link>
                             </DrawerClose>
                         </Button>
-                    ))}
+                    )) : (<>Filters for search, coming soon.</>)}
                 </div>
             </DrawerHeader>
         </DrawerContent>
