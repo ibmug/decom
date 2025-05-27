@@ -3,7 +3,6 @@ import { Cart } from "@/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useTransition } from "react";
-import {updateCartItemQuantity } from "@/lib/actions/cart.actions";
 import { Minus,Plus,ArrowRight,Loader } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,10 +12,40 @@ import { formatCurrency } from "@/lib/utils/utils";
 import { Card,CardContent } from "@/components/ui/card";
 
 
+
 const CartTable = ({cart}: {cart?: Cart})=>{
 
+  const {toast} = useToast();
+
+  const handleQuantityChange = async (itemId: string, quantity: number) => {
+  try {
+    const response = await fetch("/api/cart/update-quantity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ itemId, quantity }),
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      toast({
+        description: result.message,
+        variant: "destructive",
+      });
+    } else {
+      // Optionally, refresh the cart data or update the UI accordingly
+    }
+  } catch (error) {
+    toast({
+      description: "An unexpected error occurred.",
+      variant: "destructive",
+    });
+  }
+};
+
     const router = useRouter();
-    const {toast} = useToast();
     const [isPending, startTransition] = useTransition(); 
 return (
     <>
@@ -46,13 +75,13 @@ return (
                                 </TableCell>
                                 <TableCell className="flex-center gap-2">
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            const res = await updateCartItemQuantity(item.productId,-1)
-                                            if(!res.success){
-                                                toast({
-                                                    description:res.message,
-                                                    variant:'destructive'
-                                                })
-                                            }
+                                            await handleQuantityChange(item.productId,-1)
+                                            // if(!res.success){
+                                            //     toast({
+                                            //         description:res.message,
+                                            //         variant:'destructive'
+                                            //     })
+                                            // }
                                     }
                                     )}>
                                       {isPending ? (
@@ -63,13 +92,13 @@ return (
                                     </Button>
                                     <span className="px-2">{item.qty}</span>
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            const res = await updateCartItemQuantity(item.productId,1)
-                                            if(!res.success){
-                                                toast({
-                                                    description:res.message,
-                                                    variant:'destructive'
-                                                })
-                                            }
+                                            await handleQuantityChange(item.productId,1)
+                                            // if(!res.success){
+                                            //     toast({
+                                            //         description:res.message,
+                                            //         variant:'destructive'
+                                            //     })
+                                            // }
                                     }
                                     )}>
                                       {isPending ? (
