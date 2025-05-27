@@ -3,7 +3,7 @@ import { Cart } from "@/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useTransition } from "react";
-import { addItemToCart,removeItemFromCart } from "@/lib/actions/cart.actions";
+import {updateCartItemQuantity } from "@/lib/actions/cart.actions";
 import { Minus,Plus,ArrowRight,Loader } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,6 +36,7 @@ return (
                     </TableHeader>
                     <TableBody>
                         {cart.items.map((item)=>(
+
                             <TableRow key={item.slug}>
                                 <TableCell>
                                    <Link href={`/product/${item.slug}`} className="flex items-center">
@@ -45,7 +46,7 @@ return (
                                 </TableCell>
                                 <TableCell className="flex-center gap-2">
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            const res = await removeItemFromCart(item.productId)
+                                            const res = await updateCartItemQuantity(item.productId,-1)
                                             if(!res.success){
                                                 toast({
                                                     description:res.message,
@@ -62,7 +63,7 @@ return (
                                     </Button>
                                     <span className="px-2">{item.qty}</span>
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            const res = await addItemToCart(item)
+                                            const res = await updateCartItemQuantity(item.productId,1)
                                             if(!res.success){
                                                 toast({
                                                     description:res.message,

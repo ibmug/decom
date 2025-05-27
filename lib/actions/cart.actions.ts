@@ -116,15 +116,42 @@ export async function claimCart(sessionCartId: string, userId: string) {
 }
 
 export async function updateCartItemQuantity(itemId: string, quantity: number) {
+  try{
   await prisma.newCartItem.update({
     where: { id: itemId },
     data: { quantity },
   });
+   return {success:true, message: 'Card Item Quantity Updated'}
+  }catch(err){
+  return {success:false, message: formatError(err)}
 }
 
 
 /** Fetch the current cart, optionally claiming it on login */
-export async function getMyCart(userId: string | null, sessionCartId: string) {
+// export async function getMyCart(userId: string | null, sessionCartId: string) {
+//   const cart = await prisma.newCart.findFirst({
+//     where: userId ? { userId } : { sessionCartId },
+//     include: {
+//       items: {
+//         include: {
+//           storeProduct: {
+//             include: {
+//               card: true,
+//               accessory: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//   });
+
+//   return cart;
+// }
+
+
+export async function getMyCart() {
+  const { sessionCartId, userId } = await getCartIdentifiers();
+
   const cart = await prisma.newCart.findFirst({
     where: userId ? { userId } : { sessionCartId },
     include: {
@@ -143,7 +170,6 @@ export async function getMyCart(userId: string | null, sessionCartId: string) {
 
   return cart;
 }
-
 /** Decrement quantity or remove an item from cart */
 export async function removeCartItem(itemId: string) {
   await prisma.newCartItem.delete({
