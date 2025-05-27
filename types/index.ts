@@ -29,7 +29,57 @@ export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
 // Cart types
 export type Cart = z.infer<typeof insertCartSchema>;
-export type CartItem = z.infer<typeof cartItemSchema>;
+export type CartItem = {
+  id: string;
+  quantity: number;
+  addedAt: string | Date;
+
+  storeProduct: {
+    id: string;
+    slug: string;
+    price: string;
+    stock: number;
+    customName?: string | null;
+    type: 'CARD' | 'ACCESSORY';
+
+    card?: {
+      id: string;
+      name: string;
+      imageUrl: string;
+      setName: string;
+      manaCost?: string | null;
+    } | null;
+
+    accessory?: {
+      id: string;
+      name: string;
+      imageUrl?: string | null;
+    } | null;
+  };
+};
+
+export type NewCart = {
+  id: string;
+  sessionCartId: string;
+  userId?: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  items: CartItem[];
+};
+
+
+export type StoreProduct = {
+  id: string;
+  slug: string;
+  price: string;
+  stock: number;
+  customName?: string | null;
+  type: 'CARD' | 'ACCESSORY';
+  card?: { id: string; name: string; imageUrl: string; setName: string; manaCost?: string | null } | null;
+  accessory?: { id: string; name: string; imageUrl?: string | null } | null;
+};
+
+
 
 // Order item type
 export type OrderItem = z.infer<typeof insertOrderItemSchema>;
@@ -71,3 +121,4 @@ export interface CardItem {
   slug:           string;
   price:          string; // stringified decimal for client use
 }
+
