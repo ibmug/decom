@@ -12,8 +12,8 @@ import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCartUI } from "@/lib/actions/cart.actions";
 
 export const dynamic = "force-dynamic";
-const ProductDetailsPage = async ({params}: {params:{slug: string}}) => {
-    const {slug} = params;
+const ProductDetailsPage = async ({paramz}: {paramz:{slug: string}}) => {
+    const {slug} = paramz;
 
     const product = await getSingleProductBySlug(slug);
     if(!product) notFound();
