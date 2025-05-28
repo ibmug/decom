@@ -1,5 +1,5 @@
-import { getMyCart } from "@/lib/actions/cart.actions";
-import { CartItem, ShippingAddress } from "@/types";
+import {  getMyCartUI, UIOrderItem } from "@/lib/actions/cart.actions";
+import {  ShippingAddress } from "@/types";
 import {Metadata} from "next";
 import {redirect} from 'next/navigation'
 import { getUserById } from "@/lib/actions/user.actions";
@@ -20,7 +20,7 @@ export const metadata:Metadata = {
 
 const PlaceOrderPage = async () => {
 
-    const cart = await getMyCart();
+    const cart = await getMyCartUI();
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
@@ -95,7 +95,7 @@ const PlaceOrderPage = async () => {
                             </TableRow>
                         </TableHeader>
                             <TableBody>
-                                {cart.items.map((item:CartItem)=>(
+                                {cart.items.map((item:UIOrderItem)=>(
                                     <TableRow key={item.slug}>
                                         <TableCell>
                                             <Link href={`/product/${item.slug}`} className='flex items-center'>

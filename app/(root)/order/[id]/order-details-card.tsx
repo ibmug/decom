@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Link from "next/link";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/utils";
-import { CartItem } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 //import { Cart } from "@prisma/client";
 import {PayPalButtons,PayPalScriptProvider,usePayPalScriptReducer} from '@paypal/react-paypal-js';
 import { createPayPalOrder, approvePayPalOrder, updateOrderToDeliveredManual, updateOrderToPaidManual } from "@/lib/actions/order.actions";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { UIOrderItem } from "@/lib/actions/cart.actions";
 
     const  OrderDetailsCard = ({order, paypalClientId,isAdmin}: {order: Order,paypalClientId: string, isAdmin: boolean}) => {
         const {shippingAddress,orderItems,itemsPrice,shippingPrice,taxPrice,totalPrice,paymentMethod,isPaid,isDelivered,id,paidAt,deliveredAt} = order;
@@ -147,7 +147,7 @@ import { Button } from "@/components/ui/button";
                             </TableRow>
                         </TableHeader>
                             <TableBody>
-                                {orderItems.map((item: CartItem)=>(
+                                {orderItems.map((item: UIOrderItem)=>(
                                     <TableRow key={item.slug}>
                                         <TableCell>
                                             <Link href={`/product/${item.slug}`} className='flex items-center'>

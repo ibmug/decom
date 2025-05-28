@@ -8,7 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Table,TableBody, TableHead, TableHeader, TableRow,TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils/utils";
+import { formatCurrency, formatError } from "@/lib/utils/utils";
 import { Card,CardContent } from "@/components/ui/card";
 
 
@@ -37,9 +37,10 @@ const CartTable = ({cart}: {cart?: Cart})=>{
     } else {
       // Optionally, refresh the cart data or update the UI accordingly
     }
-  } catch (error) {
+  } catch (err) {
+    console.warn(err);
     toast({
-      description: "An unexpected error occurred.",
+      description: formatError(err),
       variant: "destructive",
     });
   }
@@ -76,12 +77,7 @@ return (
                                 <TableCell className="flex-center gap-2">
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
                                             await handleQuantityChange(item.productId,-1)
-                                            // if(!res.success){
-                                            //     toast({
-                                            //         description:res.message,
-                                            //         variant:'destructive'
-                                            //     })
-                                            // }
+                                      
                                     }
                                     )}>
                                       {isPending ? (
@@ -93,12 +89,7 @@ return (
                                     <span className="px-2">{item.qty}</span>
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
                                             await handleQuantityChange(item.productId,1)
-                                            // if(!res.success){
-                                            //     toast({
-                                            //         description:res.message,
-                                            //         variant:'destructive'
-                                            //     })
-                                            // }
+
                                     }
                                     )}>
                                       {isPending ? (

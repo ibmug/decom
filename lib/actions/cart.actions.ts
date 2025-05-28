@@ -5,9 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/authOptions'
 import { prisma } from '@/db/prisma'
-import { newCartItem } from '@/types'
-import { cartItemSchema } from '@/lib/validators'
 import { roundtwo, formatError } from '@/lib/utils/utils'
+import { calculateCartTotals } from '../utils/cartUtils'
+import { Cart } from '@prisma/client'
 
 // --- Helpers --------------------------------------------------
 
@@ -23,44 +23,6 @@ async function getCartIdentifiers() {
   const userId = session?.user?.id
   return { sessionCartId, userId }
 }
-
-/** Resolve or initialize a cart: user cart > guest cart > create new */
-async function resolveCart(sessionCartId: string, userId?: string) {
-  if (userId) {
-    const userCart = await prisma.newCart.findFirst({ where: { userId } })
-    if (userCart) return userCart
-  }
-
-  const guestCart = await prisma.newCart.findUnique({ where: { sessionCartId } })
-  if (guestCart) return guestCart
-
-  return prisma.newCart.create({
-    data: {
-      sessionCartId,
-      ...(userId && { userId }),
-    },
-  })
-}
-
-
-
-export function calculateCartTotals(cart: Awaited<ReturnType<typeof getMyCart>>) {
-  const itemsPrice = cart?.items.reduce((acc, item) => {
-    return acc + Number(item.storeProduct.price) * item.quantity;
-  }, 0) ?? 0;
-
-  const shippingPrice = itemsPrice > 100 ? 0 : 100;
-  const taxPrice = 0.15 * itemsPrice;
-  const totalPrice = itemsPrice + shippingPrice + taxPrice;
-
-  return {
-    itemsPrice: itemsPrice.toFixed(2),
-    shippingPrice: shippingPrice.toFixed(2),
-    taxPrice: taxPrice.toFixed(2),
-    totalPrice: totalPrice.toFixed(2),
-  };
-}
-
 // --- Public Actions -------------------------------------------
 
 /** Recompute all price fields */
@@ -127,26 +89,17 @@ export async function updateCartItemQuantity(itemId: string, quantity: number) {
 }
 
 
-/** Fetch the current cart, optionally claiming it on login */
-// export async function getMyCart(userId: string | null, sessionCartId: string) {
-//   const cart = await prisma.newCart.findFirst({
-//     where: userId ? { userId } : { sessionCartId },
-//     include: {
-//       items: {
-//         include: {
-//           storeProduct: {
-//             include: {
-//               card: true,
-//               accessory: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
 
-//   return cart;
-// }
+  const { itemsPrice } = await calcPrice(items); // reuse your util
+
+  return {
+    items,
+    itemsPrice
+  };
+}
+
+
+
 
 
 export async function getMyCart() {
@@ -175,4 +128,41 @@ export async function removeCartItem(itemId: string) {
   await prisma.newCartItem.delete({
     where: { id: itemId },
   });
+}
+
+export type UIOrderItem = {
+  name: string;
+  slug: string;
+  price: string;
+  image: string;
+  productId: string;
+  qty: number;
+};
+
+export async function getMyCartUI(): Promise<Cart | undefined> {
+  const raw = await getMyCart();
+  if (!raw) return undefined;
+
+  const totals = calculateCartTotals(raw);
+
+  const items = raw.items.map((item) => {
+    const product = item.storeProduct;
+    const base = product.card ?? product.accessory;
+    
+    return {
+      name: base?.name ?? 'Unknown',
+      slug: product.slug ?? 'unknown-slug', // Prevent null slug issues
+      price: product.price.toFixed(2),
+      image: base?.imageUrl ?? '/images/cardPlaceholder.png',
+      productId: product.id,
+      qty: item.quantity,
+    };
+  });
+
+  return {
+    ...totals,
+    items,
+    sessionCartId: raw.sessionCartId,
+    userId: raw.userId ?? undefined,
+  };
 }

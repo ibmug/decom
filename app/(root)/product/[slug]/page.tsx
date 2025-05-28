@@ -1,26 +1,25 @@
 ///We're using [slug] under root/product because it's our route.(That's how typescript handles it)
-//if we were using something like 'id' we would be using [id]
+
 import { getSingleProductBySlug } from "@/lib/actions/product.actions";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-//import {Button} from "@/components/ui/button";
+
 import {Card, CardContent} from "@/components/ui/card"
 import ProductPrice from "@/components/shared/product/productPrice"
 import ProductImages from "@/components/shared/product/product-images";
-//import AddToCart, {addToCart} from '@/components/shared/product/add-to-cart';
+
 import AddToCart from "@/components/shared/product/add-to-cart";
-import { getMyCart } from "@/lib/actions/cart.actions";
+import { getMyCartUI } from "@/lib/actions/cart.actions";
 
 export const dynamic = "force-dynamic";
-const ProductDetailsPage = async (props:{
-    params:Promise<{slug: string}>
-}) => {
-    const {slug} = await props.params;
+const ProductDetailsPage = async ({params}: {params:{slug: string}}) => {
+    const {slug} = params;
 
     const product = await getSingleProductBySlug(slug);
     if(!product) notFound();
 
-    const cart = await getMyCart();
+    const cart = await getMyCartUI();
+    if(!cart) notFound();
 
 
     return <>
