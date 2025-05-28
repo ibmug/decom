@@ -5,22 +5,19 @@ import OrderDetailsCard from "./order-details-card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
+export const dynamic = 'force-dynamic';
 
-export const dynamic = 'force-dynamic'
-export const metadata: Metadata= {
-    title: 'Order Details'
+export const metadata: Metadata = {
+  title: 'Order Details',
 };
 
+// ✅ FIX: no need for a custom interface unless reused
+const OrderDetailsPage = async ({ params }: { params: { id: string } }) => {
+  const { id } = params;
 
-const OrderDetailsPage = async  (props: {
-    params: Promise<{id: string}>
-}) => {
-    const {id} = await props.params
-
-    const session = await getServerSession(authOptions)
-
-    const order = await getOrderById(id);
-    if(!order) notFound();
+  const session = await getServerSession(authOptions);
+  const order = await getOrderById(id);
+  if (!order) notFound();
 
   return (
     <OrderDetailsCard
@@ -29,5 +26,6 @@ const OrderDetailsPage = async  (props: {
       isAdmin={session?.user?.role === "admin"}
     />
   );
-} 
+};
+
 export default OrderDetailsPage;
