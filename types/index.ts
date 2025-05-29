@@ -159,3 +159,8 @@ export interface UICart {
   /** Optional logged‐in user ID */
   userId?:       string
 }
+
+export type OrderShippingAddress = {
+  address: ShippingAddress;
+  addressName?: string;
+};

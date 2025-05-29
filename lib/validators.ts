@@ -130,27 +130,25 @@ export const paymentMethodSchema = z.object({
 //   shippingAddress: shippingAddressSchema
 // });
 export const insertOrderSchema = z.object({
-  userId: z.string().uuid(),
-  shippingMethod: z.enum(['DELIVERY', 'PICKUP']),
+  userId: z.string(),
+  shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
   shippingAddress: z.object({
-    address: z.object({
-      fullName: z.string(),
-      country: z.string(),
-      streetName: z.string(),
-      city: z.string(),
-      state: z.string(),
-      postalCode: z.string(),
-      phone: z.string().optional(),
-    }),
-    storeId: z.string().optional(),
-    storeName: z.string().optional(),
-    storeAddress: z.string().optional(),
+  address: z.object({
+    fullName: z.string(),
+    country: z.string(),
+    streetName: z.string(),
+    city: z.string(),
+    state: z.string(),
+    postalCode: z.string(),
+    phone: z.string().optional(),
   }),
+  addressName: z.string().optional(), // Optional for labeling pickup stores
+}),
   paymentMethod: z.string(),
-  shippingPrice: z.any(),
-  taxPrice: z.any(),
-  itemsPrice: z.any(),
-  totalPrice: z.any(),
+  shippingPrice: z.number(),
+  taxPrice: z.number(),
+  itemsPrice: z.number(),
+  totalPrice: z.number(),
 });
 
 export const insertOrderItemSchema = z.object({

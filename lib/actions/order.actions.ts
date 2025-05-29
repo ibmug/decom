@@ -8,11 +8,11 @@ import { getMyCartUI } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
-import { CartItem, ShippingAddress,Order, UICartItem } from "@/types";
+import { CartItem, ShippingAddress,Order, UICartItem, OrderShippingAddress } from "@/types";
 import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
-import { PAGE_SIZE } from "../constants";
+import { PAGE_SIZE, STORES } from "../constants";
 import { isUuid } from "../utils/utils";
 import {Prisma } from "@prisma/client";
 
@@ -59,13 +59,27 @@ export async function createOrder(){
             return {success:false, message:'Select a payment method', redirectTo: '/payment-method'}
         }
 
+        
+        
         const {shippingMethod} = await requireShippingAddress();
+        
+        if(shippingMethod === 'DELIVERY' && !user.address){throw new Error ("User has no address to deliver to!")}
+        const shippingAddress: OrderShippingAddress  = shippingMethod === 'PICKUP'
+            ? {
+                address: STORES['Shivan Shop'].address,
+                addressName: STORES['Shivan Shop'].storeName, 
+                }
+            : {
+                address: user.address,
+                };
 
+    
+        
         //Create order object
         const parsed = insertOrderSchema.parse({
             userId: user.id,
             shippingMethod,
-            shippingAddress: user.address,
+            shippingAddress,
             paymentMethod: user.paymentMethod,
             shippingPrice: cart.shippingPrice!,
             taxPrice: cart.taxPrice!,
@@ -80,7 +94,7 @@ export async function createOrder(){
             paymentMethod: parsed.paymentMethod,
             shippingPrice: parsed.shippingPrice,
             taxPrice: parsed.taxPrice,
-            itemsPrice: parsed.itemsPrice,     // ✅ now TypeScript sees this as definitely present
+            itemsPrice: parsed.itemsPrice,     
             totalPrice: parsed.totalPrice,
             };
         /// create transaction to create oredr and order items in db.
@@ -101,11 +115,7 @@ export async function createOrder(){
             await tx.cart.update({
                 where: {id: cart.id},
                 data:{
-                    items:[],
-                    totalPrice:0,
-                    taxPrice: 0,
-                    shippingPrice:0,
-                    itemsPrice:0,
+                    items: { deleteMany: {} },
                 }
             })
         return insertedOrder.id
@@ -139,6 +149,7 @@ export async function getOrderById(
 
   // Reconstruct the typed ShippingAddress
   const shippingAddress = res.shippingAddress as ShippingAddress;
+  
 
   // Build and return exactly the shared `Order` shape
   return {

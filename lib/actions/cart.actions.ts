@@ -143,5 +143,5 @@ export async function getMyCartUI(): Promise<UICart | undefined> {
     shippingPrice,
     taxPrice,
     totalPrice,
-  };
+  } satisfies UICart;
 }

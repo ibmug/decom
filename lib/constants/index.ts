@@ -29,3 +29,35 @@ export const USER_ROLES = process.env.USER_ROLES ? process.env.USER_ROLES.split(
 
 
 
+
+export const STORES = {
+   'Shivan Shop': {
+    storeId: 'shivanshop',
+    storeName: 'Shivan Shop Sucursal Centro',
+    address: {
+      fullName: 'Sucursal Centro',
+      streetName: 'Av. Siempre Viva 742',
+      city: 'Ciudad de México',
+      state: 'CDMX',
+      postalCode: '01000',
+      country: 'México',
+      phone: '555-123-4567',
+      notes: 'Favor de acudir con identificación. Atención de 9am a 6pm.',
+    }
+  },
+  'Goma Shop': {
+    storeId: 'gomaShop',
+    storeName: 'Shivan Shop Sucursal Sur',
+    storeAddress: 'Calle del Sol 456, Gustavo A. Madero, CDMX',
+      fullName: 'Sucursal Norte',
+      country: 'México',
+      postalCode: '07200',
+      streetName: 'Calle del Sol 456',
+      city: 'Ciudad de México',
+      state: 'CDMX',
+      phone: '555-987-6543',
+      notes: 'Acceso por puerta lateral. Atención de 10am a 7pm.',
+    
+  },
+  // Add more stores as needed
+};

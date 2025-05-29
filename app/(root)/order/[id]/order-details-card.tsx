@@ -120,8 +120,8 @@ import { Button } from "@/components/ui/button";
                     ) : (
                     <>
                     <h2 className="text-xl pb-4">Store Address Pickup</h2>
-                    <p>{shippingAddress.storeName}</p>
-                    <p>{shippingAddress.storeAddress}</p> 
+                    <p>{shippingAddress.addressName}</p>
+                    <p>{shippingAddress.address.streetName}</p> 
                     {isDelivered ? (
                             <Badge variant='secondary'>
                                 Delivered at: {formatDateTime(deliveredAt!).dateTime}
