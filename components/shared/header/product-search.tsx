@@ -5,7 +5,8 @@ import { getAllCats } from "@/lib/actions/product.actions";
 import { SearchIcon } from "lucide-react";
 
 const ProductSearch = async () => {
-    const categories = await getAllCats();
+    const cats = await getAllCats();
+    const categories = cats ?? []
 
     return (<>
     <form action="/search" method="GET">

@@ -151,10 +151,10 @@ const AdminOrdersPage = async (props: {
                                         {formatCurrency(order.totalPrice.toString())}
                                     </TableCell>
                                     <TableCell>
-                                        {order.isPaid ? ('Order has been paid') : ('Order has not been paid')}
+                                        {order.status! ==='PAID' || 'DELIVERED' || 'COMPLETED' ? ('Order has not been paid'): ('Order has been paid')}
                                     </TableCell>
                                     <TableCell>
-                                        {order.isDelivered ? ('Order has been delivered') : ('Order has not been delivered')}
+                                        {order.status! === 'DELIVERED' || 'COMPLETED' ? ('Order has not been delivered or is in the process of delivery'):('Order has been delivered')}
                                     </TableCell>
                                     
                                     <TableCell>

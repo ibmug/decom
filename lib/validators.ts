@@ -120,14 +120,37 @@ export const paymentMethodSchema = z.object({
 });
 
 //schema for inserting order
+// export const insertOrderSchema = z.object({
+//   userId: z.string().min(1,'User is required'),
+//   itemsPrice: currency,
+//   shippingPrice: currency,
+//   taxPrice: currency,
+//   totalPrice: currency,
+//   paymentMethod: z.string().refine((data)=>PAYMENT_METHODS.includes(data), {message: 'Invalid payment method'}), //should be one of the paymentmethods WE define.
+//   shippingAddress: shippingAddressSchema
+// });
 export const insertOrderSchema = z.object({
-  userId: z.string().min(1,'User is required'),
-  itemsPrice: currency,
-  shippingPrice: currency,
-  taxPrice: currency,
-  totalPrice: currency,
-  paymentMethod: z.string().refine((data)=>PAYMENT_METHODS.includes(data), {message: 'Invalid payment method'}), //should be one of the paymentmethods WE define.
-  shippingAddress: shippingAddressSchema
+  userId: z.string().uuid(),
+  shippingMethod: z.enum(['DELIVERY', 'PICKUP']),
+  shippingAddress: z.object({
+    address: z.object({
+      fullName: z.string(),
+      country: z.string(),
+      streetName: z.string(),
+      city: z.string(),
+      state: z.string(),
+      postalCode: z.string(),
+      phone: z.string().optional(),
+    }),
+    storeId: z.string().optional(),
+    storeName: z.string().optional(),
+    storeAddress: z.string().optional(),
+  }),
+  paymentMethod: z.string(),
+  shippingPrice: z.any(),
+  taxPrice: z.any(),
+  itemsPrice: z.any(),
+  totalPrice: z.any(),
 });
 
 export const insertOrderItemSchema = z.object({

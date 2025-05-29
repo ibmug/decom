@@ -4,7 +4,8 @@ import { cookies }          from 'next/headers';
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
 import { prisma }           from '@/db/prisma';
-import { calcPrice }        from '@/lib/actions/cart.actions';
+import { calcPrice } from '@/lib/utils/cartUtils';
+
 
 type FullItem = {
   productId: string;
@@ -16,6 +17,7 @@ type FullItem = {
 };
 
 function mergeCartItems(u: FullItem[], g: FullItem[]): FullItem[] {
+  //user,guest
   const map = new Map<string, FullItem>();
   for (const it of u) map.set(it.productId, { ...it });
   for (const it of g) {
@@ -46,10 +48,37 @@ export async function POST() {
 
   // 3) Fetch carts
   const userId = session.user.id;
-  const [guestCart, userCart] = await Promise.all([
-    prisma.cart.findUnique({ where: { sessionCartId: guestId } }),
-    prisma.cart.findFirst({   where: { userId                : userId } }),
-  ]);
+  const [guestCart, userCart] = await Promise.all([prisma.cart.findUnique({
+    where: { sessionCartId: guestId },
+    include: {
+      items: {
+        include: {
+          storeProduct: {
+            include: {
+              card:      true,
+              accessory: true,
+            }
+          }
+        }
+      }
+    }
+  }),
+  prisma.cart.findFirst({
+    where: { userId },
+    include: {
+      items: {
+     include: {
+          storeProduct: {
+            include: {
+              card:      true,
+              accessory: true,
+            }
+          }
+        }
+      }
+    }
+  }),
+])
 
   // Already merged or missing
   if (!guestCart || guestCart.userId) {
@@ -59,12 +88,22 @@ export async function POST() {
   }
 
   // 4) Merge
-  const userItems: FullItem[] = Array.isArray(userCart?.items)
-    ? (userCart.items as FullItem[])
-    : [];
-  const guestItems: FullItem[] = Array.isArray(guestCart.items)
-    ? (guestCart.items as FullItem[])
-    : [];
+  const userItems: FullItem[] = (userCart?.items ?? []).map(item => ({
+  productId: item.storeProductId,
+  qty:       item.quantity,
+  price:     item.storeProduct.price.toString(),
+  name:      item.storeProduct.card?.name ?? item.storeProduct.customName!,
+  image:     item.storeProduct.card?.imageUrl ?? '/images/fallback.png',
+  slug:      item.storeProduct.slug!,
+}));
+    const guestItems: FullItem[] = (guestCart?.items ?? []).map(item => ({
+  productId: item.storeProductId,
+  qty:       item.quantity,
+  price:     item.storeProduct.price.toString(),
+  name:      item.storeProduct.card?.name ?? item.storeProduct.customName!,
+  image:     item.storeProduct.card?.imageUrl ?? '/images/fallback.png',
+  slug:      item.storeProduct.slug!,
+}));
   const mergedItems = mergeCartItems(userItems, guestItems);
 
   // 5) Price + upsert via update/create
@@ -75,7 +114,16 @@ export async function POST() {
     // update the existing user‐cart
     await prisma.cart.update({
       where: { id: existing.id },
-      data:  { items: mergedItems, ...pricing },
+      data: {
+        items: {
+          deleteMany: {}, // remove all previous items
+          create: mergedItems.map(({ productId, qty }) => ({
+            storeProductId: productId,
+            quantity: qty,
+          })),
+        },
+        ...pricing,
+      },
     });
   } else {
     // create a new cart for the user—and give it the same sessionCartId
@@ -83,7 +131,12 @@ export async function POST() {
       data: {
         userId,
         sessionCartId: guestId,    // <— this was missing
-        items:       mergedItems,
+        items: {
+          create: mergedItems.map(({ productId, qty }) => ({
+            storeProductId: productId,
+            quantity: qty,
+          })),
+        },
         ...pricing,
       },
     });

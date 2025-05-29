@@ -1,6 +1,6 @@
 'use client'
 
-import { Order } from "@/types";
+import { Order, UIOrderItem } from "@/types";
 import { formatDateTime, formatId } from "@/lib/utils/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import {PayPalButtons,PayPalScriptProvider,usePayPalScriptReducer} from '@paypal
 import { createPayPalOrder, approvePayPalOrder, updateOrderToDeliveredManual, updateOrderToPaidManual } from "@/lib/actions/order.actions";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { UIOrderItem } from "@/lib/actions/cart.actions";
+
 
     const  OrderDetailsCard = ({order, paypalClientId,isAdmin}: {order: Order,paypalClientId: string, isAdmin: boolean}) => {
         const {shippingAddress,orderItems,itemsPrice,shippingPrice,taxPrice,totalPrice,paymentMethod,isPaid,isDelivered,id,paidAt,deliveredAt} = order;
@@ -97,7 +97,7 @@ import { UIOrderItem } from "@/lib/actions/cart.actions";
                 <Card className="my-2">
                     <CardContent className='p-4 gap-4'>
                         
-                        { shippingAddress.shippingMethod === 'DELIVERY' ? (
+                        { order.shippingMethod === 'DELIVERY' ? (
                             <>
                             <h2 className="text-xl pb-4">Shipping Address</h2>
                             <p>{shippingAddress.address.streetName}</p>

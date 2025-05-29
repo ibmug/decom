@@ -1,8 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { getToken }                 from 'next-auth/jwt'
 import { updateUserAddress }        from '@/lib/actions/user.actions'
-import { getMyCart }                from '@/lib/actions/cart.actions'
-import { prisma }                   from '@/db/prisma'
 import { shippingAddressSchema } from '@/lib/validators'
 
 
@@ -38,18 +36,6 @@ export async function POST(req: NextRequest) {
   if (!result.success) {
     return NextResponse.json({ error: result.message }, { status: 400 });
   }
-  //if the user chose in‐store pickup, force shippingPrice to 0
   
-  if (data.shippingMethod === 'PICKUP') {
-    // fetch their cart
-    const cart = await getMyCart()
-    if (cart) {
-      await prisma.cart.update({
-        where: { id: cart.id },
-        data: { shippingPrice: 0 },      // zero it out
-      })
-    }
-  }
-
   return NextResponse.json({ ok: true });
 }

@@ -14,14 +14,9 @@ import { getMyCartUI } from "@/lib/actions/cart.actions";
 export const dynamic = "force-dynamic";
 
 
-interface ProductDetailsPageProps {
-  params: {
-    slug: string;
-  };
-}
 
-const ProductDetailsPage = async ({params}: ProductDetailsPageProps) => {
-    const {slug} = params;
+const ProductDetailsPage = async ({params}: { params: Promise<{ slug: string }> }) => {
+    const {slug} = await params;
 
     const product = await getSingleProductBySlug(slug);
     if(!product) notFound();
@@ -68,12 +63,8 @@ const ProductDetailsPage = async ({params}: ProductDetailsPageProps) => {
                         </div>
                         {product.stock > 0 && (<div className="flex-center">
                             <AddToCart cart={cart} item={{
-                                productId: product.id,
-                                name: product.name,
-                                slug: product.slug,
-                                price: product.price.toString(),
-                                qty: 1,
-                                image: product.images![0],
+                                 id:           product.id,
+                                quantity:     1,
                             }}/>
                         </div>)}
                     </CardContent>

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { StringValidation, z } from "zod";
 import {
   insertProductSchema,
   insertCartSchema,
@@ -9,65 +9,22 @@ import {
   paymentResultSchema,
 } from "@/lib/validators";
 
-// Product type (infer + additional fields)
+// --- PRODUCT ---
 export type Product = z.infer<typeof insertProductSchema> & {
   id: string;
   rating: string;
   numReviews: number;
-  createdAt: string | Date;
-
-  isFeatured: boolean
-  banner: string | null
+  createdAt: Date;
+  isFeatured: boolean;
+  banner: string | null;
 };
 
-// Shipping method enum
+// --- SHIPPING ---
 export type ShippingMethod = 'DELIVERY' | 'PICKUP';
-
-// Shipping address shapes
 export type ShippingAddressInput = z.infer<typeof shippingAddressSchema>;
 export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
-// Cart types
-export type Cart = z.infer<typeof insertCartSchema>;
-export type CartItem = {
-  id: string;
-  quantity: number;
-  addedAt: string | Date;
-
-  storeProduct: {
-    id: string;
-    slug: string;
-    price: string;
-    stock: number;
-    customName?: string | null;
-    type: 'CARD' | 'ACCESSORY';
-
-    card?: {
-      id: string;
-      name: string;
-      imageUrl: string;
-      setName: string;
-      manaCost?: string | null;
-    } | null;
-
-    accessory?: {
-      id: string;
-      name: string;
-      imageUrl?: string | null;
-    } | null;
-  };
-};
-
-export type NewCart = {
-  id: string;
-  sessionCartId: string;
-  userId?: string;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  items: CartItem[];
-};
-
-
+// --- STORE PRODUCT ---
 export type StoreProduct = {
   id: string;
   slug: string;
@@ -75,16 +32,44 @@ export type StoreProduct = {
   stock: number;
   customName?: string | null;
   type: 'CARD' | 'ACCESSORY';
-  card?: { id: string; name: string; imageUrl: string; setName: string; manaCost?: string | null } | null;
-  accessory?: { id: string; name: string; imageUrl?: string | null } | null;
+  card?: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    setName: string;
+    manaCost?: string | null;
+  } | null;
+  accessory?: {
+    id: string;
+    name: string;
+    imageUrl?: string | null;
+  } | null;
+};
+
+// --- CART TYPES ---
+export type RawCart = z.infer<typeof insertCartSchema>; // Schema inferred from DB insertCartSchema
+
+export type CartItem = {
+  id: string;
+  quantity: number;
+  addedAt: Date;
+  storeProduct: StoreProduct;
+};
+
+export type NewCart = {
+  id: string;
+  sessionCartId: string;
+  userId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  items: CartItem[];
 };
 
 
 
-// Order item type
+// --- ORDER TYPES ---
 export type OrderItem = z.infer<typeof insertOrderItemSchema>;
 
-// Order type (infer + additional fields)
 export type Order = z.infer<typeof insertOrderSchema> & {
   id: string;
   createdAt: Date;
@@ -96,29 +81,81 @@ export type Order = z.infer<typeof insertOrderSchema> & {
   user: { name: string; email: string };
 };
 
+export type PaymentResult = z.infer<typeof paymentResultSchema>;
 
-export type PaymentResult = z.infer<typeof paymentResultSchema>
-
+// --- CARD ITEM FOR DISPLAY ---
 export interface CardItem {
-  // From CardMetadata
-  id:             string;   // ID from CardMetadata (useful if needed)
-  name:           string;
-  setCode:        string;
-  setName:        string;
-  manaCost?:      string;   // now optional, to match schema
-  collectorNum:   string;
-  oracleText?:    string;
-  colorIdentity:  string[];
-  imageUrl:       string;
-  rarity?:        string;
-  type?:          string;
+  id: string;
+  name: string;
+  setCode: string;
+  setName: string;
+  manaCost?: string;
+  collectorNum: string;
+  oracleText?: string;
+  colorIdentity: string[];
+  imageUrl: string;
+  rarity?: string;
+  type?: string;
   cardKingdomUri?: string;
-  usdPrice?:      number;
-  usdFoilPrice?:  number;
-
-  // From storeProduct
-  stock:          number;
-  slug:           string;
-  price:          string; // stringified decimal for client use
+  usdPrice?: number;
+  usdFoilPrice?: number;
+  stock: number;
+  slug: string;
+  price: string;
 }
 
+export type UIOrderItem = {
+  name: string;
+  slug: string;
+  price: string;
+  image: string;
+  productId: string;
+  qty: number;
+};
+
+export type AddToCartInput = {
+  productId: string;
+  name: string;
+  slug: string;
+  price: string;
+  qty: number;
+  image: string;
+};
+
+// types/cart.ts
+
+/** One row in the UI cart table */
+export interface UICartItem {
+  id: string;
+  name:      string
+  slug:      string
+  price:     string  // already formatted, e.g. "12.34"
+  image:     string
+  productId: string
+  qty:       number
+}
+
+/** The full cart payload your React components consume */
+export interface UICart {
+  id: string
+  /** Formatted subtotal of all items */
+  itemsPrice:    string
+
+  /** Formatted shipping charge */
+  shippingPrice: string
+
+  /** Formatted tax amount */
+  taxPrice:      string
+
+  /** Formatted grand total */
+  totalPrice:    string
+
+  /** Array of items (now strongly typed) */
+  items:         UICartItem[]
+
+  /** Guest or session‐based cart ID */
+  sessionCartId: string
+
+  /** Optional logged‐in user ID */
+  userId?:       string
+}

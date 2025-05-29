@@ -4,18 +4,17 @@ import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { formatError } from "../utils/utils"
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
-import { getMyCart } from "./cart.actions";
+import { getMyCartUI } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
-import { CartItem, ShippingAddress,Order } from "@/types";
+import { CartItem, ShippingAddress,Order, UICartItem } from "@/types";
 import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
 import { isUuid } from "../utils/utils";
-import { Prisma } from "@prisma/client";
-
+import {Prisma } from "@prisma/client";
 
 
 export interface GetOrderOpts {
@@ -41,7 +40,7 @@ export async function createOrder(){
         const session = await  getServerSession(authOptions);
         if(!session) throw new Error('User is not authenticated');
 
-        const cart = await getMyCart();
+        const cart = await getMyCartUI();
         const userId = session?.user?.id;
         if(!userId) throw new Error ('User not found');
         
@@ -54,30 +53,42 @@ export async function createOrder(){
             return {success: false, message:'Your cart is empty', redirectTo:'/'}
         }
          //check user has an address or has selected a store.
-       const {shippingMethod} = await requireShippingAddress();
+       
 
         if(!user.paymentMethod){
             return {success:false, message:'Select a payment method', redirectTo: '/payment-method'}
         }
 
+        const {shippingMethod} = await requireShippingAddress();
+
         //Create order object
-        const order = insertOrderSchema.parse({
+        const parsed = insertOrderSchema.parse({
             userId: user.id,
+            shippingMethod,
             shippingAddress: user.address,
             paymentMethod: user.paymentMethod,
-            shippingMethod: shippingMethod,
-            itemsPrice: cart.itemsPrice,
-            taxPrice: cart.taxPrice,
-            shippingPrice: cart.shippingPrice,
-            totalPrice: cart.totalPrice
+            shippingPrice: cart.shippingPrice!,
+            taxPrice: cart.taxPrice!,
+            itemsPrice: cart.itemsPrice!,
+            totalPrice: cart.totalPrice!,
+            });
 
-        });
+           const order: Prisma.OrderCreateInput = {
+            user:{connect: {id: parsed.userId}},
+            shippingMethod: parsed.shippingMethod,
+            shippingAddress: parsed.shippingAddress,
+            paymentMethod: parsed.paymentMethod,
+            shippingPrice: parsed.shippingPrice,
+            taxPrice: parsed.taxPrice,
+            itemsPrice: parsed.itemsPrice,     // ✅ now TypeScript sees this as definitely present
+            totalPrice: parsed.totalPrice,
+            };
         /// create transaction to create oredr and order items in db.
 
         const insertedOrderId = await prisma.$transaction(async (tx)=>{
             const insertedOrder = await tx.order.create({data: order})
             //create oorder items from the cart items
-            for(const item of cart.items as CartItem[]){
+            for(const item of cart.items as UICartItem[]){
                 await tx.orderItem.create(
                     {data:{
                         ...item,

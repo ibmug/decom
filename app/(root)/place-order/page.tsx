@@ -1,5 +1,5 @@
-import {  getMyCartUI, UIOrderItem } from "@/lib/actions/cart.actions";
-import {  ShippingAddress } from "@/types";
+
+import {  ShippingAddress, UIOrderItem } from "@/types";
 import {Metadata} from "next";
 import {redirect} from 'next/navigation'
 import { getUserById } from "@/lib/actions/user.actions";
@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/utils/utils";
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
 import PlaceOrderForm from "./place-order-form";
+import { getMyCartUI } from "@/lib/actions/cart.actions";
 
 export const metadata:Metadata = {
     title: 'Confirm your Order',

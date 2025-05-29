@@ -1,5 +1,5 @@
 'use client';
-import { Cart } from "@/types";
+
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useTransition } from "react";
@@ -10,10 +10,11 @@ import { Table,TableBody, TableHead, TableHeader, TableRow,TableCell } from "@/c
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatError } from "@/lib/utils/utils";
 import { Card,CardContent } from "@/components/ui/card";
+import { UICart } from "@/types";
 
 
 
-const CartTable = ({cart}: {cart?: Cart})=>{
+const CartTable = ({cart}: {cart?: UICart})=>{
 
   const {toast} = useToast();
 

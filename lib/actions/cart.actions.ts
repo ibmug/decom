@@ -5,9 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/authOptions'
 import { prisma } from '@/db/prisma'
-import { roundtwo, formatError } from '@/lib/utils/utils'
-import { calculateCartTotals } from '../utils/cartUtils'
-import { Cart } from '@prisma/client'
+import {formatError } from '@/lib/utils/utils'
+import { calcPrice, PriceCalcItem } from '../utils/cartUtils'
+import { UICart } from '@/types'
 
 // --- Helpers --------------------------------------------------
 
@@ -23,89 +23,61 @@ async function getCartIdentifiers() {
   const userId = session?.user?.id
   return { sessionCartId, userId }
 }
+
 // --- Public Actions -------------------------------------------
-
-/** Recompute all price fields */
-export async function calcPrice(items: CartItem[]) {
-  const itemsValue = items.reduce((sum, i) => sum + Number(i.price) * i.qty, 0)
-  const itemsPrice = roundtwo(itemsValue)
-  const shippingPrice = roundtwo(itemsPrice > 100 ? 0 : 10)
-  const taxPrice = roundtwo(0.15 * itemsPrice)
-  const totalPrice = roundtwo(itemsPrice + shippingPrice + taxPrice)
-
-  return {
-    itemsPrice:   itemsPrice.toFixed(2),
-    shippingPrice: shippingPrice.toFixed(2),
-    taxPrice:     taxPrice.toFixed(2),
-    totalPrice:   totalPrice.toFixed(2),
-  }
-}
 
 /** Add a product (or increment qty) in the cart */
 export async function addToCart(cartId: string, storeProductId: string, quantity: number = 1) {
-
-  try{
-  await prisma.newCartItem.upsert({
-    where: {
-      cartId_storeProductId: {
+  try {
+    await prisma.cartItem.upsert({
+      where: {
+        cartId_storeProductId: {
+          cartId,
+          storeProductId,
+        },
+      },
+      create: {
         cartId,
         storeProductId,
+        quantity,
       },
-    },
-    create: {
-      cartId,
-      storeProductId,
-      quantity,
-    },
-    update: {
-      quantity: {
-        increment: quantity,
+      update: {
+        quantity: {
+          increment: quantity,
+        },
       },
-    },
-  });
-  revalidatePath(`/${storeProductId}`)
-  return { success:true, message: `Item added to cart.`}
-} catch(err){
-       return { success: false, message: formatError(err) }
-}
+    });
+    revalidatePath(`/${storeProductId}`)
+    return { success: true, message: `Item added to cart.` }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
 }
 
 export async function claimCart(sessionCartId: string, userId: string) {
-  await prisma.newCart.updateMany({
+  await prisma.cart.updateMany({
     where: { sessionCartId },
     data: { userId },
   });
 }
 
 export async function updateCartItemQuantity(itemId: string, quantity: number) {
-  try{
-  await prisma.newCartItem.update({
-    where: { id: itemId },
-    data: { quantity },
-  });
-   return {success:true, message: 'Card Item Quantity Updated'}
-  }catch(err){
-  return {success:false, message: formatError(err)}
+  try {
+    await prisma.cartItem.update({
+      where: { id: itemId },
+      data: { quantity },
+    });
+    return { success: true, message: 'Card Item Quantity Updated' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
 }
 
-
-
-  const { itemsPrice } = await calcPrice(items); // reuse your util
-
-  return {
-    items,
-    itemsPrice
-  };
-}
-
-
-
-
-
+/** Get raw cart with items and store product info */
 export async function getMyCart() {
   const { sessionCartId, userId } = await getCartIdentifiers();
 
-  const cart = await prisma.newCart.findFirst({
+  const cart = await prisma.cart.findFirst({
     where: userId ? { userId } : { sessionCartId },
     include: {
       items: {
@@ -123,46 +95,53 @@ export async function getMyCart() {
 
   return cart;
 }
+
 /** Decrement quantity or remove an item from cart */
 export async function removeCartItem(itemId: string) {
-  await prisma.newCartItem.delete({
+  await prisma.cartItem.delete({
     where: { id: itemId },
   });
 }
 
-export type UIOrderItem = {
-  name: string;
-  slug: string;
-  price: string;
-  image: string;
-  productId: string;
-  qty: number;
-};
+/** Cart shape for display */
 
-export async function getMyCartUI(): Promise<Cart | undefined> {
+export async function getMyCartUI(): Promise<UICart | undefined> {
   const raw = await getMyCart();
   if (!raw) return undefined;
 
-  const totals = calculateCartTotals(raw);
+  // 1) Build minimal array for pricing
+  const priceItems: PriceCalcItem[] = raw.items.map(i => ({
+    price: i.storeProduct.price.toString(),
+    qty:   i.quantity,
+  }));
 
-  const items = raw.items.map((item) => {
-    const product = item.storeProduct;
-    const base = product.card ?? product.accessory;
-    
+  // 2) Compute all four formatted price fields
+  const { itemsPrice, shippingPrice, taxPrice, totalPrice } = calcPrice(priceItems);
+
+   // 3) Build your UI-friendly items array
+  const items = raw.items.map(i => {
+    const product = i.storeProduct;
+    const base    = product.card ?? product.accessory;
     return {
-      name: base?.name ?? 'Unknown',
-      slug: product.slug ?? 'unknown-slug', // Prevent null slug issues
-      price: product.price.toFixed(2),
-      image: base?.imageUrl ?? '/images/cardPlaceholder.png',
+      id: product.id,
+      name:      base?.name ?? 'Unknown',
+      slug:      product.slug ?? 'unknown-slug',
+      price:     product.price.toFixed(2),
+      image:     base?.imageUrl ?? '/images/cardPlaceholder.png',
       productId: product.id,
-      qty: item.quantity,
+      qty:       i.quantity,
     };
   });
 
+  // 4) Return the UICart, *including* the pricing you computed
   return {
-    ...totals,
     items,
     sessionCartId: raw.sessionCartId,
-    userId: raw.userId ?? undefined,
+    userId:        raw.userId ?? undefined,
+    id:raw.id,
+    itemsPrice,
+    shippingPrice,
+    taxPrice,
+    totalPrice,
   };
 }

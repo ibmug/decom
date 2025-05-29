@@ -63,8 +63,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <TableCell>{formatId(order.id)}</TableCell>
                 <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
                 <TableCell>{formatCurrency(order.totalPrice.toNumber())}</TableCell>
-                <TableCell>{order.isPaid ? `Paid at, ${order.paidAt}` : 'Not paid yet'}</TableCell>
-                <TableCell>{order.isDelivered ? `Delivered on, ${order.deliveredAt}` : 'Not delivered yet'}</TableCell>
+                <TableCell>{order.status! ==='PAID' || 'DELIVERED' || 'COMPLETED' ? ('Order has not been paid'): ('Order has been paid')}</TableCell>
+                <TableCell>{order.status! === 'DELIVERED' || 'COMPLETED' ? ('Order has not been delivered or is in the process of delivery'):('Order has been delivered')}</TableCell>
                 <TableCell>
                   {/* Example action link; update path as needed */}
                   <a href={`/order/${order.id}`} className="text-blue-500 underline">

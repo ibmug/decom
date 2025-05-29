@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   title: 'Order Details',
 };
 
-// ✅ FIX: no need for a custom interface unless reused
-const OrderDetailsPage = async ({ params }: { params: { id: string } }) => {
-  const { id } = params;
+
+const OrderDetailsPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
 
   const session = await getServerSession(authOptions);
   const order = await getOrderById(id);
