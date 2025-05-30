@@ -52,7 +52,7 @@ export async function getLatestProducts() {
     price: p.price.toString(),
     rating: p.rating.toString(),
     numReviews: p.numReviews,
-    createdAt: p.createdAt.toISOString(),
+    createdAt: new Date(p.createdAt),
   }));
 
   const totalPages = await prisma.product.count() / LATEST_PRODUCTS_LIMIT;

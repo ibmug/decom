@@ -195,6 +195,6 @@ export function serializeProduct(product: Product): UIProduct {
     price: product.price.toString(),
     rating: product.rating.toString(),
     numReviews: product.numReviews,
-    createdAt: product.createdAt.toISOString(),
+    createdAt: new Date(product.createdAt),
   };
 }
