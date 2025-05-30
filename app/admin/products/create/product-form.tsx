@@ -18,6 +18,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Image from 'next/image'
 import { Resolver } from "react-hook-form";
 import {Checkbox} from "@/components/ui/checkbox"
+import { formatError } from "@/lib/utils/utils";
+
 
 
 
@@ -93,8 +95,10 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
       toastSuccess(json.message);
       router.push('/admin/products');
     }
-  } catch (error: any) {
-    toastError('Unexpected error');
+  } catch (error: unknown) {
+    toast({
+        description: formatError(error)
+    })
   }
 };
 
