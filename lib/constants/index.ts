@@ -1,5 +1,5 @@
 export const APP_NAME = process.env.PUBLIC_APP_NAME || 'Tiendita';
-export const APP_DESCRIPTION =  process.env.PUBLIC_DESCRIPTION || 'Una tiendita, con 2x1 y todo'
+export const APP_DESCRIPTION =  process.env.PUBLIC_DESCRIPTION || 'Una tiendita'
 export const SERVER_URL = process.env.PUBLIC_SERVER_URL || 'http://localhost:3000'
 export const LATEST_PRODUCTS_LIMIT = Number(process.env.LATEST_PRODUCTS_LIMIT) || 4;
 
@@ -25,15 +25,14 @@ export const productDefaultValues = {
 }
 
 
-export const USER_ROLES = process.env.USER_ROLES ? process.env.USER_ROLES.split(', ') : ['admin', 'user'] 
-
+export const USER_ROLES = process.env.USER_ROLES ? process.env.USER_ROLES.split(', ') : ['admin', 'user', 'manager'] 
 
 
 
 export const STORES = {
    'Shivan Shop': {
     storeId: 'shivanshop',
-    storeName: 'Shivan Shop Sucursal Centro',
+    addressName: 'Shivan Shop Sucursal Centro',
     address: {
       fullName: 'Sucursal Centro',
       streetName: 'Av. Siempre Viva 742',
@@ -47,7 +46,7 @@ export const STORES = {
   },
   'Goma Shop': {
     storeId: 'gomaShop',
-    storeName: 'Shivan Shop Sucursal Sur',
+    addressName: 'Shivan Shop Sucursal Sur',
     storeAddress: 'Calle del Sol 456, Gustavo A. Madero, CDMX',
       fullName: 'Sucursal Norte',
       country: 'México',
@@ -61,3 +60,4 @@ export const STORES = {
   },
   // Add more stores as needed
 };
+

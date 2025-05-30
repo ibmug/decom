@@ -35,16 +35,14 @@ type ViewOrder = Omit<RawOrder, "shippingAddress"> & {
 const orderSortOptions: SortOption[] = [
     { value: "createdAt",   label: "Date"            },
     { value: "totalPrice",  label: "Total Price"    },
-    { value: "isPaid",      label: "Paid Status"    },
-    { value: "isDelivered", label: "Delivery Status"},
+    {value:"status", label:"Status"},
   ]
 
  // Create a literal union type of those values:
 const ALLOWED_ORDER_FIELDS = [
   "createdAt",
   "totalPrice",
-  "isPaid",
-  "isDelivered",
+  "status",
 ] as const;
 type AllowedOrderField = typeof ALLOWED_ORDER_FIELDS[number];
 
@@ -145,18 +143,14 @@ const AdminOrdersPage = async (props: {
                                         {order?.shippingAddress?.shippingMethod}
                                     </TableCell>
                                     <TableCell className=''>
-                                        {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.storeName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
+                                        {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.addressName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
                                     </TableCell>
                                     <TableCell>
                                         {formatCurrency(order.totalPrice.toString())}
                                     </TableCell>
                                     <TableCell>
-                                        {order.status! ==='PAID' || 'DELIVERED' || 'COMPLETED' ? ('Order has not been paid'): ('Order has been paid')}
+                                        {order.status}
                                     </TableCell>
-                                    <TableCell>
-                                        {order.status! === 'DELIVERED' || 'COMPLETED' ? ('Order has not been delivered or is in the process of delivery'):('Order has been delivered')}
-                                    </TableCell>
-                                    
                                     <TableCell>
                                         <Button asChild variant='outline' size='sm'>
                                         <Link href={`/order/${order.id}`}>Details</Link>

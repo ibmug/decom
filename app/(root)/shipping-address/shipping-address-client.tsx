@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ShippingAddressInput, ShippingAddress } from '@/types';
 import ShippingAddressForm from './shipping-address-form';
 import { updateUserAddress } from '@/lib/actions/user.actions';
+import { useState } from 'react';
 //import {useCheckout} from '@/context/CheckoutContext';
 
 interface Props {
@@ -15,20 +16,22 @@ interface Props {
 export default function ShippingAddressClient({ defaultAddress }: Props) {
   const methods = useForm<ShippingAddressInput>({
     defaultValues: {
-      shippingMethod: defaultAddress?.shippingMethod ?? 'DELIVERY',
-      address: defaultAddress?.address ?? {
-        fullName: '',
-        country: '',
-        streetName: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        phone: '',
-      },
-      storeId: defaultAddress?.storeId ?? '',
-    },
+  shippingMethod: defaultAddress?.shippingMethod ?? 'DELIVERY',
+  address: {
+    fullName:   defaultAddress?.address?.fullName   ?? '',
+    country:    defaultAddress?.address?.country    ?? '',
+    streetName: defaultAddress?.address?.streetName ?? '',
+    city:       defaultAddress?.address?.city       ?? '',
+    state:      defaultAddress?.address?.state      ?? '',
+    postalCode: defaultAddress?.address?.postalCode ?? '',
+    phone:      defaultAddress?.address?.phone      ?? '',
+    notes:      defaultAddress?.address?.notes      ?? '',
+  },
+  addressName: defaultAddress?.addressName ?? '',
+},
   });
   const router = useRouter();
+  const [storeId, setStoreId] = useState('');
 
 
     const onSubmit = async (data: ShippingAddressInput) => {  
@@ -37,16 +40,17 @@ export default function ShippingAddressClient({ defaultAddress }: Props) {
           // build the body you’ll send…
           let payload = { ...data }
       
-          if (data.shippingMethod === 'PICKUP' && data.storeId) {
+          if (data.shippingMethod === 'PICKUP' && storeId) {
             // fetch all stores once
             const storeRes = await fetch('/api/stores')
-            const stores: { id: string; name: string; address: string }[] = await storeRes.json()
-            const store = stores.find((s) => s.id === data.storeId)
-      
+            const stores = await storeRes.json()
+            const store = stores.find((s:{storeId: string}) => s.storeId === storeId)
+            if (!store) throw new Error("Selected store not found.")
+
             payload = {
               ...data,
-              storeName:    store?.name    ?? '',
-             storeAddress: store?.address ?? '',
+              address: store.address.address as typeof data.address,
+              addressName: store.addressName,
             }
           }
       
@@ -72,7 +76,7 @@ export default function ShippingAddressClient({ defaultAddress }: Props) {
         onSubmit={methods.handleSubmit(onSubmit)}
         className="space-y-6"
       >
-        <ShippingAddressForm />
+        <ShippingAddressForm storeId={storeId} setStoreId={setStoreId}/>
         <button
           type="submit"
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

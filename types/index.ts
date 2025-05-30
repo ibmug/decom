@@ -8,6 +8,7 @@ import {
   insertOrderSchema,
   paymentResultSchema,
 } from "@/lib/validators";
+import { OrderStatus } from "@prisma/client";
 
 // --- PRODUCT ---
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -71,12 +72,13 @@ export type NewCart = {
 export type OrderItem = z.infer<typeof insertOrderItemSchema>;
 
 export type Order = z.infer<typeof insertOrderSchema> & {
-  id: string;
+    id: string;
   createdAt: Date;
-  isPaid: boolean;
+  
   paidAt: Date | null;
-  isDelivered: boolean;
+  
   deliveredAt: Date | null;
+  status: OrderStatus;
   orderItems: OrderItem[];
   user: { name: string; email: string };
 };

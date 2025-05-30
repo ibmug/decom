@@ -73,43 +73,21 @@ export const signUpFormSchema = z.object({
 
 
 
- export const shippingAddressSchema = z.discriminatedUnion('shippingMethod', [
-  // DELIVERY
-  z.object({
-    shippingMethod: z.literal('DELIVERY'),
-    address: z.object({
-      fullName:   z.string().min(1, 'Full Name is required'),
-      country:    z.string().min(1, 'Country is required'),
-      streetName: z.string().min(1, 'Street name is required'),
-      city:       z.string().min(1, 'City is required'),
-      state:      z.string().min(1, 'State is required'),
-      postalCode: z.string().min(1, 'Postal code is required'),
-      phone:      z.string().optional(),
-    }),
-    storeId:        z.string().optional(),
-    storeName:      z.string().optional(),
-    storeAddress:   z.string().optional(),
+ 
+export const shippingAddressSchema = z.object({
+  shippingMethod: z.enum(['DELIVERY', 'PICKUP']),
+  address: z.object({
+    fullName:   z.string().min(1, 'Full Name is required'),
+    country:    z.string().min(1, 'Country is required'),
+    streetName: z.string().min(1, 'Street name is required'),
+    city:       z.string().min(1, 'City is required'),
+    state:      z.string().min(1, 'State is required'),
+    postalCode: z.string().min(1, 'Postal code is required'),
+    phone:      z.string().optional(),
+    notes:      z.string().optional(),
   }),
-
-  // PICKUP branch (change here)
-  z.object({
-    shippingMethod: z.literal('PICKUP'),
-    storeId:        z.string().min(1, 'Store is required'),
-    storeName:      z.string().min(1),
-    storeAddress:   z.string().min(1),
-
-    // allow address to be present without error
-    address:        z.object({
-                      fullName:   z.string(),
-                      country:    z.string(),
-                      streetName: z.string(),
-                      city:       z.string(),
-                      state:      z.string(),
-                      postalCode: z.string(),
-                      phone:      z.string().optional(),
-                    }).optional(),
-  }),
-]);
+  addressName: z.string().optional(), // e.g. “Sucursal Centro” or “Casa”
+});
 
 //schema for payment methods.
 export const paymentMethodSchema = z.object({

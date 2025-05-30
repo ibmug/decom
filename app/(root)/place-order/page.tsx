@@ -61,10 +61,10 @@ const PlaceOrderPage = async () => {
     <CardContent className="p-4 gap-4">
       <h2 className="text-xl pb-4">Pick Up Location</h2>
       <p className="font-medium">
-        Store Name: {userAddress.storeName}
+        Store Name: {userAddress.address.fullName ?? 'Error when loading store.'}
       </p>
       <p className="font-medium">
-        Store Address: {userAddress.storeAddress}
+        Store Address: {userAddress.address.streetName ?? 'An error when loading store'}
       </p>
       <div className='mt-3'>
       <Link href="/shipping-address">

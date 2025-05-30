@@ -10,12 +10,11 @@ datasource db {
 // -- Enums -----------------------------------------------------------------
 
 enum OrderStatus {
-  CREATED
+  PENDING
   PAID
-  READY_FOR_PICKUP
-  PICKED_UP
   SHIPPED
   DELIVERED
+  READY4PICKUP //For pickup
   COMPLETED
   CANCELLED
 }
@@ -198,7 +197,7 @@ model CartItem {
 model Order {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId          String         @db.Uuid
-  status          OrderStatus    @default(CREATED)
+  status          OrderStatus    @default(PENDING)
   shippingMethod  ShippingMethod
   shippingAddress Json           @db.Json
   shippingPrice   Decimal        @db.Decimal(12, 2)

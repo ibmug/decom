@@ -8,20 +8,20 @@ import { getMyCartUI } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
-import { CartItem, ShippingAddress,Order, UICartItem, OrderShippingAddress } from "@/types";
+import { ShippingAddress,Order, UICartItem, UIOrderItem } from "@/types";
 import { PaymentResult } from "@/types";
 import { paypalUtils } from "../paypalUtils";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE, STORES } from "../constants";
 import { isUuid } from "../utils/utils";
-import {Prisma } from "@prisma/client";
+import {Prisma, OrderStatus } from "@prisma/client";
 
 
 export interface GetOrderOpts {
     query?:    string
     page?:     number
     limit?:    number
-    orderBy?:  keyof Order      // e.g. "createdAt", "totalPrice", "isPaid", …
+    orderBy?:  keyof Order      // e.g. "createdAt", "totalPrice"...
     order?:    "asc" | "desc"
 
   }
@@ -50,6 +50,7 @@ export async function createOrder(){
 
         //Check if user has items in cart
         if(!cart || cart.items.length === 0 ){
+         
             return {success: false, message:'Your cart is empty', redirectTo:'/'}
         }
          //check user has an address or has selected a store.
@@ -64,10 +65,10 @@ export async function createOrder(){
         const {shippingMethod} = await requireShippingAddress();
         
         if(shippingMethod === 'DELIVERY' && !user.address){throw new Error ("User has no address to deliver to!")}
-        const shippingAddress: OrderShippingAddress  = shippingMethod === 'PICKUP'
+        const shippingAddress  = shippingMethod === 'PICKUP'
             ? {
                 address: STORES['Shivan Shop'].address,
-                addressName: STORES['Shivan Shop'].storeName, 
+                addressName: STORES['Shivan Shop'].addressName, 
                 }
             : {
                 address: user.address,
@@ -89,6 +90,7 @@ export async function createOrder(){
 
            const order: Prisma.OrderCreateInput = {
             user:{connect: {id: parsed.userId}},
+            status:  OrderStatus.PENDING,
             shippingMethod: parsed.shippingMethod,
             shippingAddress: parsed.shippingAddress,
             paymentMethod: parsed.paymentMethod,
@@ -132,6 +134,7 @@ export async function createOrder(){
 }
 
 
+
 //get order by id
 export async function getOrderById(
   orderId: string
@@ -140,7 +143,7 @@ export async function getOrderById(
     where: { id: orderId },
     include: {
       user:       { select: { name: true, email: true } },
-      orderItems: true,
+      orderItems: {select: {productId: true, name: true, slug: true, image: true, price: true, qty: true},},
     },
   })
   if (!res) return null
@@ -155,16 +158,16 @@ export async function getOrderById(
   return {
     id:             res.id,
     user:           res.user,
-    userId: res.userId,                   // { name, email }
+    userId: res.userId,  
+    status: res.status,
+    shippingMethod: res.shippingMethod,                 // { name, email }
     shippingAddress,
     paymentMethod:  res.paymentMethod,
-    itemsPrice:     res.itemsPrice.toString(),
-    shippingPrice:  res.shippingPrice.toString(),
-    taxPrice:       res.taxPrice.toString(),
-    totalPrice:     res.totalPrice.toString(),
-    isPaid:         res.isPaid,
+    itemsPrice:     res.itemsPrice.toNumber(),
+    shippingPrice:  res.shippingPrice.toNumber(),
+    taxPrice:       res.taxPrice.toNumber(),
+    totalPrice:     res.totalPrice.toNumber(),
     paidAt:         res.paidAt,
-    isDelivered:    res.isDelivered,
     deliveredAt:    res.deliveredAt,
     createdAt:      res.createdAt,
     orderItems:     res.orderItems.map((oi) => ({
@@ -174,7 +177,7 @@ export async function getOrderById(
       price:     oi.price.toString(),
       qty:       oi.qty,
       image:     oi.image!,
-    })) as CartItem[],
+    })) as UIOrderItem[],
   }
 }
 
@@ -264,7 +267,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
     });
     if(!order) throw new Error('Order Not Found');
 
-    if(order.isPaid) throw new Error('Order is already paid');
+    if(order.paidAt) throw new Error('Order is already paid');
 
     //Transaction to update order and account for product stock.
     await prisma.$transaction(async (tx)=>{
@@ -279,7 +282,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
         //Set order to paid.
         await tx.order.update({
             where:{id:orderId},
-            data:{isPaid: true,
+            data:{
             paidAt:new Date(),
             paymentResult},
         });
@@ -412,17 +415,7 @@ export async function getAllFilteredOrders({
   
     if (query) {
       const q = query.trim().toLowerCase()
-  
-      // 0) Paid / not paid
-      if (["pagado","paid","true"].includes(q))      OR.push({ isPaid: true })
-      if (["!pagado","sin pagar","no pagado","unpaid","false"].includes(q)) 
-        OR.push({ isPaid: false })
-  
-      // 1) Delivered / not delivered
-      if (["entregado","delivered","true"].includes(q)) 
-        OR.push({ isDelivered: true })
-      if (["!entregado","sin entregar","no entregado","undelivered","false"].includes(q)) 
-        OR.push({ isDelivered: false })
+
   
       // 2) UUID match
       if (isUuid(q)) {
@@ -499,13 +492,12 @@ export async function updateOrderToDeliveredManual(orderId: string): Promise<{ s
             },
         })
        if(!order) throw new Error('order not found')
-        if(!order.isPaid) throw new Error ('Order is not paid')
+        if(!order.paidAt) throw new Error ('Order is not paid')
 
        revalidatePath(`/order/${orderId}`);
         await prisma.order.update({
             where:{id:orderId},
             data:{
-                isDelivered:true,
                 deliveredAt: new Date(),
             },
         })

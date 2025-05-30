@@ -6,13 +6,21 @@ import { ShippingAddressInput } from '@/types';
 import ShippingAddressFields from './shipping-address-fields';
 import StoreSelect from '@/components/shared/checkout/store-select';
 
-export default function ShippingAddressForm() {
+
+
+interface Props {
+  storeId: string;
+  setStoreId: (id: string) => void;
+}
+
+export default function ShippingAddressForm({ storeId, setStoreId }: Props) {
   const {
     register,
     watch,
-    setValue,
     formState: { errors },
   } = useFormContext<ShippingAddressInput>();
+
+  
 
   const method = watch('shippingMethod');
 
@@ -46,11 +54,9 @@ export default function ShippingAddressForm() {
         <ShippingAddressFields register={register} errors={errors} />
       )}
       {method === 'PICKUP' && (
-        <StoreSelect
-          value={watch('storeId')}
-          onChange={(id: string) =>
-            setValue('storeId', id, { shouldValidate: true })
-          }
+       <StoreSelect
+          value={storeId}
+          onChange={(id: string) => setStoreId(id)}
         />
       )}
     </div>

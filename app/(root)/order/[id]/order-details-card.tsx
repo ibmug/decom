@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 
     const  OrderDetailsCard = ({order, paypalClientId,isAdmin}: {order: Order,paypalClientId: string, isAdmin: boolean}) => {
-        const {shippingAddress,orderItems,itemsPrice,shippingPrice,taxPrice,totalPrice,paymentMethod,isPaid,isDelivered,id,paidAt,deliveredAt} = order;
+        const {shippingAddress,orderItems,itemsPrice,shippingPrice,taxPrice,totalPrice,paymentMethod,status,id,paidAt,deliveredAt} = order;
         const {toast} = useToast();
         const PrintLoadingState = () =>{
             const [{isPending,isRejected}] = usePayPalScriptReducer();
@@ -81,9 +81,20 @@ import { Button } from "@/components/ui/button";
             <div className="col-span-2 space-4-y overflow-x-auto">
                 <Card className="my-2">
                     <CardContent className='p-4 gap-4'>
+                        <h2 className="text-xl pb-4">Status</h2>
+                        <p className='mb-2'>{paymentMethod}</p>
+                        {
+                            <Badge variant='secondary'>
+                                {status}
+                            </Badge>
+                        }
+                    </CardContent>
+                </Card>
+                <Card className="my-2">
+                    <CardContent className='p-4 gap-4'>
                         <h2 className="text-xl pb-4">PaymentMethod</h2>
                         <p className='mb-2'>{paymentMethod}</p>
-                        {isPaid ? (
+                        {paidAt ? (
                             <Badge variant='secondary'>
                                 Paid at: {formatDateTime(paidAt!).dateTime}
                             </Badge>
@@ -106,7 +117,7 @@ import { Button } from "@/components/ui/button";
                             <p>{shippingAddress.address.state}</p>
                             <p>{shippingAddress.address.postalCode}</p> 
                             <p><b className="bg-blend-color">Contact:</b> {shippingAddress.address.phone}</p>
-                            {isDelivered ? (
+                            {deliveredAt ? (
                             <Badge variant='secondary'>
                                 Delivered at: {formatDateTime(deliveredAt!).dateTime}
                             </Badge>
@@ -122,7 +133,7 @@ import { Button } from "@/components/ui/button";
                     <h2 className="text-xl pb-4">Store Address Pickup</h2>
                     <p>{shippingAddress.addressName}</p>
                     <p>{shippingAddress.address.streetName}</p> 
-                    {isDelivered ? (
+                    {deliveredAt ? (
                             <Badge variant='secondary'>
                                 Delivered at: {formatDateTime(deliveredAt!).dateTime}
                             </Badge>
@@ -204,7 +215,7 @@ import { Button } from "@/components/ui/button";
                                     </div>
                                 </div>
                                 {/*Paypal Payment */}
-                                {!isPaid && paymentMethod === 'PayPal' && (
+                                {!paidAt && paymentMethod === 'PayPal' && (
                                     <div>
                                         <PayPalScriptProvider options={{clientId: paypalClientId}}>
                                             <PrintLoadingState />
@@ -221,7 +232,7 @@ import { Button } from "@/components/ui/button";
                     {isAdmin && paymentMethod==='CashOnPickup' && (
                         <MarkAsPaidButton />
                     )}
-                    {isAdmin && !isDelivered && (
+                    {isAdmin && !deliveredAt && (
                         <MarkAsDeliveredButton />
                     )}
             </CardContent>
