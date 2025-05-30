@@ -1,7 +1,7 @@
 
 //import { getServerSession } from "next-auth";
 //import { authOptions } from "@/lib/authOptions";
-import { deleteOrder, getAllFilteredOrders } from "@/lib/actions/order.actions";
+import { getAllFilteredOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime,formatId } from "@/lib/utils/utils";
@@ -155,7 +155,7 @@ const AdminOrdersPage = async (props: {
                                         <Button asChild variant='outline' size='sm'>
                                         <Link href={`/order/${order.id}`}>Details</Link>
                                         </Button>
-                                        <DeleteDialog id={order.id} action={deleteOrder} />
+                                        <DeleteDialog id={order.id} />
                                     </TableCell>
                                 </TableRow>
                             ))}
