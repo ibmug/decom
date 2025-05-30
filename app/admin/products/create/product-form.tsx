@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import slugify from 'slugify'
 import { Textarea } from "@/components/ui/textarea";
-import { createProduct, updateProduct } from "@/lib/actions/product.actions";
 import { UploadButton } from "@/lib/uploadthing";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from 'next/image'
@@ -58,50 +57,47 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
 
 
     const onSubmitCustom: SubmitHandler<ProductFormValues> = async (values) => {
-        //On Create
-        if (type==='CREATE'){
+  const toastError = (msg: string) =>
+    toast({ variant: 'destructive', description: msg });
 
-            const dataToCreate = insertProductSchema.parse(values)
-            const res = await createProduct(dataToCreate)
+  const toastSuccess = (msg: string) =>
+    toast({ description: msg });
 
-            if(!res.success) {
-                toast({
-                    variant:'destructive',
-                    description:res.message
-                });
-            } else {
-                toast({
-                    description:res.message
-                });
-               router.push('/admin/products')
-            }
-        }
-        //On Update
-        if (type==='UPDATE'){
-            
+  try {
+    if (type === 'CREATE') {
+      const dataToCreate = insertProductSchema.parse(values);
+      const res = await fetch('/api/products/create', {
+        method: 'POST',
+        body: JSON.stringify(dataToCreate),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
 
-            if (!productId){
-            router.push('/admin/products')
-            return;
-            }
-
-            const dataToUpdate = updateProductSchema.parse(values)
-            const res = await updateProduct(dataToUpdate);
-
-            if(!res.success) {
-                toast({
-                    variant:'destructive',
-                    description:res.message
-                })
-            } else {
-                toast({
-                    variant:'default',
-                    description:res.message
-                });
-                router.push('/admin/products')
-            }
-        }
+      if (!json.success) return toastError(json.message);
+      toastSuccess(json.message);
+      router.push('/admin/products');
     }
+
+    if (type === 'UPDATE') {
+      if (!productId) return router.push('/admin/products');
+
+      const dataToUpdate = updateProductSchema.parse(values);
+      const res = await fetch('/api/products/update', {
+        method: 'POST',
+        body: JSON.stringify(dataToUpdate),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+
+      if (!json.success) return toastError(json.message);
+      toastSuccess(json.message);
+      router.push('/admin/products');
+    }
+  } catch (error: any) {
+    toastError('Unexpected error');
+  }
+};
+
     
     const images = form.watch('images')
     const isFeatured = form.watch('isFeatured')
