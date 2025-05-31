@@ -26,26 +26,37 @@ export type ShippingAddressInput = z.infer<typeof shippingAddressSchema>;
 export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
 // --- STORE PRODUCT ---
-export type StoreProduct = {
-  id: string;
-  slug: string;
-  price: string;
-  stock: number;
-  customName?: string | null;
-  type: 'CARD' | 'ACCESSORY';
-  card?: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    setName: string;
-    manaCost?: string | null;
-  } | null;
-  accessory?: {
-    id: string;
-    name: string;
-    imageUrl?: string | null;
-  } | null;
-};
+export type StoreProduct =
+  | {
+      id: string;
+      slug: string;
+      price: string;
+      stock: number;
+      customName?: string | null;
+      type: 'CARD';
+      card: {
+        id: string;
+        name: string;
+        imageUrl: string;
+        setName: string;
+        manaCost?: string | null;
+      };
+      accessory?: null;
+    }
+  | {
+      id: string;
+      slug: string;
+      price: string;
+      stock: number;
+      customName?: string | null;
+      type: 'ACCESSORY';
+      accessory: {
+        id: string;
+        name: string;
+        imageUrl?: string | null;
+      };
+      card?: null;
+    };
 
 // --- CART TYPES ---
 export type RawCart = z.infer<typeof insertCartSchema>; // Schema inferred from DB insertCartSchema
