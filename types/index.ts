@@ -166,3 +166,17 @@ export type OrderShippingAddress = {
   address: ShippingAddress;
   addressName?: string;
 };
+
+export interface UIProduct {
+  id: string;
+  name: string;
+  slug: string | null;
+  description: string;
+  price: string;
+  rating: string;
+  numReviews: number;
+  stock: number;
+  images: string[];
+  brand: string;
+  category: string;
+}

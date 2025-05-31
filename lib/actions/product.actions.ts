@@ -60,7 +60,13 @@ export async function getLatestProducts() {
 }
 
 export async function getSingleProductBySlug(slug: string) {
-  return await prisma.product.findFirst({ where: { slug } });
+  return await prisma.storeProduct.findFirst({
+    where: { slug },
+    include: {
+      card: true,
+      accessory: true,
+    },
+  });
 }
 
 export async function getSingleProductById(productId: string) {
