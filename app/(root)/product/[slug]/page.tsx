@@ -47,11 +47,14 @@ const product: UIStoreProduct =
         price: rawProduct.price.toString(),
         stock: rawProduct.stock,
         customName: rawProduct.customName,
+        name: rawProduct.accessory?.name ?? "noName",
         type: "ACCESSORY",
         accessory: rawProduct.accessory!,
-        rating:0.0,
+        rating:rawProduct.accessory?.rating.toString() ?? "0.0",
         numReviews:0,
         images:rawProduct.accessory!.imageUrl ? [rawProduct.accessory!.imageUrl] : [],
+        category: rawProduct.accessory?.category ?? undefined,
+        description: rawProduct.accessory?.description ?? undefined,
       };
 
 

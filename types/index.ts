@@ -201,9 +201,13 @@ export type UIStoreProduct =
       price: string;
       stock: number;
       customName: string | null;
+      name: string;
       type: "ACCESSORY";
       accessory: AccessoryProduct;
       rating: number;
       numReviews: number;
       images: string[]
+      brand? : string;
+      category?: string;
+      description?: string;
     };
