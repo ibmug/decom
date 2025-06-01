@@ -8,7 +8,7 @@ import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCartUI } from "@/lib/actions/cart.actions";
 import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
-import { isCardProduct, toCardItem, toUIAccessoryDisplay } from "@/lib/utils/transformers";
+import { isCardProduct } from "@/lib/utils/transformers";
 import {  UIStoreProduct } from "@/types";
 
 
@@ -48,8 +48,10 @@ const product: UIStoreProduct =
         stock: rawProduct.stock,
         customName: rawProduct.customName,
         type: "ACCESSORY",
-        accessoryId: rawProduct.accessory.id,
         accessory: rawProduct.accessory!,
+        rating:0.0,
+        numReviews:0,
+        images:rawProduct.accessory!.imageUrl ? [rawProduct.accessory!.imageUrl] : [],
       };
 
 
@@ -62,7 +64,7 @@ const isCard = isCardProduct(product)
 
 
                         {/*I'm assuming here goes our new component. */}
-                        {isCard ? <CardProductDisplay product={toCardItem(product)}/> : <AccessoryProductDisplay product={toUIAccessoryDisplay(product)} />
+                        {isCard ? <CardProductDisplay product={product}/> : <AccessoryProductDisplay product={product} />
 }
                         {product.stock > 0 && (<div className="flex-center">
                             <AddToCart cart={cart} item={{

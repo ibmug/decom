@@ -7,13 +7,14 @@ import ProductPrice from "@/components/shared/product/productPrice";
 import Image from "next/image";
 
 
-import type { CardItem } from "@/types";
+import type {UIStoreProduct } from "@/types";
 
-type CardProductDisplayProps = {
-  product: CardItem;
-};
 
-export default function CardProductDisplay({ product }: CardProductDisplayProps) {
+// Restrict to only the "CARD" variant
+type CardOnly = Extract<UIStoreProduct, { type: "CARD" }>;
+
+
+export default function CardProductDisplay({ product }: {product: CardOnly}) {
   return (
     <section>
       <div className="grid grid-cols-1 md:grid-cols-5">
@@ -21,8 +22,8 @@ export default function CardProductDisplay({ product }: CardProductDisplayProps)
         <div className="col-span-2">
           <div className="relative w-full aspect-[3/4] rounded overflow-hidden border">
             <Image
-              src={product.imageUrl}
-              alt={product.name}
+              src={product.card.imageUrl}
+              alt={product.card.name}
               fill
               className="object-contain"
             />
@@ -32,21 +33,21 @@ export default function CardProductDisplay({ product }: CardProductDisplayProps)
         {/* Details Column */}
         <div className="col-span-2 p-5">
           <div className="flex flex-col gap-4">
-            <p className="text-muted-foreground">{product.setName} • {product.collectorNum}</p>
-            <h1 className="h3-bold">{product.name}</h1>
-            {product.manaCost && <p className="text-sm text-muted-foreground">Mana Cost: {product.manaCost}</p>}
-            <p className="text-sm text-muted-foreground">{product.type} • {product.rarity}</p>
-            <p className="text-sm text-muted-foreground">Colors: {product.colorIdentity.join(', ')}</p>
-            <p className="italic mt-2">{product.oracleText}</p>
+            <p className="text-muted-foreground">{product.card.setName} • {product.card.collectorNum}</p>
+            <h1 className="h3-bold">{product.card.name}</h1>
+            {product.card.manaCost && <p className="text-sm text-muted-foreground">Mana Cost: {product.card.manaCost}</p>}
+            <p className="text-sm text-muted-foreground">{product.type} • {product.card.rarity}</p>
+            <p className="text-sm text-muted-foreground">Colors: {product.card.colorIdentity.join(', ')}</p>
+            <p className="italic mt-2">{product.card.oracleText}</p>
 
             <div className="mt-6">
               <ProductPrice
                 value={Number(product.price)}
                 className="w-24 rounded-full bg-green-100 text-green-700 px-5 py-2"
               />
-              {product.usdFoilPrice && (
+              {product.card.usdFoilPrice && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Foil: ${product.usdFoilPrice.toFixed(2)}
+                  Foil: ${product.card.usdFoilPrice.toFixed(2)}
                 </p>
               )}
             </div>

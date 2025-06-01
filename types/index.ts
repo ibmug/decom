@@ -203,4 +203,7 @@ export type UIStoreProduct =
       customName: string | null;
       type: "ACCESSORY";
       accessory: AccessoryProduct;
+      rating: number;
+      numReviews: number;
+      images: string[]
     };
