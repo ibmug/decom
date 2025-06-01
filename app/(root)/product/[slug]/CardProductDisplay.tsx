@@ -7,25 +7,10 @@ import ProductPrice from "@/components/shared/product/productPrice";
 import Image from "next/image";
 
 
+import type { CardItem } from "@/types";
+
 type CardProductDisplayProps = {
-  product: {
-    id: string;
-    slug: string;
-    name: string;
-    imageUrl: string;
-    setCode: string;
-    setName: string;
-    manaCost?: string;
-    collectorNum: string;
-    oracleText?: string ;
-    colorIdentity: string[];
-    type?: string;
-    rarity?: string;
-    usdPrice?: number;
-    usdFoilPrice?: number;
-    price: string;
-    stock: number;
-  };
+  product: CardItem;
 };
 
 export default function CardProductDisplay({ product }: CardProductDisplayProps) {

@@ -1,5 +1,4 @@
-// db/seed-store-products.ts
-import 'dotenv/config'; // ✅ Ensure .env is loaded
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
 function toSlug(str: string) {
@@ -12,8 +11,18 @@ function toSlug(str: string) {
 
 async function main() {
   console.log("🌐 Using database:", process.env.DATABASE_URL);
-
   const prisma = new PrismaClient();
+
+  // 🏪 Get a store (or create a fallback one if none exists)
+  const store = await prisma.store.upsert({
+    where: { name: 'Default Store' },
+    update: {},
+    create: {
+      name: 'Default Store',
+      address: 'Placeholder address',
+    },
+  });
+
   const BATCH_SIZE = 1000;
   let skip = 0;
   let totalSeeded = 0;
@@ -34,19 +43,21 @@ async function main() {
 
     console.log(`📦 Seeding batch ${skip / BATCH_SIZE + 1} (${metas.length} cards)...`);
 
-    for (const { id: cardId, name, setCode } of metas) {
+    for (const { id: cardMetadataId, name, setCode } of metas) {
       const slug = toSlug(`${name} ${setCode}`);
       await prisma.storeProduct.upsert({
         where: { slug },
         create: {
-          type: 'CARD',
-          cardId,
-          stock: 0,
-          price: "0",
           slug,
+          type: 'CARD',
+          cardMetadataId,
+          storeId: store.id,
+          stock: 0,
+          price: "0.00",
         },
         update: {
-          cardId,
+          cardMetadataId,
+          storeId: store.id,
         },
       });
     }

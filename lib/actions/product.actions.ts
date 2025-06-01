@@ -63,7 +63,7 @@ export async function getSingleProductBySlug(slug: string) {
   return await prisma.storeProduct.findFirst({
     where: { slug },
     include: {
-      card: true,
+      cardMetadata: true,
       accessory: true,
     },
   });

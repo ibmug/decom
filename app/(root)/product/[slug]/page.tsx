@@ -8,8 +8,8 @@ import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCartUI } from "@/lib/actions/cart.actions";
 import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
-import { toCardItem, toUIAccessoryDisplay } from "@/lib/utils/transformers";
-import { StoreProduct } from "@prisma/client";
+import { isCardProduct, toCardItem, toUIAccessoryDisplay } from "@/lib/utils/transformers";
+import {  UIStoreProduct } from "@/types";
 
 
 export const dynamic = "force-dynamic";
@@ -26,23 +26,35 @@ const ProductDetailsPage = async ({params}: { params: Promise<{ slug: string }> 
     const cart = await getMyCartUI();
     if(!cart) notFound();
 
-    const type = rawProduct.card ? 'CARD' : 'ACCESORY'
-
 
 
 // Ensure this is the version with included `card` or `accessory`
 
-const product: StoreProduct = {
-  id: rawProduct.id,
-  slug: rawProduct.slug ?? "missing-slug",
-  price: rawProduct.price,
-  stock: rawProduct.stock,
-  customName: rawProduct.customName,
-  type: rawProduct.card ? 'CARD' : 'ACCESSORY',
-  card: rawProduct.card ?? undefined,
-  accessory: rawProduct.accessory ?? undefined,
-};
+const product: UIStoreProduct =
+  rawProduct.cardMetadata
+    ? {
+        id: rawProduct.id,
+        slug: rawProduct.slug ?? "missing-slug",
+        price: rawProduct.price.toString(),
+        stock: rawProduct.stock,
+        customName: rawProduct.customName,
+        type: "CARD",
+        card: rawProduct.cardMetadata,
+      }
+    : {
+        id: rawProduct.id,
+        slug: rawProduct.slug ?? "missing-slug",
+        price: rawProduct.price.toString(),
+        stock: rawProduct.stock,
+        customName: rawProduct.customName,
+        type: "ACCESSORY",
+        accessoryId: rawProduct.accessory.id,
+        accessory: rawProduct.accessory!,
+      };
 
+
+
+const isCard = isCardProduct(product)
 
 
     return <>
@@ -50,7 +62,7 @@ const product: StoreProduct = {
 
 
                         {/*I'm assuming here goes our new component. */}
-                        {type === 'CARD' ? <CardProductDisplay product={toCardItem(product)}/> : <AccessoryProductDisplay product={toUIAccessoryDisplay(product)} />
+                        {isCard ? <CardProductDisplay product={toCardItem(product)}/> : <AccessoryProductDisplay product={toUIAccessoryDisplay(product)} />
 }
                         {product.stock > 0 && (<div className="flex-center">
                             <AddToCart cart={cart} item={{

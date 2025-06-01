@@ -8,7 +8,7 @@ import {
   insertOrderSchema,
   paymentResultSchema,
 } from "@/lib/validators";
-import { OrderStatus } from "@prisma/client";
+import { AccessoryProduct, CardMetadata, OrderStatus } from "@prisma/client";
 
 // --- PRODUCT ---
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -34,13 +34,8 @@ export type StoreProduct =
       stock: number;
       customName?: string | null;
       type: 'CARD';
-      card: {
-        id: string;
-        name: string;
-        imageUrl: string;
-        setName: string;
-        manaCost?: string | null;
-      };
+      cardId: string;
+      card: CardMetadata;
       accessory?: null;
     }
   | {
@@ -50,11 +45,8 @@ export type StoreProduct =
       stock: number;
       customName?: string | null;
       type: 'ACCESSORY';
-      accessory: {
-        id: string;
-        name: string;
-        imageUrl?: string | null;
-      };
+      accessoryId: string;
+      accessory: AccessoryMetadata;
       card?: null;
     };
 
@@ -191,3 +183,24 @@ export interface UIProduct {
   brand: string;
   category: string;
 }
+
+
+export type UIStoreProduct =
+  | {
+      id: string;
+      slug: string;
+      price: string;
+      stock: number;
+      customName: string | null;
+      type: "CARD";
+      card: CardMetadata;
+    }
+  | {
+      id: string;
+      slug: string;
+      price: string;
+      stock: number;
+      customName: string | null;
+      type: "ACCESSORY";
+      accessory: AccessoryProduct;
+    };

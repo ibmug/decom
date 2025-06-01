@@ -1,4 +1,4 @@
-import { StoreProduct } from "@/types"; // or wherever it’s defined
+import { StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
 
 export function toUICardDisplay(product: StoreProduct) {
   if (!product.card) throw new Error("Card data missing in StoreProduct");
@@ -42,7 +42,7 @@ export function toUIAccessoryDisplay(product: StoreProduct) {
 }
 
 
-export function toCardItem(product: StoreProduct): CardItem {
+export function toCardItem(product: Extract<UIStoreProduct, {type: "CARD"}>): CardItem {
   if (!product.card) throw new Error("Missing card");
   return {
     id: product.card.id,
@@ -63,4 +63,12 @@ export function toCardItem(product: StoreProduct): CardItem {
     slug: product.slug ?? "missing-slug",
     price: product.price.toString(),
   };
+}
+
+export function isCardProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'CARD' }> {
+  return product.type === 'CARD';
+}
+
+export function isAccessoryProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'ACCESSORY' }> {
+  return product.type === 'ACCESSORY';
 }

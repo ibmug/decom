@@ -30,7 +30,7 @@ export async function getSingleCardBySlug(slug: string) {
       stock: true,
       slug: true,
       price: true,
-      card: {
+      cardMetadata: {
         select: {
           id: true,
           name: true,
@@ -52,21 +52,21 @@ export async function getSingleCardBySlug(slug: string) {
   if (!raw) return null;
 
   return {
-    id:           raw.card?.id,
-    name:         raw.card?.name,
-    imageUrl:     raw.card?.imageUrl,
-    oracleText:   raw.card?.oracleText,
-    setCode:      raw.card?.setCode,
-    collectorNum: raw.card?.collectorNum,
-    colorIdentity: raw.card?.colorIdentity,
-    manaCost: raw.card?.manaCost,
-    type:         raw.card?.type,
-    rarity:       raw.card?.rarity,
-    setName:      raw.card?.setName,
+    id:           raw.cardMetadata?.id,
+    name:         raw.cardMetadata?.name,
+    imageUrl:     raw.cardMetadata?.imageUrl,
+    oracleText:   raw.cardMetadata?.oracleText,
+    setCode:      raw.cardMetadata?.setCode,
+    collectorNum: raw.cardMetadata?.collectorNum,
+    colorIdentity: raw.cardMetadata?.colorIdentity,
+    manaCost: raw.cardMetadata?.manaCost,
+    type:         raw.cardMetadata?.type,
+    rarity:       raw.cardMetadata?.rarity,
+    setName:      raw.cardMetadata?.setName,
     stock:        raw.stock,
     slug:         raw.slug ?? '',
     price:        raw.price.toString(),
-    usdPrice: raw.card?.usdPrice
+    usdPrice: raw.cardMetadata?.usdPrice
   };
 }
 
@@ -95,7 +95,7 @@ export async function searchCards({
   }
 
  const where: Prisma.StoreProductWhereInput = {
-  card: {
+  cardMetadata: {
     is: metadataWhere,
   },
 };
@@ -105,15 +105,15 @@ export async function searchCards({
 
   const rows = await prisma.storeProduct.findMany({
     where,
-    include: { card: true},
+    include: { cardMetadata: true},
     skip: (page - 1) * limit,
     take: limit,
   });
 
   const data: CardItem[] = rows
-  .filter((r) => r.card) // only check for presence of card
+  .filter((r) => r.cardMetadata) // only check for presence of card
   .map((r) => {
-    const m = r.card!; // card is already CardMetadata
+    const m = r.cardMetadata!; // card is already CardMetadata
     return {
       id:             r.id,
       slug:           r.slug ?? '',
