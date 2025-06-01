@@ -46,7 +46,7 @@ export type StoreProduct =
       customName?: string | null;
       type: 'ACCESSORY';
       accessoryId: string;
-      accessory: AccessoryMetadata;
+      accessory: AccessoryProduct;
       card?: null;
     };
 

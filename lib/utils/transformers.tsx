@@ -1,4 +1,4 @@
-import { StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
+import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
 
 export function toUICardDisplay(product: StoreProduct) {
   if (!product.card) throw new Error("Card data missing in StoreProduct");
