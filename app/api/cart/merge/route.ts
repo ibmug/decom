@@ -55,7 +55,7 @@ export async function POST() {
         include: {
           storeProduct: {
             include: {
-              card:      true,
+              cardMetadata:      true,
               accessory: true,
             }
           }
@@ -70,7 +70,7 @@ export async function POST() {
      include: {
           storeProduct: {
             include: {
-              card:      true,
+              cardMetadata:      true,
               accessory: true,
             }
           }
@@ -92,16 +92,16 @@ export async function POST() {
   productId: item.storeProductId,
   qty:       item.quantity,
   price:     item.storeProduct.price.toString(),
-  name:      item.storeProduct.card?.name ?? item.storeProduct.customName!,
-  image:     item.storeProduct.card?.imageUrl ?? '/images/fallback.png',
+  name:      item.storeProduct.cardMetadata?.name ?? item.storeProduct.customName!,
+  image:     item.storeProduct.cardMetadata?.imageUrl ?? '/images/fallback.png',
   slug:      item.storeProduct.slug!,
 }));
     const guestItems: FullItem[] = (guestCart?.items ?? []).map(item => ({
   productId: item.storeProductId,
   qty:       item.quantity,
   price:     item.storeProduct.price.toString(),
-  name:      item.storeProduct.card?.name ?? item.storeProduct.customName!,
-  image:     item.storeProduct.card?.imageUrl ?? '/images/fallback.png',
+  name:      item.storeProduct.cardMetadata?.name ?? item.storeProduct.customName!,
+  image:     item.storeProduct.cardMetadata?.imageUrl ?? '/images/fallback.png',
   slug:      item.storeProduct.slug!,
 }));
   const mergedItems = mergeCartItems(userItems, guestItems);

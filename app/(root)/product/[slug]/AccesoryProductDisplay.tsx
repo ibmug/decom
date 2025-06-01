@@ -16,7 +16,7 @@ type AccessoryProductDisplayProps = {
     brand?: string;
     category?: string;
     description?: string;
-    rating: string;
+    rating: number;
     numReviews: number;
   };
 };

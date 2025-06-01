@@ -84,7 +84,7 @@ export async function getMyCart() {
         include: {
           storeProduct: {
             include: {
-              card: true,
+              cardMetadata: true,
               accessory: true,
             },
           },
@@ -121,7 +121,7 @@ export async function getMyCartUI(): Promise<UICart | undefined> {
    // 3) Build your UI-friendly items array
   const items = raw.items.map(i => {
     const product = i.storeProduct;
-    const base    = product.card ?? product.accessory;
+    const base    = product.cardMetadata ?? product.accessory;
     return {
       id: product.id,
       name:      base?.name ?? 'Unknown',

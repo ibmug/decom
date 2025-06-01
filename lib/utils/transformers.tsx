@@ -36,8 +36,8 @@ export function toUIAccessoryDisplay(product: StoreProduct) {
     brand: product.accessory.brand ?? undefined,
     category: product.accessory.category,
     description: product.accessory.description ?? undefined,
-    rating: product.rating.toString(),
-    numReviews: product.numReviews,
+    rating: product.accessory.rating ?? "0.0",
+    numReviews: product.accessory.numReviews ?? 0,
   };
 }
 
