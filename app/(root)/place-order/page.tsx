@@ -13,7 +13,7 @@ import { formatCurrency } from "@/lib/utils/utils";
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
 import PlaceOrderForm from "./place-order-form";
-import { getMyCartUI } from "@/lib/actions/cart.actions";
+import { getMyCart } from "@/lib/actions/cart.actions";
 
 export const metadata:Metadata = {
     title: 'Confirm your Order',
@@ -21,7 +21,7 @@ export const metadata:Metadata = {
 
 const PlaceOrderPage = async () => {
 
-    const cart = await getMyCartUI();
+    const cart = await getMyCart();
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 

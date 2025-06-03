@@ -30,7 +30,7 @@ export function toUIAccessoryDisplay(product: StoreProduct) {
   return {
     id: product.accessory.id,
     name: product.accessory.name,
-    images: product.accessory.imageUrl ? [product.accessory.imageUrl] : [],
+    images: product.accessory.images ? [product.accessory.images] : [],
     price: product.price.toString(),
     stock: product.stock,
     brand: product.accessory.brand ?? undefined,

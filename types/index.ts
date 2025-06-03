@@ -132,37 +132,27 @@ export type AddToCartInput = {
 /** One row in the UI cart table */
 export interface UICartItem {
   id: string;
-  name:      string
-  slug:      string
-  price:     string  // already formatted, e.g. "12.34"
-  image:     string
-  productId: string
-  qty:       number
+  productId: string; // ← this is StoreProduct.id
+  name: string;
+  slug: string;
+  price: string;
+  image: string;
+  qty: number;
+  stock: number;
 }
 
 /** The full cart payload your React components consume */
 export interface UICart {
-  id: string
-  /** Formatted subtotal of all items */
-  itemsPrice:    string
-
-  /** Formatted shipping charge */
-  shippingPrice: string
-
-  /** Formatted tax amount */
-  taxPrice:      string
-
-  /** Formatted grand total */
-  totalPrice:    string
-
-  /** Array of items (now strongly typed) */
-  items:         UICartItem[]
-
-  /** Guest or session‐based cart ID */
-  sessionCartId: string
-
-  /** Optional logged‐in user ID */
-  userId?:       string
+  id: string;
+  userId?: string;
+  sessionCartId: string;
+  items: UICartItem[];
+  itemsPrice: string;
+  shippingPrice: string;
+  taxPrice: string;
+  totalPrice: string;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 export type OrderShippingAddress = {

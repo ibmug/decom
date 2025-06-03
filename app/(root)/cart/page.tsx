@@ -1,4 +1,4 @@
-import {  getMyCartUI } from "@/lib/actions/cart.actions";
+import {  getMyCart } from "@/lib/actions/cart.actions";
 import CartTable from "./cart-table";
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,7 @@ export const metadata = {
 
 const CartPage = async () => {
 
-  const cart = await getMyCartUI();
+  const cart = await getMyCart();
 
   return (<div>
     <CartTable cart={cart}/>

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 
 import AddToCart from "@/components/shared/product/add-to-cart";
-import { getMyCartUI } from "@/lib/actions/cart.actions";
+import { getMyCart } from "@/lib/actions/cart.actions";
 import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
 import { isCardProduct } from "@/lib/utils/transformers";
@@ -30,7 +30,7 @@ const ProductDetailsPage = async ({params}: { params: Promise<{ slug: string }> 
 
     if(!rawProduct) notFound();
 
-    const cart = await getMyCartUI();
+    const cart = await getMyCart();
     if(!cart) notFound();
 
 

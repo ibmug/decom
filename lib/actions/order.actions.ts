@@ -4,7 +4,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { formatError } from "../utils/utils"
 import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
-import { getMyCartUI } from "./cart.actions";
+import { getMyCart } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
@@ -40,7 +40,7 @@ export async function createOrder(){
         const session = await  getServerSession(authOptions);
         if(!session) throw new Error('User is not authenticated');
 
-        const cart = await getMyCartUI();
+        const cart = await getMyCart();
         const userId = session?.user?.id;
         if(!userId) throw new Error ('User not found');
         
