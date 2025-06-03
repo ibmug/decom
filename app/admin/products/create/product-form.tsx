@@ -17,8 +17,8 @@ import { UploadButton } from "@/lib/uploadthing";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from 'next/image'
 import { Resolver } from "react-hook-form";
-import {Checkbox} from "@/components/ui/checkbox"
 import { formatError } from "@/lib/utils/utils";
+import { useEffect } from "react";
 
 
 
@@ -40,6 +40,7 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
 
     const router = useRouter();
     const {toast} = useToast();
+    
 
     const defaultValues = type === 'UPDATE' && product 
     ? updateProductSchema.parse(product)
@@ -57,8 +58,22 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
         defaultValues,
     });
 
+    const {watch, setValue} = form;
+        
+    const images = watch('images')
+    const name = watch("name");
+
+    useEffect(() => {
+  const generatedSlug = slugify(name ?? '', { lower: true, strict: true });
+  setValue('slug', generatedSlug, { shouldValidate: true });
+}, [name, setValue]);
+
 
     const onSubmitCustom: SubmitHandler<ProductFormValues> = async (values) => {
+
+
+
+        console.log("Submitting Values...")
   const toastError = (msg: string) =>
     toast({ variant: 'destructive', description: msg });
 
@@ -67,7 +82,9 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
 
   try {
     if (type === 'CREATE') {
-      const dataToCreate = insertProductSchema.parse(values);
+        const slug = slugify(values.name, {lower:true, strict: true})
+        console.log("Payload:..", {...values, slug})
+      const dataToCreate = insertProductSchema.parse({...values,slug});
       const res = await fetch('/api/products/create', {
         method: 'POST',
         body: JSON.stringify(dataToCreate),
@@ -102,13 +119,18 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
   }
 };
 
+
     
-    const images = form.watch('images')
-    const isFeatured = form.watch('isFeatured')
-    const banner = form.watch('banner')
 
     return <Form {...form}>
-        <form method='POST'  onSubmit={form.handleSubmit(onSubmitCustom)} className='space-y-8'>
+        <form method='POST'  onSubmit={form.handleSubmit(
+    (values) => {
+      // Inject slug BEFORE resolver validates
+      values.slug = slugify(values.name ?? '', { lower: true, strict: true });
+      onSubmitCustom(values);
+    },
+    (errors) => console.error("❌ Validation Errors:", errors)
+  )} className='space-y-8'>
             <div className="flex flex-col md:flex-row gap-5">
                 {/*Name*/}
                 <FormField control={form.control}
@@ -121,20 +143,19 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
                         </FormControl>
                     </FormItem>
                 )} />
-                {/*Slug*/}
+
                 <FormField control={form.control}
                 name='slug'
                 render={({field}:{field:ControllerRenderProps<z.infer<typeof insertProductSchema>, 'slug'>; })=>(
                     <FormItem className='w-full'>
                         <FormLabel>Slug:</FormLabel>
                         <FormControl>
-                            <div className='relative'>
-                            <Input placeholder="Pon el codigo de producto:" {...field} />
-                            <Button type='button' className='bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 mt-2' onClick={()=>{form.setValue('slug', slugify(form.getValues('name'), {lower:true}))}}>Generar</Button>
-                            </div>
+                            <Input placeholder="auto-generated slug" {...field} readOnly />
                         </FormControl>
                     </FormItem>
                 )} />
+                {/*Slug*/}
+                
             </div>
             <div className="flex flex-col md:flex-row gap-5">
                 {/*Category*/}
@@ -160,7 +181,17 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
                     </FormItem>
                 )} />
             </div>
+            <FormField control={form.control} name='description' render={({field}) => (
+                <FormItem className='w-full'>
+                    <FormLabel>Descripcion:</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder='Detalles del producto...' {...field} className='resize-none'/>
+                    </FormControl>
+                </FormItem>
+            )} />
+
             <div className="flex flex-col md:flex-row gap-5">
+                
                 {/*Price*/}
                 <FormField control={form.control}
                 name='price'
@@ -214,52 +245,7 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
                 )} />
 
             </div>
-            <div className="upload-field">
-                {/*isfeatured*/}
-                Featured Product
-                <Card>
-                    <CardContent className='space-y-2 mt-2'>
-                        <FormField 
-                        control={form.control}
-                        name='isFeatured'
-                        render={({field})=>(
-                            <FormItem className='space-x-2 items-center'>
-                                <FormControl>
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                </FormControl>
-                                <FormLabel>Tiene Promo?</FormLabel>
-                            </FormItem>
-                        )}/>
-                        {isFeatured && banner && (
-                            <Image src={banner} alt='Banner Image' className='w-full object-cover object-center rounded-sm' width={1920} height={680}/>
-                        )}
-                        {isFeatured && !banner && (
-                            <UploadButton endpoint='imageUploader' onClientUploadComplete={(res:{url: string}[])=>{
-                                form.setValue( 'banner' , res[0].url);
-                            }} onUploadError={(error:Error)=>{
-                                toast({
-                                    variant:'destructive',
-                                    description: `Error: ${error.message}`
-                                })
-                            }} />
-                        )}
-                    </CardContent>
-                </Card>
 
-            </div>
-            <div>
-                {/*Description*/}
-                <FormField control={form.control}
-                name='description'
-                render={({field}:{field:ControllerRenderProps<z.infer<typeof insertProductSchema>, 'description'>; })=>(
-                    <FormItem className='w-full'>
-                        <FormLabel>Descripcion:</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder='Este producto es lo ultimo en tecnologia...' {...field} className='resize-none'/>
-                        </FormControl>
-                    </FormItem>
-                )} />
-            </div>
             <div>
                 {/*Submit*/}
                 <Button type='submit'disabled={form.formState.isSubmitting} className='button col-span-2 w-full'>

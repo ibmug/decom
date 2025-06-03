@@ -97,16 +97,6 @@ export const paymentMethodSchema = z.object({
   message:'Invalid Payment Method',
 });
 
-//schema for inserting order
-// export const insertOrderSchema = z.object({
-//   userId: z.string().min(1,'User is required'),
-//   itemsPrice: currency,
-//   shippingPrice: currency,
-//   taxPrice: currency,
-//   totalPrice: currency,
-//   paymentMethod: z.string().refine((data)=>PAYMENT_METHODS.includes(data), {message: 'Invalid payment method'}), //should be one of the paymentmethods WE define.
-//   shippingAddress: shippingAddressSchema
-// });
 export const insertOrderSchema = z.object({
   userId: z.string(),
   shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
@@ -163,3 +153,16 @@ export const updateUserSchema = updateProfileSchema.extend({
 
 });
 
+
+
+export const insertAccessoryProductSchema = z.object({
+  slug: z.string().min(3),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  brand: z.string().optional(),
+  category: z.string().min(1),
+  images: z.array(z.string().url()).min(1, "At least one image is required"),
+  price: currency, // or z.coerce.number().min(0.01)
+  stock: z.coerce.number().int().min(0),
+  storeId: z.string().uuid().optional(), // optional if you made storeId optional in Prisma schema
+});

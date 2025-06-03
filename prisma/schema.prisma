@@ -124,7 +124,7 @@ model AccessoryProduct {
   name        String
   description String?
   brand       String?
-  imageUrl    String?
+  images    String[]
   category    String
   rating Float? @default(0)
   numReviews Int? @default(0)
@@ -225,8 +225,8 @@ model StoreProduct {
   customName     String?
   type           ProductType
 
-  storeId        String      @db.Uuid
-  store          Store       @relation("StoreToProducts", fields: [storeId], references: [id])
+  storeId        String?      @db.Uuid
+  store          Store?       @relation("StoreToProducts", fields: [storeId], references: [id])
 
   cardMetadataId String?     @db.Uuid
   cardMetadata   CardMetadata? @relation("MetadataToStoreProduct", fields: [cardMetadataId], references: [id])
@@ -235,4 +235,5 @@ model StoreProduct {
   accessory      AccessoryProduct? @relation("AccessoryToStoreProduct", fields: [accessoryId], references: [id])
 
   CartItem       CartItem[]
+  lastUpdated DateTime @default(now()) @updatedAt 
 }

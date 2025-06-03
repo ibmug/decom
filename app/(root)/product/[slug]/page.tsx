@@ -17,10 +17,17 @@ export const dynamic = "force-dynamic";
 
 
 const ProductDetailsPage = async ({params}: { params: Promise<{ slug: string }> }) => {
+
+
+
     const {slug} = await params;
+
+    console.log(slug)
 
     
     const rawProduct = await getSingleProductBySlug(slug);
+
+
     if(!rawProduct) notFound();
 
     const cart = await getMyCartUI();
@@ -52,7 +59,7 @@ const product: UIStoreProduct =
         accessory: rawProduct.accessory!,
         rating:rawProduct.accessory?.rating ?? 0,
         numReviews: rawProduct.accessory?.numReviews ?? 0,
-        images:rawProduct.accessory!.imageUrl ? [rawProduct.accessory!.imageUrl] : [],
+        images:rawProduct.accessory!.images ?? [],
         category: rawProduct.accessory?.category ?? undefined,
         description: rawProduct.accessory?.description ?? undefined,
       };
