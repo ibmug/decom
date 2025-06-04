@@ -34,7 +34,7 @@ export default function SearchProductClient({ session }: SearchProductClientProp
   const minPrice    = sp.get('minPrice')
   const maxPrice    = sp.get('maxPrice')
 
-  const searchParamString = sp.toString()
+  //const searchParamString = sp.toString()
 
   const [results, setResults] = useState<SearchResult>({ data: [], totalPages: 1, currentPage: Number(page) })
   const [loading, setLoading] = useState(true)
@@ -61,7 +61,7 @@ export default function SearchProductClient({ session }: SearchProductClientProp
       .then(res => res.json())
       .then((json: SearchResult) => setResults(json))
       .finally(() => setLoading(false))
-  }, [searchParamString])
+  }, [q,page,type,set,cardType,colors,colorsExact,manaCost,minPrice,maxPrice])
 
   if (loading) return <p>Loading products…</p>
 

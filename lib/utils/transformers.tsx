@@ -50,3 +50,28 @@ export function isCardProduct(product: UIStoreProduct): product is Extract<UISto
 export function isAccessoryProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'ACCESSORY' }> {
   return product.type === 'ACCESSORY';
 }
+
+
+export function toUIAccessoryDisplayGetLatest(
+  p: Extract<StoreProduct, { type: 'ACCESSORY' }>
+): UIStoreProduct {
+  if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
+
+  return {
+    type: 'ACCESSORY',
+    id: p.id,
+    slug: p.slug,
+    price: p.price.toString(),
+    stock: p.stock,
+    customName: p.customName ?? null,
+    accessory: p.accessory,
+    //cardMetadata: undefined,
+    name: p.accessory.name,
+    rating: Number(p.accessory.rating ?? 0),
+    numReviews: p.accessory.numReviews ?? 0,
+    description: p.accessory.description ?? undefined,
+    category: p.accessory.category,
+    brand: p.accessory.brand ?? undefined, // ✅ this is fine now
+    images: p.accessory.images ?? [],
+  };
+}

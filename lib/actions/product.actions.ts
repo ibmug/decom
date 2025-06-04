@@ -1,11 +1,12 @@
 import { prisma } from "@/db/prisma";
 import { convertToPlainObject, formatError } from "../utils/utils";
 import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
-import { Product } from "@/types";
+import { Product, UIStoreProduct } from "@/types";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import { z } from 'zod';
 import { Prisma } from "@prisma/client";
 import { revalidatePage } from "./server/product.server.actions";
+import { toCardItem, toUIAccessoryDisplayGetLatest } from "../utils/transformers";
 
 export type UIProduct = Omit<Product, "price" | "rating"> & {
   price: string;
@@ -31,33 +32,62 @@ interface GetProductOpts {
   order?: "asc" | "desc";
 }
 
-export async function getLatestProducts() {
-  const rows = await prisma.product.findMany({
+export async function getLatestProducts(): Promise<{ data: UIStoreProduct[] }> {
+  const rows = await prisma.storeProduct.findMany({
     where: {},
-    orderBy: { createdAt: 'desc' },
+    orderBy: { lastUpdated: 'desc' },
+    include: {
+      cardMetadata: true,
+      accessory: true,
+    },
     take: LATEST_PRODUCTS_LIMIT,
   });
 
-  const products: Product[] = rows.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    category: p.category,
-    brand: p.brand,
-    description: p.description,
-    stock: p.stock,
-    images: p.images,
-    isFeatured: p.isFeatured,
-    banner: p.banner,
-    price: p.price.toString(),
-    rating: p.rating.toString(),
-    numReviews: p.numReviews,
-    createdAt: new Date(p.createdAt),
-  }));
+  const products: UIStoreProduct[] = rows.map((p) => {
+    if (p.type === 'CARD') {
+    if (!p.cardMetadata) throw new Error("Missing cardMetadata for CARD product");
 
-  const totalPages = await prisma.product.count() / LATEST_PRODUCTS_LIMIT;
-  return { data: products, totalPages };
+    const base = toCardItem({
+      ...p,
+      type: 'CARD',
+      price: p.price.toString(),
+      slug: p.slug ?? 'missing-slug',
+      cardMetadata: p.cardMetadata,
+    });
+
+    const asUIProduct: UIStoreProduct = {
+      ...base,
+      type: 'CARD',
+      id: p.id,
+      slug: p.slug,
+      price: p.price.toString(),
+      stock: p.stock,
+      customName: p.customName ?? null,
+      cardMetadata: p.cardMetadata,
+      //accessory: undefined,
+    };
+
+    return asUIProduct;
+  }
+    if (p.type === 'ACCESSORY') {
+      if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
+
+      return toUIAccessoryDisplayGetLatest({
+        ...p,
+        accessory: p.accessory!,
+        price: p.price.toString(),
+        type: 'ACCESSORY',
+        accessoryId:p.accessoryId!,
+      });
+    }
+
+    throw new Error(`Unknown product type: ${p.type}`);
+  });
+
+  return { data: products };
 }
+
+
 
 export async function getSingleProductBySlug(slug: string) {
   return await prisma.storeProduct.findFirst({
