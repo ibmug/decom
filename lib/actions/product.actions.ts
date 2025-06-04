@@ -106,17 +106,6 @@ export async function getAllFilteredProducts({
   return { data, totalPages };
 }
 
-export async function deleteProduct(id: string) {
-  try {
-    const productExists = await prisma.product.findFirst({ where: { id } });
-    if (!productExists) throw new Error('Product was not found');
-    await prisma.product.delete({ where: { id } });
-    await revalidatePage('/admin/products');
-    return { success: true, message: 'Deleted succesfully' };
-  } catch (err) {
-    return { success: false, message: formatError(err) };
-  }
-}
 
 export async function createProduct(data: z.infer<typeof insertProductSchema>) {
   try {
@@ -143,15 +132,6 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
   }
 }
 
-export async function getAllCats() {
-  try{
-  const data = await prisma.product.groupBy({ by: ['category'], _count: true });
-  return data;
-  }catch(err){
-    console.log(err)
-    return;
-  }
-}
 
 export async function getFeaturedProducts() {
   return await prisma.product.findMany({

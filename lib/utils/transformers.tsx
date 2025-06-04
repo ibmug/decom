@@ -1,30 +1,6 @@
 import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
 
-export function toUICardDisplay(product: StoreProduct) {
-  if (product.type !== 'CARD' || !product.cardMetadata) {
-    throw new Error("Invalid StoreProduct: expected CARD type with cardMetadata");
-  }
 
-  return {
-    id: product.cardMetadata.id,
-    slug: product.slug ?? "missing-slug",
-    name: product.cardMetadata.name,
-    imageUrl: product.cardMetadata.imageUrl,
-    setCode: product.cardMetadata.setCode,
-    setName: product.cardMetadata.setName,
-    manaCost: product.cardMetadata.manaCost ?? undefined,
-    collectorNum: product.cardMetadata.collectorNum,
-    oracleText: product.cardMetadata.oracleText ?? undefined,
-    colorIdentity: product.cardMetadata.colorIdentity,
-    type: product.cardMetadata.type ?? undefined,
-    rarity: product.cardMetadata.rarity ?? undefined,
-    cardKingdomUri: product.cardMetadata.cardKingdomUri ?? undefined,
-    usdPrice: product.cardMetadata.usdPrice ?? undefined,
-    usdFoilPrice: product.cardMetadata.usdFoilPrice ?? undefined,
-    price: product.price.toString(),
-    stock: product.stock,
-  };
-}
 
 export function toUIAccessoryDisplay(product: StoreProduct) {
   if (!product.accessory) throw new Error("Missing accessory data");
