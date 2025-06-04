@@ -61,3 +61,44 @@ export const STORES = {
   // Add more stores as needed
 };
 
+export const SET_CODES = [
+  { code: 'khm', name: 'Kaldheim' },
+  { code: 'neo', name: 'Kamigawa: Neon Dynasty' },
+  { code: 'one', name: 'Phyrexia: All Will Be One' },
+  { code: 'mom', name: 'March of the Machine' },
+  { code: 'bro', name: 'The Brothers’ War' },
+  { code: 'snc', name: 'Streets of New Capenna' },
+  { code: 'mid', name: 'Innistrad: Midnight Hunt' },
+  { code: 'vow', name: 'Innistrad: Crimson Vow' },
+  { code: 'afr', name: 'Adventures in the Forgotten Realms' },
+  { code: 'sld', name: 'Secret Lair Drop' },
+  { code: '5ed', name: 'Fifth Edition' },
+  { code: 'uma', name: 'Ultimate Masters' },
+  { code: 'mh2', name: 'Modern Horizons 2' },
+  { code: 'war', name: 'War of the Spark' },
+  { code: 'grn', name: 'Guilds of Ravnica' },
+  { code: 'dom', name: 'Dominaria' },
+  { code: 'znr', name: 'Zendikar Rising' },
+  { code: 'm21', name: 'Core Set 2021' },
+  // ... add more as needed
+]
+
+
+
+export const CARD_COLORS = [
+  {code:'B', name:"Black"},
+  {code:'W', name:"White"},
+  {code:'G', name:"Green"},
+  {code:'U', name:"Blue"},
+  {code:'R', name:"Red"},
+  {code:'', name:"Colorless"},
+]
+export const CARD_TYPES = [
+  'Creature',
+  'Enchantment',
+  'Artifact',
+  'Planeswalker',
+  'Land',
+  'Instant',
+  'Sorcery'
+]

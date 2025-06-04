@@ -46,7 +46,7 @@ const product: UIStoreProduct =
         stock: rawProduct.stock,
         customName: rawProduct.customName,
         type: "CARD",
-        card: rawProduct.cardMetadata,
+        cardMetadata: rawProduct.cardMetadata,
       }
     : {
         id: rawProduct.id,

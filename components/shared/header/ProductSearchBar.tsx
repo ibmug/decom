@@ -8,11 +8,29 @@ export default function ProductSearchBar() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
 
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const encodedQuery = encodeURIComponent(query.trim());
-    router.push(`/searchProduct?q=${encodedQuery}`);
+      const params = new URLSearchParams(searchParams.toString())
+   if (query.trim()) {
+      params.set('q', query.trim()) 
+    } else {
+      params.delete('q') // Remove if empty
+    }
+
+   // const encodedQuery = encodeURIComponent(params.toString());
+    router.push(`/search?${params.toString()}`);
   };
+
+
+// const handleSearch = () => {
+//   const params = new URLSearchParams(searchParams.toString())
+//   if (query) params.set('q', query)
+//   else params.delete('q')
+
+//   router.push(`/search?${params.toString()}`)
+// }
+
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">

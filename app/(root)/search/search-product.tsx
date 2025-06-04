@@ -1,7 +1,7 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import type { UIStoreProduct } from '@/types'
 import { Session } from 'next-auth'
 
@@ -28,16 +28,42 @@ export default function SearchProductClient({ session }: SearchProductClientProp
 
   const [results, setResults] = useState<SearchResult>({ data: [], totalPages: 1, currentPage: page })
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState(sp.get('q') || '')
 
   useEffect(() => {
-    setLoading(true)
-    fetch(`/api/products?q=${encodeURIComponent(q)}&page=${page}`)
-      .then(res => res.json())
-      .then((json: SearchResult) => setResults(json))
-      .finally(() => setLoading(false))
-  }, [q, page])
+  setLoading(true)
+
+  const params = new URLSearchParams()
+
+  const keys = [
+    'q',
+    'page',
+    'type',
+    'set',
+    'cardType',
+    'colors',
+    'colorsExact',
+    'manaCost',
+    'minPrice',
+    'maxPrice'
+  ]
+
+  for (const key of keys) {
+    const value = sp.get(key)
+    if (value) params.set(key, value)
+  }
+
+  const url = `/api/products?${params.toString()}`
+  console.log('Fetching:', url)
+
+  fetch(url)
+    .then(res => res.json())
+    .then((json: SearchResult) => setResults(json))
+    .finally(() => setLoading(false))
+}, [sp.toString()])
 
   if (loading) return <p>Loading products…</p>
+  
 
   return (
     <div className="space-y-6">
@@ -46,7 +72,7 @@ export default function SearchProductClient({ session }: SearchProductClientProp
           <p>No products found for “{q}”.</p>
         ) : (
           results.data.map((product) => {
-  if (product.type === 'CARD' && product.card) {
+  if (product.type === 'CARD' && product.cardMetadata) {
     
     return (
       <CardDisplay

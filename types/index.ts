@@ -35,7 +35,7 @@ export type StoreProduct =
       customName?: string | null;
       type: 'CARD';
       cardId: string;
-      card: CardMetadata;
+      cardMetadata: CardMetadata;
       accessory?: null;
     }
   | {
@@ -183,7 +183,7 @@ export type UIStoreProduct =
       stock: number;
       customName: string | null;
       type: "CARD";
-      card: CardMetadata;
+      cardMetadata: CardMetadata;
     }
   | {
       id: string;
