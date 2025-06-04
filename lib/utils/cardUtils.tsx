@@ -3,6 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import type { JSX } from 'react';
 
+
 /**
  * Render a mana cost string (e.g. "{2}{G}{U}") as inline mana symbols.
  */
@@ -65,3 +66,4 @@ export function renderOracleText(oracleText: string, size = 18) {
     </div>
   );
 }
+
