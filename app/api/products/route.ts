@@ -47,31 +47,30 @@ export async function GET(req: NextRequest) {
     andClause.push({ cardMetadata: { is: { manaCost: { contains: manaCost } } } })
   }
 
-  if (selectedColors.length > 0) {
-    if (colorsExact) {
-      andClause.push({
-        cardMetadata: {
-          is: {
+ if (selectedColors.length > 0) {
+  if (colorsExact) {
+  andClause.push({
+    cardMetadata: {
+      is: {
+        AND: [
+          {
             colorIdentity: {
-              equals: [...selectedColors].sort((a, b) => a.localeCompare(b)),
+              hasEvery: selectedColors,
             },
           },
-        },
-      })
-    } else {
-      andClause.push({
-        OR: selectedColors.map((c) => ({
-          cardMetadata: {
-            is: {
-              colorIdentity: {
-                has: c,
-              },
+          {
+            // Ensures no extra colors are present
+            colorIdentity: {
+              equals: selectedColors.sort(),
             },
           },
-        })),
-      })
-    }
-  }
+        ],
+      },
+    },
+  });
+}
+
+}
 
   if (cardType) {
     andClause.push({ cardMetadata: { is: { type: { contains: cardType, mode: Prisma.QueryMode.insensitive } } } })
