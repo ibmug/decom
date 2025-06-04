@@ -80,6 +80,30 @@ export const SET_CODES = [
   { code: 'dom', name: 'Dominaria' },
   { code: 'znr', name: 'Zendikar Rising' },
   { code: 'm21', name: 'Core Set 2021' },
+  { code: 'eld', name: 'Throne of Eldraine' },
+  { code: 'thb', name: 'Theros Beyond Death' },
+  { code: 'iko', name: 'Ikoria: Lair of Behemoths' },
+  { code: 'stx', name: 'Strixhaven: School of Mages' },
+  { code: 'dmu', name: 'Dominaria United' },
+  { code: 'mat', name: 'March of the Machine: The Aftermath' },
+  { code: 'ltr', name: 'The Lord of the Rings: Tales of Middle-earth' },
+  { code: 'woe', name: 'Wilds of Eldraine' },
+  { code: 'lci', name: 'The Lost Caverns of Ixalan' },
+  { code: 'mkm', name: 'Murders at Karlov Manor' },
+  { code: 'otj', name: 'Outlaws of Thunder Junction' },
+  { code: 'mh3', name: 'Modern Horizons 3' },
+  { code: 'acr', name: 'Assassin’s Creed' },
+  { code: 'blb', name: 'Bloomburrow' },
+  { code: 'dsk', name: 'Duskmourn: House of Horror' },
+  { code: 'fdn', name: 'Foundations' },
+  { code: 'dfn', name: 'Foundations Jumpstart' },
+  { code: 'inr', name: 'Innistrad Remastered' },
+  { code: 'dft', name: 'Aetherdrift' },
+  { code: 'tdm', name: 'Tarkir: Dragonstorm' },
+  { code: 'fin', name: 'Final Fantasy' },
+  { code: 'eoe', name: 'Edge of Eternities' },
+  { code: 'spm', name: 'Marvel’s Spider-Man' },
+  { code: 'ava', name: 'Avatar: The Last Airbender' },
   // ... add more as needed
 ]
 
@@ -100,5 +124,6 @@ export const CARD_TYPES = [
   'Planeswalker',
   'Land',
   'Instant',
-  'Sorcery'
+  'Sorcery',
+  'Battle',
 ]
