@@ -6,6 +6,7 @@ import Menu from "./menu"
 import CategoryDrawer from './category-drawer';
 //import ProductSearch from './product-search';
 import CardSearchInput from '../cardComponents/CardSearchInput';
+import ProductSearchBar from './ProductSearchBar';
 
 
 const Header = () => {
@@ -21,7 +22,8 @@ const Header = () => {
             </div>
             
             <div className="">
-                   <CardSearchInput/>
+                   {/* <CardSearchInput/> */}
+                   <ProductSearchBar/>
                 </div>
             <Menu></Menu>
         </div>
