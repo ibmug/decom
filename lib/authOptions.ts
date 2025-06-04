@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
         entry.lastAttempt = now;
         loginAttempts.set(ip, entry);
     
-        //console.log(`[Auth] login attempt #${entry.count} from IP ${ip}`);
+        
     
         if (entry.count > MAX_LOGIN_ATTEMPTS) {
           console.warn(

@@ -47,28 +47,6 @@ export async function GET(req: NextRequest) {
     andClause.push({ cardMetadata: { is: { manaCost: { contains: manaCost } } } })
   }
 
-//  if (selectedColors.length > 0) {
-//   if (colorsExact) {
-//   andClause.push({
-//     cardMetadata: {
-//       is: {
-//         AND: [
-//           {
-//             colorIdentity: {
-//               hasEvery: selectedColors,
-//             },
-//           },
-//           {
-//             // Ensures no extra colors are present
-//             colorIdentity: {
-//               equals: selectedColors.sort(),
-//             },
-//           },
-//         ],
-//       },
-//     },
-//   });
-// }
 if (selectedColors.length > 0) {
   const isColorlessSelected = selectedColors.length === 1 && selectedColors[0] === 'C'
 
@@ -138,13 +116,6 @@ if (selectedColors.length > 0) {
     }),
     prisma.storeProduct.count({ where: whereClause }),
   ])
-
-  console.log("Color Params:", {
-    raw: searchParams.get('colors'),
-    selectedColors,
-    colorsExact,
-  })
-  console.log('WHERE CLAUSE:', JSON.stringify(whereClause, null, 2))
 
   return NextResponse.json({
     data,

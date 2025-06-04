@@ -73,7 +73,7 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
 
 
 
-        console.log("Submitting Values...")
+        
   const toastError = (msg: string) =>
     toast({ variant: 'destructive', description: msg });
 
@@ -83,7 +83,7 @@ const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => 
   try {
     if (type === 'CREATE') {
         const slug = slugify(values.name, {lower:true, strict: true})
-        console.log("Payload:..", {...values, slug})
+        
       const dataToCreate = insertProductSchema.parse({...values,slug});
       const res = await fetch('/api/products/create', {
         method: 'POST',

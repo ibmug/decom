@@ -29,6 +29,7 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
           <p><strong>Price:</strong> ${product.usdPrice?.toString() || 'n/a'}</p>
           <p><strong>Stock:</strong> {product.stock}</p>
           {session?.user?.role === 'admin' && (
+            
   <AddStock cardProductId={product.id} initialStock={product.stock} />
 )}
         </div>

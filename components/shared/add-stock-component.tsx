@@ -53,19 +53,22 @@ export default function AddStock({ cardProductId, initialStock }: AddStockProps)
           onChange={(e) => setInput(Number(e.target.value))}
           className="w-14"
         />
-        <Button
+        {loading ? (<>Updating..</>) : (<>
+         <Button
           variant="destructive"
           onClick={() => updateStockHandler(-input)}
           disabled={loading || input <= 0 || input > stock}
         >
-          {loading ? "Removing..." : "Remove"}
+          -
         </Button>
         <Button
           onClick={() => updateStockHandler(input)}
           disabled={loading || input <= 0}
         >
-          {loading ? "Adding..." : "Add"}
+          +
         </Button>
+        </>)}
+  
       </div>
     </div>
   )

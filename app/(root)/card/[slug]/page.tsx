@@ -22,7 +22,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
   if (!card) notFound();
 
   const imageUrl = card.imageUrl ?? "/images/cardPlaceholder.png";
-  console.log(card.oracleText)
+  
 
   return (
     <section>

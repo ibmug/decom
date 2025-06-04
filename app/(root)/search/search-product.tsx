@@ -55,7 +55,7 @@ export default function SearchProductClient({ session }: SearchProductClientProp
     if (maxPrice)    params.set('maxPrice', maxPrice)
 
     const url = `/api/products?${params.toString()}`
-    console.log('Fetching:', url)
+    
 
     fetch(url)
       .then(res => res.json())

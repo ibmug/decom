@@ -94,7 +94,7 @@ const AdminOrdersPage = async (props: {
      order:   orderDir,
    });
 
-    //console.log(orders.data[0])
+    
     const viewOrders: ViewOrder[] = orders.data.map((order: RawOrder) => {
         // parse+validate shippingAddress, throws if invalid
         const sa = shippingAddressSchema.parse(order.shippingAddress)
