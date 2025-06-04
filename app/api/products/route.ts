@@ -47,28 +47,66 @@ export async function GET(req: NextRequest) {
     andClause.push({ cardMetadata: { is: { manaCost: { contains: manaCost } } } })
   }
 
- if (selectedColors.length > 0) {
-  if (colorsExact) {
-  andClause.push({
-    cardMetadata: {
-      is: {
-        AND: [
-          {
-            colorIdentity: {
-              hasEvery: selectedColors,
-            },
+//  if (selectedColors.length > 0) {
+//   if (colorsExact) {
+//   andClause.push({
+//     cardMetadata: {
+//       is: {
+//         AND: [
+//           {
+//             colorIdentity: {
+//               hasEvery: selectedColors,
+//             },
+//           },
+//           {
+//             // Ensures no extra colors are present
+//             colorIdentity: {
+//               equals: selectedColors.sort(),
+//             },
+//           },
+//         ],
+//       },
+//     },
+//   });
+// }
+if (selectedColors.length > 0) {
+  const isColorlessSelected = selectedColors.length === 1 && selectedColors[0] === 'C'
+
+  if (isColorlessSelected) {
+    // Show only colorless cards
+    andClause.push({
+      cardMetadata: {
+        is: {
+          colorIdentity: {
+            equals: [],
           },
-          {
-            // Ensures no extra colors are present
-            colorIdentity: {
-              equals: selectedColors.sort(),
-            },
-          },
-        ],
+        },
       },
-    },
-  });
-}
+    })
+  } else if (colorsExact) {
+    andClause.push({
+      cardMetadata: {
+        is: {
+          colorIdentity: {
+            equals: selectedColors.sort(),
+          },
+        },
+      },
+    })
+  } else {
+    andClause.push({
+      OR: selectedColors.map((c) => ({
+        cardMetadata: {
+          is: {
+            colorIdentity: {
+              has: c,
+            },
+          },
+        },
+      })),
+    })
+  }
+
 
 }
 

@@ -115,7 +115,7 @@ export const CARD_COLORS = [
   {code:'G', name:"Green"},
   {code:'U', name:"Blue"},
   {code:'R', name:"Red"},
-  {code:'', name:"Colorless"},
+  {code:'C', name:"Colorless"},
 ]
 export const CARD_TYPES = [
   'Creature',
