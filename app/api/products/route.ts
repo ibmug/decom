@@ -1,13 +1,10 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/db/prisma'
 import { Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
-  const reqUrl = new URL(req.url, 'http://localhost')  // origin is required here
-const searchParams = reqUrl.searchParams
-
-  //const { searchParams } = new URL(req.url)
+  const reqUrl = new URL(req.url, 'http://localhost')
+  const searchParams = reqUrl.searchParams
 
   const q = searchParams.get('q') ?? ''
   const page = parseInt(searchParams.get('page') ?? '1')
@@ -24,9 +21,8 @@ const searchParams = reqUrl.searchParams
 
   const PAGE_SIZE = 12
 
-  const whereClause: Prisma.StoreProductWhereInput = {
-    AND: [],
-  }
+  const whereClause: Prisma.StoreProductWhereInput = {}
+  const andClause: Prisma.StoreProductWhereInput[] = []
 
   if (type === 'CARD') {
     whereClause.type = 'CARD'
@@ -35,7 +31,7 @@ const searchParams = reqUrl.searchParams
   }
 
   if (q) {
-    whereClause.AND!.push({
+    andClause.push({
       OR: [
         { accessory: { is: { name: { contains: q, mode: Prisma.QueryMode.insensitive } } } },
         { cardMetadata: { is: { name: { contains: q, mode: Prisma.QueryMode.insensitive } } } }
@@ -44,51 +40,53 @@ const searchParams = reqUrl.searchParams
   }
 
   if (set) {
-    whereClause.AND!.push({ cardMetadata: { is: { setCode: { equals: set } } } })
+    andClause.push({ cardMetadata: { is: { setCode: { equals: set } } } })
   }
 
   if (manaCost) {
-    whereClause.AND!.push({ cardMetadata: { is: { manaCost: { contains: manaCost } } } })
+    andClause.push({ cardMetadata: { is: { manaCost: { contains: manaCost } } } })
   }
 
   if (selectedColors.length > 0) {
-  if (colorsExact) {
-    // Must contain ALL selected colors AND have NO others
-    whereClause.AND!.push({
-      cardMetadata: {
-        is: {
-          colorIdentity: {
-            equals: [...selectedColors].sort((a, b) => a.localeCompare(b)),
-          },
-        },
-      },
-    })
-  } else {
-    // Matches ANY of the selected colors
-    whereClause.AND!.push({
-      OR: selectedColors.map((c) => ({
+    if (colorsExact) {
+      andClause.push({
         cardMetadata: {
           is: {
             colorIdentity: {
-              has: c,
+              equals: [...selectedColors].sort((a, b) => a.localeCompare(b)),
             },
           },
         },
-      })),
-    })
+      })
+    } else {
+      andClause.push({
+        OR: selectedColors.map((c) => ({
+          cardMetadata: {
+            is: {
+              colorIdentity: {
+                has: c,
+              },
+            },
+          },
+        })),
+      })
+    }
   }
-}
 
   if (cardType) {
-    whereClause.AND!.push({ cardMetadata: { is: { type: { contains: cardType, mode: Prisma.QueryMode.insensitive } } } })
+    andClause.push({ cardMetadata: { is: { type: { contains: cardType, mode: Prisma.QueryMode.insensitive } } } })
   }
 
   if (minPrice) {
-    whereClause.AND!.push({ price: { gte: parseFloat(minPrice) } })
+    andClause.push({ price: { gte: parseFloat(minPrice) } })
   }
 
   if (maxPrice) {
-    whereClause.AND!.push({ price: { lte: parseFloat(maxPrice) } })
+    andClause.push({ price: { lte: parseFloat(maxPrice) } })
+  }
+
+  if (andClause.length > 0) {
+    whereClause.AND = andClause
   }
 
   const [data, totalCount] = await Promise.all([
@@ -103,12 +101,13 @@ const searchParams = reqUrl.searchParams
     }),
     prisma.storeProduct.count({ where: whereClause }),
   ])
+
   console.log("Color Params:", {
-  raw: searchParams.get('colors'),
-  selectedColors,
-  colorsExact,
-})
-console.log('WHERE CLAUSE:', JSON.stringify(whereClause, null, 2));
+    raw: searchParams.get('colors'),
+    selectedColors,
+    colorsExact,
+  })
+  console.log('WHERE CLAUSE:', JSON.stringify(whereClause, null, 2))
 
   return NextResponse.json({
     data,

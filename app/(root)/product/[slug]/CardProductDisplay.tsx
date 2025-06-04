@@ -22,8 +22,8 @@ export default function CardProductDisplay({ product }: {product: CardOnly}) {
         <div className="col-span-2">
           <div className="relative w-full aspect-[3/4] rounded overflow-hidden border">
             <Image
-              src={product.card.imageUrl}
-              alt={product.card.name}
+              src={product.cardMetadata.imageUrl}
+              alt={product.cardMetadata.name}
               fill
               className="object-contain"
             />
@@ -33,21 +33,21 @@ export default function CardProductDisplay({ product }: {product: CardOnly}) {
         {/* Details Column */}
         <div className="col-span-2 p-5">
           <div className="flex flex-col gap-4">
-            <p className="text-muted-foreground">{product.card.setName} • {product.card.collectorNum}</p>
-            <h1 className="h3-bold">{product.card.name}</h1>
-            {product.card.manaCost && <p className="text-sm text-muted-foreground">Mana Cost: {product.card.manaCost}</p>}
-            <p className="text-sm text-muted-foreground">{product.type} • {product.card.rarity}</p>
-            <p className="text-sm text-muted-foreground">Colors: {product.card.colorIdentity.join(', ')}</p>
-            <p className="italic mt-2">{product.card.oracleText}</p>
+            <p className="text-muted-foreground">{product.cardMetadata.setName} • {product.cardMetadata.collectorNum}</p>
+            <h1 className="h3-bold">{product.cardMetadata.name}</h1>
+            {product.cardMetadata.manaCost && <p className="text-sm text-muted-foreground">Mana Cost: {product.cardMetadata.manaCost}</p>}
+            <p className="text-sm text-muted-foreground">{product.type} • {product.cardMetadata.rarity}</p>
+            <p className="text-sm text-muted-foreground">Colors: {product.cardMetadata.colorIdentity.join(', ')}</p>
+            <p className="italic mt-2">{product.cardMetadata.oracleText}</p>
 
             <div className="mt-6">
               <ProductPrice
                 value={Number(product.price)}
                 className="w-24 rounded-full bg-green-100 text-green-700 px-5 py-2"
               />
-              {product.card.usdFoilPrice && (
+              {product.cardMetadata.usdFoilPrice && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Foil: ${product.card.usdFoilPrice.toFixed(2)}
+                  Foil: ${product.cardMetadata.usdFoilPrice.toFixed(2)}
                 </p>
               )}
             </div>

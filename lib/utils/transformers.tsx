@@ -1,24 +1,26 @@
 import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
 
 export function toUICardDisplay(product: StoreProduct) {
-  if (!product.card) throw new Error("Card data missing in StoreProduct");
+  if (product.type !== 'CARD' || !product.cardMetadata) {
+    throw new Error("Invalid StoreProduct: expected CARD type with cardMetadata");
+  }
 
   return {
-    id: product.card.id,
+    id: product.cardMetadata.id,
     slug: product.slug ?? "missing-slug",
-    name: product.card.name,
-    imageUrl: product.card.imageUrl,
-    setCode: product.card.setCode,
-    setName: product.card.setName,
-    manaCost: product.card.manaCost ?? undefined,
-    collectorNum: product.card.collectorNum,
-    oracleText: product.card.oracleText ?? undefined,
-    colorIdentity: product.card.colorIdentity,
-    type: product.card.type ?? undefined,
-    rarity: product.card.rarity ?? undefined,
-    cardKingdomUri: product.card.cardKingdomUri ?? undefined,
-    usdPrice: product.card.usdPrice ?? undefined,
-    usdFoilPrice: product.card.usdFoilPrice ?? undefined,
+    name: product.cardMetadata.name,
+    imageUrl: product.cardMetadata.imageUrl,
+    setCode: product.cardMetadata.setCode,
+    setName: product.cardMetadata.setName,
+    manaCost: product.cardMetadata.manaCost ?? undefined,
+    collectorNum: product.cardMetadata.collectorNum,
+    oracleText: product.cardMetadata.oracleText ?? undefined,
+    colorIdentity: product.cardMetadata.colorIdentity,
+    type: product.cardMetadata.type ?? undefined,
+    rarity: product.cardMetadata.rarity ?? undefined,
+    cardKingdomUri: product.cardMetadata.cardKingdomUri ?? undefined,
+    usdPrice: product.cardMetadata.usdPrice ?? undefined,
+    usdFoilPrice: product.cardMetadata.usdFoilPrice ?? undefined,
     price: product.price.toString(),
     stock: product.stock,
   };

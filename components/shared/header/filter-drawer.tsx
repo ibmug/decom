@@ -50,7 +50,7 @@ useEffect(() => {
   setManaCost(sp.get('manaCost') ?? '')
   setCardType(sp.get('cardType') ?? '')
   setSetCode(sp.get('set') ?? '')
-}, [])
+}, [sp])
 
 
 
