@@ -2,9 +2,6 @@
 
 import { getSingleProductBySlug } from "@/lib/actions/product.actions";
 import { notFound } from "next/navigation";
-
-
-import AddToCart from "@/components/shared/product/add-to-cart";
 import { getMyCart } from "@/lib/actions/cart.actions";
 import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";

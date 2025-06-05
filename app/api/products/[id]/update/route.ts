@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = updateProductSchema.parse(body);
 
-    await prisma.product.update({
+    await prisma.storeProduct.update({
       where: { id: data.id },
       data,
     });

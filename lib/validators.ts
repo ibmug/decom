@@ -99,6 +99,8 @@ export const paymentMethodSchema = z.object({
 
 export const insertOrderSchema = z.object({
   userId: z.string(),
+  updateAt: z.string(),
+  createdAt: z.string(),
   shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
   shippingAddress: z.object({
   address: z.object({

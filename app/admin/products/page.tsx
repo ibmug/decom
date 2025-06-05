@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { getAllFilteredProducts } from "@/lib/actions/product.actions";
+import { getAllFilteredProducts, UIProduct } from "@/lib/actions/product.actions";
 import { formatCurrency, formatId } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,7 @@ import { Product } from "@/types";
 import SortSelector from "@/components/admin/sort-control";
 import { SortOption } from "@/components/admin/sortselector.types";
 import { PAGE_SIZE } from "@/lib/constants";
+
 
 
 const productSortOptions: SortOption[] = [
@@ -49,7 +50,7 @@ const AdminProductsPage = async (props: {
         order,
     })
 
-    const viewProducts : Product[] = products.data.map((p)=>({
+    const viewProducts : Product[] = products.data.map((p: UIProduct)=>({
         ...p,
         price: p.price.toString(),
         rating: p.rating.toString(),

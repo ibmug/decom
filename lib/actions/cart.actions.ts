@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/authOptions'
 import { prisma } from '@/db/prisma'
 import { formatError } from '@/lib/utils/utils'
 import { calcPrice, PriceCalcItem, serializeCart } from '@/lib/utils/cartUtils'
-import { Prisma } from '@prisma/client'
+
 
 //type CartWithItems = Prisma.CartGetPayload<{ include: { items: {include:{storeProduct: true}} } }>
 // --- Helpers --------------------------------------------------
@@ -140,18 +140,18 @@ export async function addItemToCart(data: { productId: string; qty?: number }) {
 
     const cart = await resolveCart(sessionCartId, userId)
     const existingItems = cart.items.map(item => ({
-  productId: item.storeProductId,
+  storeProductId: item.storeProductId,
   qty: item.quantity,
   price: item.storeProduct.price.toString(),
 }))
     const items = [...existingItems]
-    const idx = items.findIndex(x => x.productId === data.productId)
+    const idx = items.findIndex(x => x.storeProductId === data.productId)
     if (idx >= 0) {
       if (prod.stock < items[idx].qty + 1) throw new Error('Not enough stock')
       items[idx].qty += 1
     } else {
       if (prod.stock < 1) throw new Error('Not enough stock')
-      items.push({ productId: data.productId, qty: 1, price: prod.price.toString() })
+      items.push({ storeProductId: data.productId, qty: 1, price: prod.price.toString() })
     }
 
     const pricing = await calcPrice(
@@ -203,11 +203,11 @@ export async function removeItemFromCart(productId: string) {
 
     const cart = await resolveCart(sessionCartId, userId)
     const items = cart.items.map(item => ({
-  productId: item.storeProductId,
+  storeProductId: item.storeProductId,
   qty: item.quantity,
   price: item.storeProduct.price.toString(),
 }))
-    const idx = items.findIndex(x => x.productId === productId)
+    const idx = items.findIndex(x => x.storeProductId === productId)
     if (idx < 0) throw new Error('Product not in cart')
 
     if (items[idx].qty > 1) {
@@ -226,7 +226,7 @@ export async function removeItemFromCart(productId: string) {
         items: {
   deleteMany: {},
   create: items.map(i => ({
-    storeProductId: i.productId,
+    storeProductId: i.storeProductId,
     quantity: i.qty,
   })),
 }
@@ -252,24 +252,24 @@ export async function updateCartItemQuantity(productId: string, newQty: number) 
   const { sessionCartId, userId } = await getCartIdentifiers()
   const cart = await resolveCart(sessionCartId, userId)
 
-  let items = cart.items.map(item => ({
-    productId: item.storeProductId,
+  const items = cart.items.map(item => ({
+    storeProductId: item.storeProductId,
     qty: item.quantity,
     price: item.storeProduct.price.toString(),
   }))
 
-  let idx = items.findIndex(x => x.productId === productId)
+  let idx = items.findIndex(x => x.storeProductId === productId)
 
   if (idx < 0 && newQty > 0) {
     const prod = await prisma.storeProduct.findUnique({ where: { id: productId } })
     if (!prod) throw new Error('Product not found')
     if (prod.stock < newQty) throw new Error('Not enough stock')
 
-    items.push({ productId, qty: newQty, price: prod.price.toString() })
+    items.push({ storeProductId: productId, qty: newQty, price: prod.price.toString() })
   }
 
   // 🔁 Recalculate index after possible push
-  idx = items.findIndex(x => x.productId === productId)
+  idx = items.findIndex(x => x.storeProductId === productId)
 
   if (newQty <= 0) {
     items.splice(idx, 1)
@@ -285,7 +285,7 @@ export async function updateCartItemQuantity(productId: string, newQty: number) 
       items: {
         deleteMany: {}, // optionally clear old items
         create: items.map(i => ({
-          storeProductId: i.productId,
+          storeProductId: i.storeProductId,
           quantity: i.qty,
         })),
       },

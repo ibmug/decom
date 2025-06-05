@@ -1,7 +1,6 @@
 'use client';
 
 import { useToast } from '@/hooks/use-toast';
-import { revalidatePage } from '@/lib/actions/server/product.server.actions';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 

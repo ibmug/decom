@@ -77,7 +77,7 @@ return (
                                 </TableCell>
                                 <TableCell className="flex-center gap-2">
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            await handleQuantityChange(item.productId,-1)
+                                            await handleQuantityChange(item.storeProductId,-1)
                                       
                                     }
                                     )}>
@@ -89,7 +89,7 @@ return (
                                     </Button>
                                     <span className="px-2">{item.qty}</span>
                                     <Button disabled={isPending} variant="outline" type='button' onClick={()=>startTransition(async ()=>{
-                                            await handleQuantityChange(item.productId,1)
+                                            await handleQuantityChange(item.storeProductId,1)
 
                                     }
                                     )}>

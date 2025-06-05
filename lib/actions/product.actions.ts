@@ -161,15 +161,15 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
     return { success: false, message: formatError(err) };
   }
 }
-
-
-export async function getFeaturedProducts() {
-  return await prisma.product.findMany({
-    where: { isFeatured: true },
-    orderBy: { createdAt: 'desc' },
-    take: 4,
-  });
-}
+///We need to add a function to pull banners and promotions.
+//An entire different page will be available for this.
+// export async function getFeaturedProducts() {
+//   return await prisma.storeProduct.findMany({
+//     where: { isFeatured: true },
+//     orderBy: { createdAt: 'desc' },
+//     take: 4,
+//   });
+// }
 
 export interface EnrichedProduct {
   id: string;

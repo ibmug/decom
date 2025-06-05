@@ -26,6 +26,8 @@ export function calcPrice(items: PriceCalcItem[]) {
 export function serializeCart(record: {
   id: string;
   userId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
   sessionCartId: string;
   items?: {
     id: string;
@@ -57,6 +59,8 @@ export function serializeCart(record: {
 }) {
   return {
     id: record.id,
+    updatedAt: record.updatedAt.toISOString(),
+    createdAt: record.createdAt.toISOString(),
     userId: record.userId ?? undefined,
     sessionCartId: record.sessionCartId,
     items: record.items?.map((item) => {
@@ -67,7 +71,7 @@ export function serializeCart(record: {
 
       return {
         id: item.id,
-        productId: item.storeProductId,
+        storeProductId: item.storeProductId,
         name:
           product.customName ??
           (isCard ? metadata?.name : accessory?.name) ??

@@ -89,6 +89,8 @@ export async function createOrder() {
       taxPrice: Number(cart.taxPrice),
       itemsPrice: Number(cart.itemsPrice),
       totalPrice: Number(cart.totalPrice),
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt,
     });
 
     const insertedOrderId = await prisma.$transaction(async (tx) => {
@@ -159,7 +161,7 @@ export async function getOrderById(
     where: { id: orderId },
     include: {
       user:       { select: { name: true, email: true } },
-      orderItems: {select: {productId: true, name: true, slug: true, image: true, price: true, qty: true},},
+      orderItems: {select: {storeProductId: true, name: true, slug: true, image: true, price: true, qty: true},},
     },
   })
   if (!res) return null
@@ -187,7 +189,7 @@ export async function getOrderById(
     deliveredAt:    res.deliveredAt,
     createdAt:      res.createdAt,
     orderItems:     res.orderItems.map((oi) => ({
-      productId: oi.productId,
+      storeProductId: oi.storeProductId,
       name:      oi.name!,
       slug:      oi.slug!,
       price:     oi.price.toString(),
@@ -290,7 +292,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
         //iterate over the products and update the stock.
         for(const item of order.orderItems){
             await tx.product.update({
-                where:{id: item.productId},
+                where:{id: item.storeProductId},
                 data: {stock: {increment: -item.qty}},
             });
         }

@@ -6,12 +6,12 @@ import { formatError } from '@/lib/utils/utils';
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const product = await prisma.product.findFirst({ where: { id } });
+    const product = await prisma.storeProduct.findFirst({ where: { id } });
     if (!product) {
       return NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
     }
 
-    await prisma.product.delete({ where: { id } });
+    await prisma.storeProduct.delete({ where: { id } });
     await revalidatePath('/admin/products');
 
     return NextResponse.json({ success: true, message: 'Deleted successfully' });

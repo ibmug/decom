@@ -6,7 +6,6 @@ import { ShippingAddress } from "@/types";
 import { getServerSession } from 'next-auth/next';
 import { authOptions }      from '@/lib/authOptions';
 import { redirect } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 export const metadata: Metadata = {
     title: 'Select Payment Method',
 }

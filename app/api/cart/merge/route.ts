@@ -8,7 +8,7 @@ import { calcPrice } from '@/lib/utils/cartUtils';
 
 
 type FullItem = {
-  productId: string;
+  storeProductId: string;
   qty:       number;
   price:     string;
   name:      string;
@@ -19,12 +19,12 @@ type FullItem = {
 function mergeCartItems(u: FullItem[], g: FullItem[]): FullItem[] {
   //user,guest
   const map = new Map<string, FullItem>();
-  for (const it of u) map.set(it.productId, { ...it });
+  for (const it of u) map.set(it.storeProductId, { ...it });
   for (const it of g) {
-    if (map.has(it.productId)) {
-      map.get(it.productId)!.qty += it.qty;
+    if (map.has(it.storeProductId)) {
+      map.get(it.storeProductId)!.qty += it.qty;
     } else {
-      map.set(it.productId, { ...it });
+      map.set(it.storeProductId, { ...it });
     }
   }
   return Array.from(map.values());
@@ -89,7 +89,7 @@ export async function POST() {
 
   // 4) Merge
   const userItems: FullItem[] = (userCart?.items ?? []).map(item => ({
-  productId: item.storeProductId,
+  storeProductId: item.storeProductId,
   qty:       item.quantity,
   price:     item.storeProduct.price.toString(),
   name:      item.storeProduct.cardMetadata?.name ?? item.storeProduct.customName!,
@@ -97,7 +97,7 @@ export async function POST() {
   slug:      item.storeProduct.slug!,
 }));
     const guestItems: FullItem[] = (guestCart?.items ?? []).map(item => ({
-  productId: item.storeProductId,
+  storeProductId: item.storeProductId,
   qty:       item.quantity,
   price:     item.storeProduct.price.toString(),
   name:      item.storeProduct.cardMetadata?.name ?? item.storeProduct.customName!,
@@ -117,8 +117,8 @@ export async function POST() {
       data: {
         items: {
           deleteMany: {}, // remove all previous items
-          create: mergedItems.map(({ productId, qty }) => ({
-            storeProductId: productId,
+          create: mergedItems.map(({ storeProductId, qty }) => ({
+            storeProductId: storeProductId,
             quantity: qty,
           })),
         },
@@ -132,8 +132,8 @@ export async function POST() {
         userId,
         sessionCartId: guestId,    // <— this was missing
         items: {
-          create: mergedItems.map(({ productId, qty }) => ({
-            storeProductId: productId,
+          create: mergedItems.map(({ storeProductId, qty }) => ({
+            storeProductId: storeProductId,
             quantity: qty,
           })),
         },
