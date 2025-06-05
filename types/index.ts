@@ -114,12 +114,12 @@ export type UIOrderItem = {
   slug: string;
   price: string;
   image: string;
-  productId: string;
+  storeProductId: string;
   qty: number;
 };
 
 export type AddToCartInput = {
-  productId: string;
+  storeProductId: string;
   name: string;
   slug: string;
   price: string;

@@ -9,7 +9,7 @@ import { formatError } from '@/lib/utils/utils'
 import { calcPrice, PriceCalcItem, serializeCart } from '@/lib/utils/cartUtils'
 import { Prisma } from '@prisma/client'
 
-type CartWithItems = Prisma.CartGetPayload<{ include: { items: {include:{storeProduct: true}} } }>
+//type CartWithItems = Prisma.CartGetPayload<{ include: { items: {include:{storeProduct: true}} } }>
 // --- Helpers --------------------------------------------------
 
 /** Read or create sessionCartId cookie + current userId */
