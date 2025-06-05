@@ -1,4 +1,6 @@
-name: CI - Lint & Build
+# .github/workflows/ci.yml
+
+name: CI - Lint, Build & Test
 
 on:
   push:
@@ -11,23 +13,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18 # or whatever you're using
+          node-version: 18
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Lint code
+      - name: Run ESLint
         run: npm run lint
 
-      - name: Build project
+      - name: Build the Next.js application
         run: npm run build
 
-      # Optional: run tests if you have them
-      - name: Run tests
+      - name: Run Jest tests
         run: npm test
