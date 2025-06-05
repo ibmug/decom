@@ -26,6 +26,11 @@ export default async function ShippingAddressPage() {
     throw new Error('No user ID');
   }
 
+  //well implement guest proceed to purchase soon.
+  if (!session?.user?.id) {
+    redirect('/sign-in') //user is not logged, lets redirect them.
+  }
+
   const user = await getUserById(userId);
 
   return (

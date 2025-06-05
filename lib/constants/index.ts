@@ -30,7 +30,7 @@ export const USER_ROLES = process.env.USER_ROLES ? process.env.USER_ROLES.split(
 
 
 export const STORES = {
-   'Shivan Shop': {
+  'Shivan Shop': {
     storeId: 'shivanshop',
     addressName: 'Shivan Shop Sucursal Centro',
     address: {
@@ -42,24 +42,25 @@ export const STORES = {
       country: 'México',
       phone: '555-123-4567',
       notes: 'Favor de acudir con identificación. Atención de 9am a 6pm.',
-    }
+    },
   },
   'Goma Shop': {
     storeId: 'gomaShop',
     addressName: 'Shivan Shop Sucursal Sur',
-    storeAddress: 'Calle del Sol 456, Gustavo A. Madero, CDMX',
+    address: {
       fullName: 'Sucursal Norte',
-      country: 'México',
-      postalCode: '07200',
       streetName: 'Calle del Sol 456',
       city: 'Ciudad de México',
       state: 'CDMX',
+      postalCode: '07200',
+      country: 'México',
       phone: '555-987-6543',
       notes: 'Acceso por puerta lateral. Atención de 10am a 7pm.',
-    
+    },
   },
-  // Add more stores as needed
-};
+  //add more if needed
+}
+
 
 export const SET_CODES = [
   { code: 'khm', name: 'Kaldheim' },

@@ -61,22 +61,24 @@ export async function getUserById(userId: string) {
   return user;
 }
 
-// Update user address
-export async function updateUserAddress(data: ShippingAddress) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) throw new Error('Not authenticated');
-    const userId = session.user.id;
 
-    const address = shippingAddressSchema.parse(data);
+interface UpdateAddressInput extends ShippingAddress {
+  userId: string;
+}
+// Update user address
+export async function updateUserAddress(data: UpdateAddressInput) {
+  try {
     await prisma.user.update({
-      where: { id: userId },
-      data: { address },
+      where: { id: data.userId },
+      data: {
+        address:data
+      },
     });
 
-    return { success: true, message: 'Address updated.' };
-  } catch (error) {
-    return { success: false, message: formatError(error) };
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: 'Failed to update user address' };
   }
 }
 

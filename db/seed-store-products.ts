@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
+
 function toSlug(str: string) {
   return str
     .toLowerCase()
@@ -9,11 +11,46 @@ function toSlug(str: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function buildBaseSlug(name: string, setCode: string) {
+  return toSlug(`${name} ${setCode}`);
+}
+
+async function buildUniqueSlug(
+  baseSlug: string,
+  cardMetadataId: string,
+  collectorNum: string,
+  scryfallId: string,
+  prisma: PrismaClient
+): Promise<string> {
+  // Try base slug first
+  const existing = await prisma.storeProduct.findUnique({
+    where: { slug: baseSlug },
+    include: { cardMetadata: true },
+  });
+
+  if (!existing) return baseSlug;
+
+  // If it's the same card, reuse the slug
+  if (
+    existing.cardMetadataId === cardMetadataId ||
+    existing.cardMetadata?.scryfallId === scryfallId
+  ) {
+    return baseSlug;
+  }
+
+  // Append collectorNum
+  const slugWithNum = `${baseSlug}-${toSlug(collectorNum)}`;
+  const existingNum = await prisma.storeProduct.findUnique({ where: { slug: slugWithNum } });
+  if (!existingNum) return slugWithNum;
+
+  // Final fallback: append short scryfallId
+  const shortId = scryfallId.slice(0, 8);
+  return `${slugWithNum}-${toSlug(shortId)}`;
+}
+
 async function main() {
   console.log("🌐 Using database:", process.env.DATABASE_URL);
-  const prisma = new PrismaClient();
 
-  // 🏪 Get a store (or create a fallback one if none exists)
   const store = await prisma.store.upsert({
     where: { name: 'Default Store' },
     update: {},
@@ -29,24 +66,43 @@ async function main() {
 
   while (true) {
     const metas = await prisma.cardMetadata.findMany({
-      select: { id: true, name: true, setCode: true },
+      where: {
+        products: {
+          none: {}, // Only those without StoreProduct
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        setCode: true,
+        collectorNum: true,
+        scryfallId: true,
+      },
       take: BATCH_SIZE,
       skip,
     });
 
     if (metas.length === 0) {
       if (totalSeeded === 0) {
-        console.warn("⚠️ No CardMetadata entries found. Double-check your database.");
+        console.warn("⚠️ No unlinked CardMetadata entries found.");
       }
       break;
     }
 
     console.log(`📦 Seeding batch ${skip / BATCH_SIZE + 1} (${metas.length} cards)...`);
 
-    for (const { id: cardMetadataId, name, setCode } of metas) {
-      const slug = toSlug(`${name} ${setCode}`);
+    for (const meta of metas) {
+      const { id: cardMetadataId, name, setCode, collectorNum, scryfallId } = meta;
+
+      const baseSlug = buildBaseSlug(name, setCode);
+      const slug = await buildUniqueSlug(baseSlug, cardMetadataId, collectorNum, scryfallId, prisma);
+
       await prisma.storeProduct.upsert({
         where: { slug },
+        update: {
+          cardMetadataId,
+          storeId: store.id,
+        },
         create: {
           slug,
           type: 'CARD',
@@ -55,18 +111,15 @@ async function main() {
           stock: 0,
           price: "0.00",
         },
-        update: {
-          cardMetadataId,
-          storeId: store.id,
-        },
       });
+
+      totalSeeded++;
     }
 
-    totalSeeded += metas.length;
     skip += BATCH_SIZE;
   }
 
-  console.log(`✅ Finished seeding ${totalSeeded} StoreProduct entries from CardMetadata`);
+  console.log(`✅ Finished syncing ${totalSeeded} StoreProduct entries.`);
   await prisma.$disconnect();
 }
 

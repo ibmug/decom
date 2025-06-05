@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../authOptions";
 import { getMyCart } from "./cart.actions";
 import { getUserById, requireShippingAddress } from "./user.actions";
-import { insertOrderSchema } from "../validators";
+import { insertOrderItemSchema, insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
 import { ShippingAddress,Order, UICartItem, UIOrderItem } from "@/types";
 import { PaymentResult } from "@/types";
@@ -35,104 +35,120 @@ export type OrderWithUser = Prisma.OrderGetPayload<{
 
 //create order and create the order items
 
-export async function createOrder(){
-    try{
-        const session = await  getServerSession(authOptions);
-        if(!session) throw new Error('User is not authenticated');
+export async function createOrder() {
+  console.warn('🛒 Creating order...');
 
-        const cart = await getMyCart();
-        const userId = session?.user?.id;
-        if(!userId) throw new Error ('User not found');
-        
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) throw new Error('User is not authenticated');
 
-        //This would be the cleanest way
-        const user = await getUserById(userId);
+    const userId = session.user.id;
+    const cart = await getMyCart();
+    if (!userId) throw new Error('User ID not found');
+    if (!cart) throw new Error('Cart not found');
 
-        //Check if user has items in cart
-        if(!cart || cart.items.length === 0 ){
-         
-            return {success: false, message:'Your cart is empty', redirectTo:'/'}
-        }
-         //check user has an address or has selected a store.
-       
+    if (cart.items.length === 0) {
+      return {
+        success: false,
+        message: 'Your cart is empty',
+        redirectTo: '/',
+      };
+    }
 
-        if(!user.paymentMethod){
-            return {success:false, message:'Select a payment method', redirectTo: '/payment-method'}
-        }
+    const user = await getUserById(userId);
+    if (!user.paymentMethod) {
+      return {
+        success: false,
+        message: 'Select a payment method',
+        redirectTo: '/payment-method',
+      };
+    }
 
-        
-        
-        const {shippingMethod} = await requireShippingAddress();
-        
-        if(shippingMethod === 'DELIVERY' && !user.address){throw new Error ("User has no address to deliver to!")}
-        const shippingAddress  = shippingMethod === 'PICKUP'
-            ? {
-                address: STORES['Shivan Shop'].address,
-                addressName: STORES['Shivan Shop'].addressName, 
-                }
-            : {
-                address: user.address,
-                };
+    const { shippingMethod } = await requireShippingAddress();
 
-    
-        
-        //Create order object
-        const parsed = insertOrderSchema.parse({
-            userId: user.id,
-            shippingMethod,
-            shippingAddress,
-            paymentMethod: user.paymentMethod,
-            shippingPrice: cart.shippingPrice!,
-            taxPrice: cart.taxPrice!,
-            itemsPrice: cart.itemsPrice!,
-            totalPrice: cart.totalPrice!,
-            });
+    if (shippingMethod === 'DELIVERY' && !user.address) {
+      throw new Error('User has no address to deliver to');
+    }
 
-           const order: Prisma.OrderCreateInput = {
-            user:{connect: {id: parsed.userId}},
-            status:  OrderStatus.PENDING,
-            shippingMethod: parsed.shippingMethod,
-            shippingAddress: parsed.shippingAddress,
-            paymentMethod: parsed.paymentMethod,
-            shippingPrice: parsed.shippingPrice,
-            taxPrice: parsed.taxPrice,
-            itemsPrice: parsed.itemsPrice,     
-            totalPrice: parsed.totalPrice,
-            };
-        /// create transaction to create oredr and order items in db.
+    const shippingAddress =
+      shippingMethod === 'PICKUP'
+        ? {
+            address: STORES['Shivan Shop'].address,
+            addressName: STORES['Shivan Shop'].addressName,
+          }
+        : {
+            ...user.address,
+          };
 
-        const insertedOrderId = await prisma.$transaction(async (tx)=>{
-            const insertedOrder = await tx.order.create({data: order})
-            //create oorder items from the cart items
-            for(const item of cart.items as UICartItem[]){
-                await tx.orderItem.create(
-                    {data:{
-                        ...item,
-                        price: item.price,
-                        orderId: insertedOrder.id
-                    },
-                });
-            }
-            //Clear the cart
-            await tx.cart.update({
-                where: {id: cart.id},
-                data:{
-                    items: { deleteMany: {} },
-                }
-            })
-        return insertedOrder.id
+    const parsedOrder = insertOrderSchema.parse({
+      userId: user.id,
+      shippingMethod,
+      shippingAddress,
+      paymentMethod: user.paymentMethod,
+      shippingPrice: Number(cart.shippingPrice),
+      taxPrice: Number(cart.taxPrice),
+      itemsPrice: Number(cart.itemsPrice),
+      totalPrice: Number(cart.totalPrice),
+    });
+
+    const insertedOrderId = await prisma.$transaction(async (tx) => {
+      const insertedOrder = await tx.order.create({
+        data: {
+          user: { connect: { id: parsedOrder.userId } },
+          status: OrderStatus.PENDING,
+          shippingMethod: parsedOrder.shippingMethod,
+          shippingAddress: parsedOrder.shippingAddress,
+          paymentMethod: parsedOrder.paymentMethod,
+          shippingPrice: parsedOrder.shippingPrice,
+          taxPrice: parsedOrder.taxPrice,
+          itemsPrice: parsedOrder.itemsPrice,
+          totalPrice: parsedOrder.totalPrice,
+        },
+      });
+
+      for (const item of cart.items as UICartItem[]) {
+        console.log("🧩 Order item data:", item);
+        const parsedItem = insertOrderItemSchema.parse({
+          storeProductId: item.storeProductId, // ← This must match StoreProduct.id
+          slug: item.slug,
+          image: item.image,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
         });
 
-        if(!insertedOrderId){ throw new Error('Order Not created')}
+        await tx.orderItem.create({
+          data: {
+            orderId: insertedOrder.id,
+            ...parsedItem,
+          },
+        });
+      }
 
-        return{success:true, message:'Order Created.', redirectTo:`/order/${insertedOrderId}` }
+      await tx.cart.update({
+        where: { id: cart.id },
+        data: { items: { deleteMany: {} } },
+      });
 
-    }catch(err){
-        if(isRedirectError(err)){ throw err};
-        return {success: false, message: formatError(err)}
-    }
+      return insertedOrder.id;
+    });
+
+    if (!insertedOrderId) throw new Error('Order not created');
+
+    return {
+      success: true,
+      message: 'Order created successfully',
+      redirectTo: `/order/${insertedOrderId}`,
+    };
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    console.error('❌ Order creation failed:', err);
+    return {
+      success: false,
+      message: formatError(err),
+    };
+  }
 }
-
 
 
 //get order by id

@@ -132,7 +132,7 @@ export type AddToCartInput = {
 /** One row in the UI cart table */
 export interface UICartItem {
   id: string;
-  productId: string; // ← this is StoreProduct.id
+  storeProductId: string; 
   name: string;
   slug: string;
   price: string;

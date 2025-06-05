@@ -34,41 +34,41 @@ export default function ShippingAddressClient({ defaultAddress }: Props) {
   const [storeId, setStoreId] = useState('');
 
 
-    const onSubmit = async (data: ShippingAddressInput) => {  
-      
-      
-          // build the body you’ll send…
-          let payload = { ...data }
-      
-          if (data.shippingMethod === 'PICKUP' && storeId) {
-            // fetch all stores once
-            const storeRes = await fetch('/api/stores')
-            const stores = await storeRes.json()
-            const store = stores.find((s:{storeId: string}) => s.storeId === storeId)
-            if (!store) throw new Error("Selected store not found.")
+  const onSubmit = async (data: ShippingAddressInput) => {
+  let payload: ShippingAddressInput = { ...data };
 
-            payload = {
-              ...data,
-              address: store.address.address as typeof data.address,
-              addressName: store.addressName,
-            }
-          }
-      
-          // now send exactly one POST
-          const res = await fetch('/api/user/shipping', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(payload),
-          })
-           if (!res.ok) {
-             console.error('Save failed', await res.json())
-             const { error } = await res.json()
-             alert(error)
-             return
-           }
-           updateUserAddress(data)
-           router.push('/payment-method')
-         }
+  if (data.shippingMethod === 'PICKUP' && storeId) {
+  const storeRes = await fetch('/api/stores');
+  const { stores } = await storeRes.json();
+  const store = stores.find((s: { storeId: string }) => s.storeId === storeId);
+  if (!store) throw new Error("Selected store not found.");
+
+  payload = {
+    shippingMethod: 'PICKUP',
+    addressName: store.addressName,
+    address: store.address, 
+  };
+}
+
+
+
+  
+
+  const res = await fetch('/api/user/shipping', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const { error } = await res.json();
+    console.error('Save failed', error);
+    alert(error);
+    return;
+  }
+
+  router.push('/payment-method');
+};
 
   return (
     <FormProvider {...methods}>

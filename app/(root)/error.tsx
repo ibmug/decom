@@ -2,6 +2,7 @@
 
 import { useToast } from '@/hooks/use-toast';
 import { revalidatePage } from '@/lib/actions/server/product.server.actions';
+import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function GlobalError({
@@ -18,9 +19,9 @@ export default function GlobalError({
   const customSubmit=() =>{
     toast({
               description: 'Reloading page...',
+              variant:'destructive'
             })
-    revalidatePage('/')
-    console.warn(error)
+    redirect('/')
     return;
   }
 

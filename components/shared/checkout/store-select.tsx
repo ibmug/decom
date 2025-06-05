@@ -16,12 +16,16 @@ interface Props {
 export default function StoreSelect({ value, onChange }: Props) {
   const [stores, setStores] = useState<Store[]>([]);
 
-  useEffect(() => {
-    fetch('/api/stores')
-      .then((res) => res.json())
-      .then(setStores)
-      .catch(() => setStores([]));
-  }, []);
+useEffect(() => {
+  fetch('/api/stores')
+    .then((res) => res.json())
+    .then((data) => {
+      setStores(data.stores ?? []); // ← Fix: extract the array from the object
+    })
+    .catch(() => setStores([]));
+}, []);
+
+  console.log(stores)
 
   return (
     <div>
@@ -36,9 +40,9 @@ export default function StoreSelect({ value, onChange }: Props) {
       >
         <option value="">Select a store…</option>
         {stores.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name} — {s.address}
-          </option>
+          <option key={s.storeId} value={s.storeId}>
+    {s.addressName} — {s.address.streetName}, {s.address.city}
+  </option>
         ))}
       </select>
     </div>

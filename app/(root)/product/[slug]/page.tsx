@@ -10,6 +10,7 @@ import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
 import { isCardProduct } from "@/lib/utils/transformers";
 import {  UIStoreProduct } from "@/types";
+import AddToCartWrapper from "@/components/shared/product/add-to-cart-wrapper";
 
 
 export const dynamic = "force-dynamic";
@@ -77,10 +78,7 @@ const isCard = isCardProduct(product)
                         {isCard ? <CardProductDisplay product={product}/> : <AccessoryProductDisplay product={product} />
 }
                         {product.stock > 0 && (<div className="flex-center">
-                            <AddToCart cart={cart} item={{
-                                 id:           product.id,
-                                quantity:     1,
-                            }}/>
+                           <AddToCartWrapper productId={product.id} />
                         </div>)}
     </>;
 }

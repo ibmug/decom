@@ -49,6 +49,7 @@ const CartTable = ({cart}: {cart?: UICart})=>{
 
     const router = useRouter();
     const [isPending, startTransition] = useTransition(); 
+    
 return (
     <>
           <h1 className="py-4 h2-bold">Tu carrito</h1>
@@ -67,10 +68,9 @@ return (
                     </TableHeader>
                     <TableBody>
                         {cart.items.map((item)=>(
-
-                            <TableRow key={item.slug}>
+                            <TableRow key={item.id}>
                                 <TableCell>
-                                   <Link href={`/product/${item.slug}`} className="flex items-center">
+                                   <Link href={`/product/${item.name}`} className="flex items-center">
                                         <Image src={item.image} alt={item.name} width={50} height={50}/>
                                         <span className="px-2">{item.name}</span>
                                    </Link> 
