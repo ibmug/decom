@@ -86,13 +86,16 @@ const AdminProductsPage = async (props: {
                 {viewProducts.data.map((product: UIStoreProduct)=>(
                     <TableRow key={product.id}>
                         <TableCell>{formatId(product.id)}</TableCell>
-                        <TableCell>{product.customName}</TableCell>
+                        <TableCell>{product.type === 'ACCESSORY' ? product.name : product.cardMetadata.name}</TableCell>
                         <TableCell className='text-right'>{formatCurrency(product.price)}</TableCell>
                         <TableCell>{product.stock}</TableCell>
                         <TableCell>{product.type === 'ACCESSORY' ? product.accessory?.rating ?? '-' : '-'}</TableCell>
                         <TableCell className='flex gap-1'>
                             <Button asChild variant='outline' size='sm'>
-                                <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                                {product.type === 'ACCESSORY' 
+  ? <Link href={`/admin/products/${product.id}`}>Edit</Link> 
+  : <Link href={`/card/${product.slug}`}>Edit</Link>}
+
                             </Button>
                             <DeleteDialog id={product.id}/>
                         </TableCell>

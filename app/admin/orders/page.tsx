@@ -95,15 +95,25 @@ const AdminOrdersPage = async (props: {
    });
 
     
-    const viewOrders: ViewOrder[] = orders.data.map((order: RawOrder) => {
+    const viewOrders: ViewOrder[] = orders.data.flatMap((order: RawOrder) => {
         // parse+validate shippingAddress, throws if invalid
-        const sa = shippingAddressSchema.parse(order.shippingAddress)
-    
-        return {
-          ...order,
-          shippingAddress: sa,        // now strongly typed
-        }
-      })
+        if (!order.shippingAddress) {
+  console.warn(`Skipping order ${order.id} due to missing shippingAddress`);
+  return [];
+}
+
+ try {
+    const sa = shippingAddressSchema.parse({
+      ...(order.shippingAddress as object),
+      shippingMethod: order.shippingMethod,
+    });
+
+    return [{ ...order, shippingAddress: sa }];
+  } catch (err) {
+    console.warn(`Skipping order ${order.id} due to invalid schema`, err);
+    return [];
+  }
+});
 
 
     return (<div className="space-y-2">
@@ -121,8 +131,7 @@ const AdminOrdersPage = async (props: {
                                 <TableHead>Type</TableHead>
                                 <TableHead>Shipping Address</TableHead>
                                 <TableHead>Total</TableHead>
-                                <TableHead>Paid</TableHead>
-                                <TableHead>Delivered</TableHead>
+                                <TableHead>Current Status</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
