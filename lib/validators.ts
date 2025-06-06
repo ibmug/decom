@@ -7,19 +7,21 @@ import { PAYMENT_METHODS } from "./constants";
 //The parenthesis means(the ? means optional) which means should contain up to two digits AFTER the dot('.') .(\.\d{2})
 const currency = z.string().refine((value)=> /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))),'Price must have exactly two decimal places')
 //Schema for products.
-export const baseProductSchema = z.object({
-    id: z.string().optional(),
-    name: z.string().min(3,'Name must be at least 3 chars long'),
-    slug: z.string().min(3,'Slug must be at least 3 chars long'),
-    category: z.string().min(3,'Category must be at least 3 chars long'),
-    brand: z.string().min(3,'Brand must be at least 3 chars long'),
-    description: z.string().min(3,'Description must be at least 3 chars long'),
-    stock: z.coerce.number(),
-    images: z.array(z.string()).min(1,'Product must have at least one image'),
-    isFeatured: z.boolean(),
-    banner: z.string().nullable(),
-    price: currency,
-})
+const baseProductSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, 'Name must be at least 3 chars long'),
+  slug: z.string().min(3, 'Slug must be at least 3 chars long'),
+  category: z.string().min(3, 'Category must be at least 3 chars long'),
+  brand: z.string().min(3, 'Brand must be at least 3 chars long'),
+  description: z.string().min(3, 'Description must be at least 3 chars long'),
+  stock: z.coerce.number(),
+  images: z.array(z.string()).min(1, 'Product must have at least one image'),
+  isFeatured: z.boolean(),
+  banner: z.string().nullable(),
+  price: currency,
+  type: z.enum(['CARD', 'ACCESSORY']), // ✅ Add this line
+});
+
 
 // For creation, drop id entirely
 export const insertProductSchema = baseProductSchema.omit({ id: true })

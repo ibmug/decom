@@ -35,12 +35,19 @@ type ProductFormValues = z.infer<typeof insertProductSchema> & {
 //     product?: Product;
 //     productId?: string;
 // }
-interface ProductFormProps {
-  type: 'CREATE' | 'UPDATE';
-  product: UIStoreProduct; // ✅ Or a custom StoreProductUpdateInput type
-  productId: string;
-}
+type ProductFormProps =
+  | {
+      type: 'CREATE';
+      product?: never;
+      productId?: never;
+    }
+  | {
+      type: 'UPDATE';
+      product: UIStoreProduct;
+      productId: string;
+    };
 
+    
 const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => {
 
     const router = useRouter();

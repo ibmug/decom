@@ -1,11 +1,11 @@
-import { StringValidation, z } from "zod";
+import {  z } from "zod";
 import {
   insertProductSchema,
   insertCartSchema,
-  cartItemSchema,
+  
   shippingAddressSchema,
   insertOrderItemSchema,
-  insertOrderSchema,
+  
   paymentResultSchema,
 } from "@/lib/validators";
 import { AccessoryProduct, CardMetadata, OrderStatus } from "@prisma/client";
@@ -37,6 +37,8 @@ export type StoreProduct =
       cardId: string;
       cardMetadata: CardMetadata;
       accessory?: null;
+      rating?: number;
+      numReviews?: number;
     }
   | {
       id: string;
@@ -48,6 +50,8 @@ export type StoreProduct =
       accessoryId: string;
       accessory: AccessoryProduct;
       card?: null;
+      numReviews?: number;
+      rating?: number;
     };
 
 // --- CART TYPES ---
@@ -123,6 +127,8 @@ export interface CardItem {
   stock: number;
   slug: string;
   price: string;
+  rating?: number;
+  numReviews?: number;
 }
 
 export type UIOrderItem = {
@@ -182,7 +188,7 @@ export interface UIProduct {
   slug: string | null;
   description: string;
   price: string;
-  rating: string;
+  rating: number;
   numReviews: number;
   stock: number;
   images: string[];
@@ -190,6 +196,33 @@ export interface UIProduct {
   category: string;
 }
 
+
+// export type UIStoreProduct =
+//   | {
+//       id: string;
+//       slug: string;
+//       price: string;
+//       stock: number;
+//       customName: string | null;
+//       type: "CARD";
+//       cardMetadata: CardMetadata;
+//     }
+//   | {
+//       id: string;
+//       slug: string;
+//       price: string;
+//       stock: number;
+//       customName: string | null;
+//       name: string;
+//       type: "ACCESSORY";
+//       accessory: AccessoryProduct;
+//       rating?: number;
+//       numReviews: number;
+//       images: string[]
+//       brand? : string;
+//       category?: string;
+//       description?: string;
+//     };
 
 export type UIStoreProduct =
   | {
@@ -200,6 +233,8 @@ export type UIStoreProduct =
       customName: string | null;
       type: "CARD";
       cardMetadata: CardMetadata;
+      rating?: number;           
+      numReviews?: number;       
     }
   | {
       id: string;
@@ -210,12 +245,13 @@ export type UIStoreProduct =
       name: string;
       type: "ACCESSORY";
       accessory: AccessoryProduct;
-      rating: number;
-      numReviews: number;
-      images: string[]
-      brand? : string;
+      rating?: number;
+      numReviews?: number;
+      images: string[];
+      brand?: string;
       category?: string;
       description?: string;
     };
+
 
     

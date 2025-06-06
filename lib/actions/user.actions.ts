@@ -69,11 +69,11 @@ interface UpdateAddressInput extends ShippingAddress {
 export async function updateUserAddress(data: UpdateAddressInput) {
   try {
     await prisma.user.update({
-      where: { id: data.userId },
-      data: {
-        address:data
-      },
-    });
+  where: { id: data.userId },
+  data: {
+    address: data as unknown as Prisma.InputJsonValue, 
+  },
+});
 
     return { success: true };
   } catch (err) {

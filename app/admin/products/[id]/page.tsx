@@ -2,8 +2,8 @@ import { getSingleProductById } from "@/lib/actions/product.actions";
 import {Metadata} from "next";
 import { notFound } from "next/navigation";
 import ProductForm from "../create/product-form";
-import { transformToUIStoreProduct } from "@/lib/utils/transformers";
-import { StoreProduct } from "@/types";
+import { toUIAccessoryDisplayGetLatest } from "@/lib/utils/transformers";
+import {  UIStoreProduct } from "@/types";
 
 
 
@@ -28,7 +28,33 @@ const AdminProductUpdatePage = async (props: {
 
     if (!productRaw) return notFound();
 
-   const productToUpdate = transformToUIStoreProduct(productRaw as StoreProduct & { price: string });
+   let productToUpdate: UIStoreProduct;
+
+if (productRaw.type === "CARD") {
+  if (!productRaw.cardMetadata) throw new Error("Missing cardMetadata for CARD");
+
+  productToUpdate = {
+    ...productRaw,
+    type: "CARD",
+    price: productRaw.price.toString(),
+    slug: productRaw.slug ?? "missing-slug",
+    cardMetadata: productRaw.cardMetadata,
+  };
+} else if (productRaw.type === "ACCESSORY") {
+  if (!productRaw.accessory) throw new Error("Missing accessory for ACCESSORY");
+
+  productToUpdate = {
+    ...toUIAccessoryDisplayGetLatest({
+      ...productRaw,
+      price: productRaw.price.toString(),
+      type: "ACCESSORY",
+      accessoryId: productRaw.accessoryId!,
+      accessory: productRaw.accessory,
+    }),
+  };
+} else {
+  throw new Error("Unknown product type");
+}
 
 
   

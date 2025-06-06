@@ -3,6 +3,7 @@ import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever
 
 
 
+
 export function toUIAccessoryDisplay(product: StoreProduct) {
   if (!product.accessory) throw new Error("Missing accessory data");
 
@@ -21,7 +22,7 @@ export function toUIAccessoryDisplay(product: StoreProduct) {
 }
 
 
-export function toCardItem(product: Extract<UIStoreProduct, {type: "CARD"}>): CardItem {
+export function toCardItem(product: Extract<UIStoreProduct, { type: "CARD" }>): CardItem {
   if (!product.cardMetadata) throw new Error("Missing card");
   return {
     id: product.cardMetadata.id,
@@ -41,8 +42,11 @@ export function toCardItem(product: Extract<UIStoreProduct, {type: "CARD"}>): Ca
     stock: product.stock,
     slug: product.slug ?? "missing-slug",
     price: product.price.toString(),
+    numReviews: product.numReviews ?? 0,
+    rating: product.rating ?? 0,
   };
 }
+
 
 export function isCardProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'CARD' }> {
   return product.type === 'CARD';
@@ -66,49 +70,14 @@ export function toUIAccessoryDisplayGetLatest(
     stock: p.stock,
     customName: p.customName ?? null,
     accessory: p.accessory,
-    //cardMetadata: undefined,
     name: p.accessory.name,
     rating: Number(p.accessory.rating ?? 0),
     numReviews: p.accessory.numReviews ?? 0,
     description: p.accessory.description ?? undefined,
     category: p.accessory.category,
-    brand: p.accessory.brand ?? undefined, // ✅ this is fine now
-    images: p.accessory.images ?? [],
+    brand: p.accessory.brand ?? undefined,
+    images: p.accessory.images, // assuming always defined
   };
 }
 
 
-export function transformToUIStoreProduct(productRaw: StoreProduct & {price: string}): UIStoreProduct {
-  if (productRaw.type === 'ACCESSORY' && productRaw.accessory) {
-    return {
-      id: productRaw.id,
-      slug: productRaw.slug,
-      price: productRaw.price,
-      stock: productRaw.stock,
-      customName: productRaw.customName ?? null,
-      type: 'ACCESSORY',
-      name: productRaw.accessory.name,
-      accessory: productRaw.accessory,
-      rating: productRaw.accessory.rating ?? 0,
-      numReviews: productRaw.accessory.numReviews ?? 0,
-      images: productRaw.accessory.images ?? [],
-      brand: productRaw.accessory.brand ?? '',
-      category: productRaw.accessory.category ?? '',
-      description: productRaw.accessory.description ?? '',
-    };
-  }
-
-  if (productRaw.type === 'CARD' && productRaw.cardMetadata) {
-    return {
-      id: productRaw.id,
-      slug: productRaw.slug,
-      price: productRaw.price.toString(),
-      stock: productRaw.stock,
-      customName: productRaw.customName ?? null,
-      type: 'CARD',
-      cardMetadata: productRaw.cardMetadata,
-    };
-  }
-
-  throw new Error('Invalid product structure');
-}

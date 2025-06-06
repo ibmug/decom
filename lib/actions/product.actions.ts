@@ -6,6 +6,7 @@ import { insertProductSchema, updateProductSchema } from "../validators";
 import { z } from 'zod';
 import { revalidatePage } from "./server/product.server.actions";
 import { toCardItem, toUIAccessoryDisplayGetLatest } from "../utils/transformers";
+import { Prisma } from "@prisma/client";
 
 export type UIProduct = Omit<Product, "price" | "rating"> & {
   price: string;
@@ -173,7 +174,10 @@ export async function getAllProducts({
 export async function createProduct(data: z.infer<typeof insertProductSchema>) {
   try {
     const product = insertProductSchema.parse(data);
-    await prisma.storeProduct.create({ data: product });
+    await prisma.storeProduct.create({  data: {
+    ...product,
+    price: new Prisma.Decimal(product.price),
+  }, });
     await revalidatePage('/admin/products');
     return { success: true, message: 'Product created succesfully.' };
   } catch (err) {

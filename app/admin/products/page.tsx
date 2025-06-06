@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
-import { Product, StoreProduct } from "@/types";
+import { Product,  UIStoreProduct } from "@/types";
 import SortSelector from "@/components/admin/sort-control";
 import { SortOption } from "@/components/admin/sortselector.types";
-//import { PAGE_SIZE } from "@/lib/constants";
+import { PAGE_SIZE } from "@/lib/constants";
+
 
 
 
@@ -50,7 +51,7 @@ const AdminProductsPage = async (props: {
     //     order,
     // })
     console.log(query,category,ob,order)
-    const products = await getAllProducts();
+    const products = await getAllProducts({limit:PAGE_SIZE});
 
     // const viewProducts : StoreProduct[] = products.data.map((p: StoreProduct)=>({
     //     ...p,
@@ -82,13 +83,13 @@ const AdminProductsPage = async (props: {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {viewProducts.map((product: StoreProduct)=>(
+                {viewProducts.data.map((product: UIStoreProduct)=>(
                     <TableRow key={product.id}>
                         <TableCell>{formatId(product.id)}</TableCell>
-                        <TableCell>{product.name}</TableCell>
+                        <TableCell>{product.customName}</TableCell>
                         <TableCell className='text-right'>{formatCurrency(product.price)}</TableCell>
                         <TableCell>{product.stock}</TableCell>
-                        <TableCell>{product.rating}</TableCell>
+                        <TableCell>{product.type === 'ACCESSORY' ? product.accessory?.rating ?? '-' : '-'}</TableCell>
                         <TableCell className='flex gap-1'>
                             <Button asChild variant='outline' size='sm'>
                                 <Link href={`/admin/products/${product.id}`}>Edit</Link>

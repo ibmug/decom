@@ -72,7 +72,7 @@ const isCard = isCardProduct(product)
 
 
                         {/*I'm assuming here goes our new component. */}
-                        {isCard ? <CardProductDisplay product={product}/> : <AccessoryProductDisplay product={product} />
+                        {isCard ? <CardProductDisplay product={product}/> : <AccessoryProductDisplay product= {{ ...product, rating: product.rating ?? 0, numReviews: product.numReviews ?? 0 }} />
 }
                         {product.stock > 0 && (<div className="flex-center">
                            <AddToCartWrapper productId={product.id} />
