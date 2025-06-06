@@ -74,16 +74,32 @@ export type NewCart = {
 // --- ORDER TYPES ---
 export type OrderItem = z.infer<typeof insertOrderItemSchema>;
 
-export type Order = z.infer<typeof insertOrderSchema> & {
-    id: string;
+export type Order = {
+  id: string;
+  userId: string;
+  shippingMethod: 'DELIVERY' | 'PICKUP';
+  shippingAddress: ShippingAddress; // or use a specific shape
+  paymentMethod: string;
+  itemsPrice: number;
+  shippingPrice: number;
+  taxPrice: number;
+  totalPrice: number;
   createdAt: Date;
-  
   paidAt: Date | null;
-  
   deliveredAt: Date | null;
   status: OrderStatus;
   orderItems: OrderItem[];
   user: { name: string; email: string };
+};
+
+export type UIOrder = Omit<Order, 'createdAt' | 'paidAt' | 'deliveredAt' | 'itemsPrice' | 'taxPrice' | 'totalPrice' | 'shippingPrice'> & {
+  createdAt: string;
+  paidAt: string | null;
+  deliveredAt: string | null;
+  itemsPrice: string;
+  shippingPrice: string;
+  taxPrice: string;
+  totalPrice: string;
 };
 
 export type PaymentResult = z.infer<typeof paymentResultSchema>;
@@ -201,3 +217,5 @@ export type UIStoreProduct =
       category?: string;
       description?: string;
     };
+
+    

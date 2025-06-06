@@ -4,7 +4,6 @@ import { LATEST_PRODUCTS_LIMIT, PAGE_SIZE } from "../constants";
 import { Product, UIStoreProduct } from "@/types";
 import { insertProductSchema, updateProductSchema } from "../validators";
 import { z } from 'zod';
-import { Prisma } from "@prisma/client";
 import { revalidatePage } from "./server/product.server.actions";
 import { toCardItem, toUIAccessoryDisplayGetLatest } from "../utils/transformers";
 
@@ -18,19 +17,24 @@ export interface GetAllProductsResult {
   totalPages: number;
 }
 
+export interface EnrichedProduct {
+  id: string;
+  cardName: string;
+  stock: number;
+  price: string;
+  setCode: string;
+  collectorNum: string;
+  oracleText: string;
+  colorIdentity: string[];
+  imageUrl: string;
+}
+
 export interface GetAllEnrichedProductsResult {
   data: EnrichedProduct[];
   totalPages: number;
 }
 
-interface GetProductOpts {
-  page: number;
-  limit: number;
-  query?: string;
-  category?: string;
-  orderBy: keyof Product;
-  order?: "asc" | "desc";
-}
+
 
 export async function getLatestProducts(): Promise<{ data: UIStoreProduct[] }> {
   const rows = await prisma.storeProduct.findMany({
@@ -100,37 +104,66 @@ export async function getSingleProductBySlug(slug: string) {
 }
 
 export async function getSingleProductById(productId: string) {
-  const data = await prisma.product.findFirst({ where: { id: productId } });
+  const data = await prisma.storeProduct.findFirst({ where: { id: productId }, include:{accessory:true, cardMetadata:true} });
   return convertToPlainObject(data);
 }
 
-export async function getAllFilteredProducts({
-  query = "",
+export async function getAllProducts({
   page = 1,
   limit = PAGE_SIZE,
-  category,
-  orderBy = "createdAt",
-  order = "desc",
-}: GetProductOpts) {
-  const where: Prisma.ProductWhereInput = {};
-  if (category) where.category = category;
-  if (query) {
-    where.OR = [
-      { name: { contains: query, mode: "insensitive" } },
-      { description: { contains: query, mode: "insensitive" } },
-      { slug: { contains: query, mode: "insensitive" } },
-    ];
-  }
-
-  const [data, total] = await prisma.$transaction([
-    prisma.product.findMany({
-      where,
+}: {
+  page?: number;
+  limit?: number;
+}): Promise<{ data: UIStoreProduct[]; totalPages: number }> {
+  const [rows, total] = await prisma.$transaction([
+    prisma.storeProduct.findMany({
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { [orderBy]: order },
+      orderBy: { lastUpdated: "desc" },
+      include: {
+        cardMetadata: true,
+        accessory: true,
+      },
     }),
-    prisma.product.count({ where }),
+    prisma.storeProduct.count(),
   ]);
+
+  const data: UIStoreProduct[] = rows.map((p) => {
+    if (p.type === "CARD") {
+      if (!p.cardMetadata) throw new Error("Missing cardMetadata for CARD product");
+
+      return {
+        ...toCardItem({
+          ...p,
+          type: "CARD",
+          price: p.price.toString(),
+          slug: p.slug ?? "missing-slug",
+          cardMetadata: p.cardMetadata,
+        }),
+        id: p.id,
+        customName: p.customName ?? null,
+        type: "CARD",
+        stock: p.stock,
+        slug: p.slug,
+        price: p.price.toString(),
+        cardMetadata: p.cardMetadata,
+      };
+    }
+
+    if (p.type === "ACCESSORY") {
+      if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
+
+      return toUIAccessoryDisplayGetLatest({
+        ...p,
+        type: "ACCESSORY",
+        accessoryId: p.accessoryId!,
+        accessory: p.accessory,
+        price: p.price.toString(),
+      });
+    }
+
+    throw new Error(`Unknown product type: ${p.type}`);
+  });
 
   const totalPages = Math.ceil(total / limit);
   return { data, totalPages };
@@ -140,7 +173,7 @@ export async function getAllFilteredProducts({
 export async function createProduct(data: z.infer<typeof insertProductSchema>) {
   try {
     const product = insertProductSchema.parse(data);
-    await prisma.product.create({ data: product });
+    await prisma.storeProduct.create({ data: product });
     await revalidatePage('/admin/products');
     return { success: true, message: 'Product created succesfully.' };
   } catch (err) {
@@ -151,10 +184,10 @@ export async function createProduct(data: z.infer<typeof insertProductSchema>) {
 export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
   try {
     const product = updateProductSchema.parse(data);
-    const existingProduct = await prisma.product.findFirst({ where: { id: product.id } });
+    const existingProduct = await prisma.storeProduct.findFirst({ where: { id: product.id } });
     if (!existingProduct) throw new Error('Product not found');
 
-    await prisma.product.update({ where: { id: product.id }, data: product });
+    await prisma.storeProduct.update({ where: { id: product.id }, data: product });
     await revalidatePage('/admin/products');
     return { success: true, message: 'Product updated succesfully.' };
   } catch (err) {
@@ -171,14 +204,3 @@ export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
 //   });
 // }
 
-export interface EnrichedProduct {
-  id: string;
-  cardName: string;
-  stock: number;
-  price: string;
-  setCode: string;
-  collectorNum: string;
-  oracleText: string;
-  colorIdentity: string[];
-  imageUrl: string;
-}

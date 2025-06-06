@@ -1,4 +1,5 @@
 // utils/cartUtils.ts
+import { Prisma } from "@prisma/client"
 import { roundtwo } from "./utils"
 
 export interface PriceCalcItem {
@@ -36,26 +37,26 @@ export function serializeCart(record: {
     storeProduct: {
       id: string;
       slug?: string | null;
-      price: number | string;
+      price: number | string | Prisma.Decimal;
       stock: number;
       type: 'CARD' | 'ACCESSORY';
       customName?: string | null;
       cardMetadata?: {
         name: string;
-        slug: string;
+        slug?: string;
         imageUrl?: string;
       } | null;
       accessory?: {
         name: string;
-        slug: string;
+        slug?: string;
         images: string[];
       } | null;
     };
   }[];
-  itemsPrice: number | string;
-  shippingPrice: number | string;
-  taxPrice: number | string;
-  totalPrice: number | string;
+  itemsPrice: number | string | Prisma.Decimal;
+  shippingPrice: number | string | Prisma.Decimal;
+  taxPrice: number | string | Prisma.Decimal;
+  totalPrice: number | string | Prisma.Decimal;
 }) {
   return {
     id: record.id,
@@ -77,14 +78,13 @@ export function serializeCart(record: {
           (isCard ? metadata?.name : accessory?.name) ??
           'Unnamed',
         slug:
-          product.slug ??
-          (isCard ? metadata?.slug : accessory?.slug) ??
-          'unknown-slug',
-        price: product.price.toString(),
+          product.slug ?? 'unknown-slug',
+        //price: product.price.toString(),
+        price: safeDecimalToString(product.price),
         image:
-          (isCard
-            ? metadata?.imageUrl
-            : accessory?.images?.[0]) ?? '/images/cardPlaceholder.png',
+          isCard
+    ? '/images/cardPlaceholder.png'
+    : accessory?.images?.[0] ?? '/images/cardPlaceholder.png',
         qty: item.quantity,
         stock: product.stock,
       };
@@ -94,4 +94,13 @@ export function serializeCart(record: {
     taxPrice: record.taxPrice.toString(),
     totalPrice: record.totalPrice.toString(),
   };
+}
+
+
+
+function safeDecimalToString(value: unknown): string {
+  if (typeof value === 'string' || typeof value === 'number') return value.toString();
+  if (value && typeof value === 'object' && 'toString' in value)
+    return (value as { toString(): string }).toString();
+  return '';
 }

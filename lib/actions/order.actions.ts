@@ -69,7 +69,8 @@ export async function createOrder() {
     if (shippingMethod === 'DELIVERY' && !user.address) {
       throw new Error('User has no address to deliver to');
     }
-
+     
+    const address = user.address && typeof user.address === 'object' ? {...user.address} : {}
     const shippingAddress =
       shippingMethod === 'PICKUP'
         ? {
@@ -77,7 +78,7 @@ export async function createOrder() {
             addressName: STORES['Shivan Shop'].addressName,
           }
         : {
-            ...user.address,
+            ...address,
           };
 
     const parsedOrder = insertOrderSchema.parse({
@@ -291,7 +292,7 @@ async function updateOrderPaid({orderId,paymentResult}: {orderId: string; paymen
     await prisma.$transaction(async (tx)=>{
         //iterate over the products and update the stock.
         for(const item of order.orderItems){
-            await tx.product.update({
+            await tx.storeProduct.update({
                 where:{id: item.storeProductId},
                 data: {stock: {increment: -item.qty}},
             });
@@ -352,7 +353,7 @@ type SalesDataType = {
 export async function getOrderSummary(){
     //Get counts for each resource
     const ordersCount = await prisma.order.count();
-    const productsCount = await prisma.product.count();
+    const productsCount = await prisma.storeProduct.count();
     const usersCount = await prisma.user.count();
 
     //Calculate the total sales

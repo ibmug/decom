@@ -2,6 +2,7 @@ import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever
 
 
 
+
 export function toUIAccessoryDisplay(product: StoreProduct) {
   if (!product.accessory) throw new Error("Missing accessory data");
 
@@ -74,4 +75,40 @@ export function toUIAccessoryDisplayGetLatest(
     brand: p.accessory.brand ?? undefined, // ✅ this is fine now
     images: p.accessory.images ?? [],
   };
+}
+
+
+export function transformToUIStoreProduct(productRaw: StoreProduct & {price: string}): UIStoreProduct {
+  if (productRaw.type === 'ACCESSORY' && productRaw.accessory) {
+    return {
+      id: productRaw.id,
+      slug: productRaw.slug,
+      price: productRaw.price,
+      stock: productRaw.stock,
+      customName: productRaw.customName ?? null,
+      type: 'ACCESSORY',
+      name: productRaw.accessory.name,
+      accessory: productRaw.accessory,
+      rating: productRaw.accessory.rating ?? 0,
+      numReviews: productRaw.accessory.numReviews ?? 0,
+      images: productRaw.accessory.images ?? [],
+      brand: productRaw.accessory.brand ?? '',
+      category: productRaw.accessory.category ?? '',
+      description: productRaw.accessory.description ?? '',
+    };
+  }
+
+  if (productRaw.type === 'CARD' && productRaw.cardMetadata) {
+    return {
+      id: productRaw.id,
+      slug: productRaw.slug,
+      price: productRaw.price.toString(),
+      stock: productRaw.stock,
+      customName: productRaw.customName ?? null,
+      type: 'CARD',
+      cardMetadata: productRaw.cardMetadata,
+    };
+  }
+
+  throw new Error('Invalid product structure');
 }

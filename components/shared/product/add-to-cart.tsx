@@ -22,7 +22,7 @@ export default function AddToCart({ cart, item }: AddToCartProps) {
   const [loadingAction, setLoadingAction] = useState<'add' | 'remove' | null>(null)
   const router = useRouter()
 
-  const currentItem = cart?.items.find(x => x.productId === item.id)
+  const currentItem = cart?.items.find(x => x.storeProductId === item.id)
 
   const handleQuantityChange = (itemId: string, delta: number) => {
     setLoadingAction(delta > 0 ? 'add' : 'remove')

@@ -1,7 +1,7 @@
 'use client'
 import { productDefaultValues } from "@/lib/constants";
 import { insertProductSchema, updateProductSchema } from "@/lib/validators";
-import { Product } from "@/types";
+import { UIStoreProduct } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,10 +30,15 @@ type ProductFormValues = z.infer<typeof insertProductSchema> & {
 
 
 
+// interface ProductFormProps {
+//     type: 'CREATE' | 'UPDATE';
+//     product?: Product;
+//     productId?: string;
+// }
 interface ProductFormProps {
-    type: 'CREATE' | 'UPDATE';
-    product?: Product;
-    productId?: string;
+  type: 'CREATE' | 'UPDATE';
+  product: UIStoreProduct; // ✅ Or a custom StoreProductUpdateInput type
+  productId: string;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({type, product, productId}) => {

@@ -168,7 +168,7 @@ export async function addItemToCart(data: { productId: string; qty?: number }) {
     items: {
       deleteMany: {}, // Remove all existing cart items
       create: items.map(i => ({
-        storeProductId: i.productId,
+        storeProductId: i.storeProductId,
         quantity: i.qty,
       })),
     },
@@ -198,7 +198,17 @@ export async function getMyCart(): Promise<ReturnType<typeof serializeCart>> {
 export async function removeItemFromCart(productId: string) {
   try {
     const { sessionCartId, userId } = await getCartIdentifiers()
-    const prod = await prisma.product.findUnique({ where: { id: productId } })
+    //const prod = await prisma.storeProduct.findUnique({ where: { id: productId } })
+    const prod = await prisma.storeProduct.findUnique({
+  where: { id: productId },
+  include: {
+    cardMetadata: { select: { name: true } },
+    accessory: { select: { name: true } },
+  },
+});
+
+    
+
     if (!prod) throw new Error('Product not found')
 
     const cart = await resolveCart(sessionCartId, userId)
@@ -239,7 +249,12 @@ export async function removeItemFromCart(productId: string) {
     })
 
     revalidatePath(`/product/${prod.slug}`)
-    return { success: true, message: `${prod.name} removed from cart.` }
+    const name =
+  prod.customName ??
+  (prod.type === 'CARD'
+    ? prod.cardMetadata?.name
+    : prod.accessory?.name) ?? 'Unnamed'
+    return { success: true, message: `${name} removed from cart.` }
   } catch (err) {
     return { success: false, message: formatError(err) }
   }

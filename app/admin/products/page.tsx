@@ -1,15 +1,15 @@
 
 import Link from "next/link";
-import { getAllFilteredProducts, UIProduct } from "@/lib/actions/product.actions";
+import { getAllProducts } from "@/lib/actions/product.actions";
 import { formatCurrency, formatId } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
-import { Product } from "@/types";
+import { Product, StoreProduct } from "@/types";
 import SortSelector from "@/components/admin/sort-control";
 import { SortOption } from "@/components/admin/sortselector.types";
-import { PAGE_SIZE } from "@/lib/constants";
+//import { PAGE_SIZE } from "@/lib/constants";
 
 
 
@@ -41,20 +41,23 @@ const AdminProductsPage = async (props: {
       } = await props.searchParams
       const page = Number(pageStr)
 
-    const products = await getAllFilteredProducts({
-        page,
-        query,
-        limit: PAGE_SIZE,
-        category,
-        orderBy: ob,
-        order,
-    })
+    // const products = await getAllFilteredProducts({
+    //     page,
+    //     query,
+    //     limit: PAGE_SIZE,
+    //     category,
+    //     orderBy: ob,
+    //     order,
+    // })
+    console.log(query,category,ob,order)
+    const products = await getAllProducts();
 
-    const viewProducts : Product[] = products.data.map((p: UIProduct)=>({
-        ...p,
-        price: p.price.toString(),
-        rating: p.rating.toString(),
-    }));
+    // const viewProducts : StoreProduct[] = products.data.map((p: StoreProduct)=>({
+    //     ...p,
+    //     price: p.price.toString(
+    // }));
+
+    const viewProducts = products;
 
     return (<div className="space--y-2">
         
@@ -73,19 +76,17 @@ const AdminProductsPage = async (props: {
                     <TableHead>ID</TableHead>
                     <TableHead>NAME</TableHead>
                     <TableHead className='text-right'>PRICE</TableHead>
-                    <TableHead>CATEGORY</TableHead>
                     <TableHead>STOCK</TableHead>
                     <TableHead>RATING</TableHead>
                     <TableHead className='w-[100px]'>ACTIONS</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {viewProducts.map((product: Product)=>(
+                {viewProducts.map((product: StoreProduct)=>(
                     <TableRow key={product.id}>
                         <TableCell>{formatId(product.id)}</TableCell>
                         <TableCell>{product.name}</TableCell>
                         <TableCell className='text-right'>{formatCurrency(product.price)}</TableCell>
-                        <TableCell>{product.category}</TableCell>
                         <TableCell>{product.stock}</TableCell>
                         <TableCell>{product.rating}</TableCell>
                         <TableCell className='flex gap-1'>

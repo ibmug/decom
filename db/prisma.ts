@@ -1,6 +1,6 @@
 // db/prisma.ts
+import { UIProduct } from '@/types';
 import { Order, PrismaClient } from '@prisma/client';
-import { Product } from '@prisma/client';
 
 declare global {
   // These live on globalThis to survive HMR in dev
@@ -29,12 +29,12 @@ const extendedPrisma =
   result: {
     product: {
       price: {
-        compute(p: Product) {
+        compute(p: UIProduct) {
           return p.price.toString();
         },
       },
       rating: {
-        compute(p: Product) {
+        compute(p: UIProduct) {
           return p.rating.toString();
         },
       },
