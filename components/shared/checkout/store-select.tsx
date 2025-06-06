@@ -40,8 +40,8 @@ useEffect(() => {
       >
         <option value="">Select a store…</option>
         {stores.map((s) => (
-          <option key={s.storeId} value={s.storeId}>
-    {s.addressName} — {s.address.streetName}, {s.address.city}
+          <option key={s.id} value={s.id}>
+    {s.name} — {s.address}
   </option>
         ))}
       </select>
