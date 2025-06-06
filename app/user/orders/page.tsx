@@ -62,7 +62,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <TableRow key={order.id}>
                 <TableCell>{formatId(order.id)}</TableCell>
                 <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
-                <TableCell>{formatCurrency(order.totalPrice.toNumber())}</TableCell>
+                <TableCell>{formatCurrency(order.totalPrice.toString())}</TableCell>
                 <TableCell>{order.status}</TableCell>
                 <TableCell>
                   {/* Example action link; update path as needed */}

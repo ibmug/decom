@@ -187,7 +187,7 @@ import { Button } from "@/components/ui/button";
                                         Items:
                                     </div>
                                     <div>
-                                        {formatCurrency(itemsPrice)}
+                                        {itemsPrice}
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
@@ -195,7 +195,7 @@ import { Button } from "@/components/ui/button";
                                         Tax:
                                     </div>
                                     <div>
-                                        {formatCurrency(taxPrice)}
+                                        {formatCurrency(taxPrice.toString())}
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
@@ -203,7 +203,7 @@ import { Button } from "@/components/ui/button";
                                         Shipping:
                                     </div>
                                     <div>
-                                        {formatCurrency(shippingPrice)}
+                                        {formatCurrency(shippingPrice.toString())}
                                     </div>
                                 </div>
                                 <div className="flex justify-between font-bold text-red-600">
@@ -211,7 +211,7 @@ import { Button } from "@/components/ui/button";
                                         Total:
                                     </div>
                                     <div>
-                                        {formatCurrency(totalPrice)}
+                                        {formatCurrency(totalPrice.toString())}
                                     </div>
                                 </div>
                                 {/*Paypal Payment */}
