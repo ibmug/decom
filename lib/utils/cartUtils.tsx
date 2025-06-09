@@ -23,7 +23,6 @@ export function calcPrice(items: PriceCalcItem[]) {
 }
 
 
-// lib/utils/cart-serializer.ts
 export function serializeCart(record: {
   id: string;
   userId?: string | null;
@@ -45,6 +44,7 @@ export function serializeCart(record: {
         name: string;
         slug?: string;
         imageUrl?: string;
+        backsideImageUrl?: string | null; 
       } | null;
       accessory?: {
         name: string;
@@ -70,23 +70,38 @@ export function serializeCart(record: {
       const metadata = product.cardMetadata;
       const accessory = product.accessory;
 
+      const name =
+        product.customName ??
+        (isCard ? metadata?.name : accessory?.name) ??
+        'Unnamed';
+
+      const image =
+        isCard
+          ? metadata?.imageUrl ?? '/images/cardPlaceholder.png'
+          : accessory?.images?.[0] ?? '/images/cardPlaceholder.png';
+
+      const backsideImage =
+  isCard && metadata?.backsideImageUrl != null
+    ? metadata.backsideImageUrl
+    : undefined;
+
+
+      const quantityRequested = item.quantity;
+      const availableQty = product.stock;
+
       return {
         id: item.id,
         storeProductId: item.storeProductId,
-        name:
-          product.customName ??
-          (isCard ? metadata?.name : accessory?.name) ??
-          'Unnamed',
-        slug:
-          product.slug ?? 'unknown-slug',
-        //price: product.price.toString(),
+        type: product.type,
+        name,
+        slug: product.slug ?? 'unknown-slug',
         price: safeDecimalToString(product.price),
-        image:
-          isCard
-    ? '/images/cardPlaceholder.png'
-    : accessory?.images?.[0] ?? '/images/cardPlaceholder.png',
-        qty: item.quantity,
-        stock: product.stock,
+        image,
+        backsideImage, 
+        qty: quantityRequested,
+        stock: availableQty,
+        stockAvailable: availableQty >= quantityRequested,
+        availableQty,
       };
     }) ?? [],
     itemsPrice: record.itemsPrice.toString(),

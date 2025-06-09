@@ -3,10 +3,18 @@
 import { useEffect, useState } from 'react';
 
 export interface Store {
-  id: string;
-  name: string;
-  address: string;
+  storeId: string;
+  addressName: string;
+  address: {
+    fullName: string;
+    streetName: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    phone?: string;
+  };
 }
+
 
 interface Props {
   value?: string;
@@ -40,8 +48,8 @@ useEffect(() => {
       >
         <option value="">Select a store…</option>
         {stores.map((s) => (
-          <option key={s.id} value={s.id}>
-    {s.name} — {s.address}
+          <option key={s.storeId} value={s.storeId}>
+    {s.addressName} — {s.address.streetName}
   </option>
         ))}
       </select>

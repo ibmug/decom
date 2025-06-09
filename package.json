@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "seed:metadata": "ts-node ./db/seed-metadata.ts",
     "seed:cards": "ts-node ./db/seed-store-products.ts",
+    "seed:doublesided": "ts-node ./db/import-doublesided.ts",
     "cleanup:script": "ts-node ./db/cleanCard.ts"
   },
   "dependencies": {

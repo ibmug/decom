@@ -55,6 +55,29 @@ export async function createOrder() {
       };
     }
 
+    // ✅ Check stock before proceeding
+    for (const item of cart.items) {
+      const product = await prisma.storeProduct.findUnique({
+        where: { id: item.storeProductId },
+        include: {
+          cardMetadata: true,
+          accessory: true,
+        },
+      });
+
+      if (!product || product.stock < item.qty) {
+        const name =
+          product?.customName ??
+          product?.cardMetadata?.name ??
+          product?.accessory?.name ??
+          'Unnamed Product';
+        return {
+          success: false,
+          message: `Could not complete order because ${name} no longer has any stock!`,
+        };
+      }
+    }
+
     const user = await getUserById(userId);
     if (!user.paymentMethod) {
       return {
@@ -69,8 +92,8 @@ export async function createOrder() {
     if (shippingMethod === 'DELIVERY' && !user.address) {
       throw new Error('User has no address to deliver to');
     }
-     
-    const address = user.address && typeof user.address === 'object' ? {...user.address} : {}
+
+    const address = user.address && typeof user.address === 'object' ? { ...user.address } : {};
     const shippingAddress =
       shippingMethod === 'PICKUP'
         ? {
@@ -86,12 +109,10 @@ export async function createOrder() {
       shippingMethod,
       shippingAddress,
       paymentMethod: user.paymentMethod,
-      shippingPrice: Number(cart.shippingPrice),
+      shippingPrice: shippingMethod === 'PICKUP' ? 0 : Number(cart.shippingPrice),
       taxPrice: Number(cart.taxPrice),
       itemsPrice: Number(cart.itemsPrice),
       totalPrice: Number(cart.totalPrice),
-      createdAt: cart.createdAt,
-      updatedAt: cart.updatedAt,
     });
 
     const insertedOrderId = await prisma.$transaction(async (tx) => {
@@ -112,7 +133,7 @@ export async function createOrder() {
       for (const item of cart.items as UICartItem[]) {
         console.log("🧩 Order item data:", item);
         const parsedItem = insertOrderItemSchema.parse({
-          storeProductId: item.storeProductId, // ← This must match StoreProduct.id
+          storeProductId: item.storeProductId,
           slug: item.slug,
           image: item.image,
           name: item.name,
@@ -125,6 +146,12 @@ export async function createOrder() {
             orderId: insertedOrder.id,
             ...parsedItem,
           },
+        });
+
+        // Reduce stock after successful item creation
+        await tx.storeProduct.update({
+          where: { id: item.storeProductId },
+          data: { stock: { decrement: item.qty } },
         });
       }
 
@@ -152,6 +179,7 @@ export async function createOrder() {
     };
   }
 }
+
 
 
 //get order by id

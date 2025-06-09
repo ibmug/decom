@@ -101,8 +101,8 @@ export const paymentMethodSchema = z.object({
 
 export const insertOrderSchema = z.object({
   userId: z.string(),
-  updateAt: z.string(),
-  createdAt: z.string(),
+  updatedAt: z.string().optional(),
+  createdAt: z.string().optional(),
   shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
   shippingAddress: z.object({
   address: z.object({
@@ -169,4 +169,5 @@ export const insertAccessoryProductSchema = z.object({
   price: currency, // or z.coerce.number().min(0.01)
   stock: z.coerce.number().int().min(0),
   storeId: z.string().uuid().optional(), // optional if you made storeId optional in Prisma schema
+  
 });

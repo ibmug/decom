@@ -94,6 +94,7 @@ model CardMetadata {
   oracleText     String?
   colorIdentity  String[]
   imageUrl       String
+  backsideImageUrl String?
   rarity         String?
   type           String?
   cardKingdomUri String?

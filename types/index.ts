@@ -162,6 +162,8 @@ export interface UICartItem {
   image: string;
   qty: number;
   stock: number;
+
+  type: 'CARD' |'ACCESSORY'
 }
 
 /** The full cart payload your React components consume */
@@ -198,32 +200,6 @@ export interface UIProduct {
 }
 
 
-// export type UIStoreProduct =
-//   | {
-//       id: string;
-//       slug: string;
-//       price: string;
-//       stock: number;
-//       customName: string | null;
-//       type: "CARD";
-//       cardMetadata: CardMetadata;
-//     }
-//   | {
-//       id: string;
-//       slug: string;
-//       price: string;
-//       stock: number;
-//       customName: string | null;
-//       name: string;
-//       type: "ACCESSORY";
-//       accessory: AccessoryProduct;
-//       rating?: number;
-//       numReviews: number;
-//       images: string[]
-//       brand? : string;
-//       category?: string;
-//       description?: string;
-//     };
 
 export type UIStoreProduct =
   | {

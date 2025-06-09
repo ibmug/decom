@@ -75,64 +75,87 @@ export async function resolveCart(sessionCartId: string, userId?: string) {
 /** Add a product (or increment qty) in the cart */
 export async function addItemToCart(data: { storeProductId: string; qty?: number }) {
   try {
-    const { sessionCartId, userId } = await getCartIdentifiers()
-    const prod = await prisma.storeProduct.findUnique({
-  where: { id: data.storeProductId },
-  include: {
-    cardMetadata: true,
-    accessory: true,
-  },
-})
-    if (!prod) throw new Error('Product not found')
+    const { sessionCartId, userId } = await getCartIdentifiers();
 
-    const cart = await resolveCart(sessionCartId, userId)
+    const prod = await prisma.storeProduct.findUnique({
+      where: { id: data.storeProductId },
+      include: {
+        cardMetadata: true,
+        accessory: true,
+      },
+    });
+
+    if (!prod) throw new Error('Product not found');
+
+    const cart = await resolveCart(sessionCartId, userId);
     const existingItems = cart.items.map(item => ({
-  storeProductId: item.storeProductId,
-  qty: item.quantity,
-  price: item.storeProduct.price.toString(),
-}))
-    const items = [...existingItems]
-    const idx = items.findIndex(x => x.storeProductId === data.storeProductId)
+      storeProductId: item.storeProductId,
+      qty: item.quantity,
+      price: item.storeProduct.price.toString(),
+    }));
+
+    const items = [...existingItems];
+    const idx = items.findIndex(x => x.storeProductId === data.storeProductId);
+
+    const requestedQty = data.qty ?? 1;
+    const currentQty = idx >= 0 ? items[idx].qty : 0;
+    const newTotalQty = currentQty + requestedQty;
+
+    if (prod.stock < newTotalQty) {
+      throw new Error('Not enough stock available');
+    }
+
     if (idx >= 0) {
-      if (prod.stock < items[idx].qty + 1) throw new Error('Not enough stock')
-      items[idx].qty += 1
+      items[idx].qty = newTotalQty;
     } else {
-      if (prod.stock < 1) throw new Error('Not enough stock')
-      items.push({ storeProductId: data.storeProductId, qty: 1, price: prod.price.toString() })
+      items.push({
+        storeProductId: data.storeProductId,
+        qty: requestedQty,
+        price: prod.price.toString(),
+      });
     }
 
     const pricing = await calcPrice(
       items.map(i => ({ price: i.price, qty: i.qty } as PriceCalcItem))
-    )
+    );
 
     const userExists = userId
-  ? await prisma.user.findUnique({ where: { id: userId } })
-  : null;
+      ? await prisma.user.findUnique({ where: { id: userId } })
+      : null;
 
     await prisma.cart.update({
-  where: { id: cart.id },
-  data: {
-    items: {
-      deleteMany: {}, // Remove all existing cart items
-      create: items.map(i => ({
-        storeProductId: i.storeProductId,
-        quantity: i.qty,
-      })),
-    },
-    itemsPrice: pricing.itemsPrice,
-    shippingPrice: pricing.shippingPrice,
-    taxPrice: pricing.taxPrice,
-    totalPrice: pricing.totalPrice,
-    ...(userExists && { userId }),
-  },
-})
-    const name = prod.customName ?? prod.cardMetadata?.name ?? prod.accessory?.name ?? 'Unname Product'
-    revalidatePath(`/product/${prod.slug}`)
-    return { success: true, message: `${name} added to cart.` }
+      where: { id: cart.id },
+      data: {
+        items: {
+          deleteMany: {}, // Reset items
+          create: items.map(i => ({
+            storeProductId: i.storeProductId,
+            quantity: i.qty,
+          })),
+        },
+        itemsPrice: pricing.itemsPrice,
+        shippingPrice: pricing.shippingPrice,
+        taxPrice: pricing.taxPrice,
+        totalPrice: pricing.totalPrice,
+        ...(userExists && { userId }),
+      },
+    });
+
+    const name =
+      prod.customName ??
+      prod.cardMetadata?.name ??
+      prod.accessory?.name ??
+      'Unnamed Product';
+
+    revalidatePath(`/product/${prod.slug}`);
+
+    return { success: true, message: `${name} added to cart.` };
   } catch (err) {
-    return { success: false, message: formatError(err) }
+    return { success: false, message: formatError(err) };
   }
 }
+
+
 
 /** Fetch the current cart (raw), no UI formatting */
 export async function getMyCart(): Promise<ReturnType<typeof serializeCart>> {

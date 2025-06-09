@@ -52,9 +52,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <TableHead>ID</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>TOTAL</TableHead>
-                <TableHead>PAID</TableHead>
-                <TableHead>DELIVERED</TableHead>
-                <TableHead>ACTIONS</TableHead>
+                <TableHead>STATUS</TableHead>
+                <TableHead>Details</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -63,7 +62,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <TableCell>{formatId(order.id)}</TableCell>
                 <TableCell>{formatDateTime(order.createdAt).dateTime}</TableCell>
                 <TableCell>{formatCurrency(order.totalPrice.toString())}</TableCell>
-                <TableCell>{order.status}</TableCell>
+                <TableCell>{order.status === 'PENDING' ? 'Pending Pickup/Delivery' : order.status}</TableCell>
                 <TableCell>
                   {/* Example action link; update path as needed */}
                   <a href={`/order/${order.id}`} className="text-blue-500 underline">
