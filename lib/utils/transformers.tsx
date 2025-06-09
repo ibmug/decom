@@ -1,4 +1,4 @@
-import { CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
+import { AppUser, CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
 
 
 
@@ -26,6 +26,7 @@ export function toCardItem(product: Extract<UIStoreProduct, { type: "CARD" }>): 
   if (!product.cardMetadata) throw new Error("Missing card");
   return {
     id: product.cardMetadata.id,
+    storeProductId: product.id,
     name: product.cardMetadata.name,
     setCode: product.cardMetadata.setCode,
     setName: product.cardMetadata.setName,
@@ -81,3 +82,11 @@ export function toUIAccessoryDisplayGetLatest(
 }
 
 
+
+export function isAdmin(user: AppUser) {
+  return user.role === 'ADMIN';
+}
+
+export function isManager(user: AppUser) {
+  return user.role === 'MANAGER' || user.role === 'ADMIN';
+}

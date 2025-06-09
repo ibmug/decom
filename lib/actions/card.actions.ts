@@ -119,7 +119,7 @@ export async function searchCards({
       slug:           r.slug ?? '',
       stock:          r.stock,
       price:          r.price.toString(),
-
+      storeProductId: r.id,
       name:           m.name,
       setCode:        m.setCode,
       setName:        m.setName,

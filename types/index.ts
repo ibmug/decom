@@ -111,6 +111,7 @@ export type PaymentResult = z.infer<typeof paymentResultSchema>;
 // --- CARD ITEM FOR DISPLAY ---
 export interface CardItem {
   id: string;
+  storeProductId: string;
   name: string;
   setCode: string;
   setName: string;
@@ -254,4 +255,13 @@ export type UIStoreProduct =
     };
 
 
-    
+  export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
+
+  
+export type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  role: UserRole;
+};

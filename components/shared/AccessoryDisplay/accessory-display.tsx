@@ -6,6 +6,9 @@ import { UIStoreProduct } from '@/types'
 import { Card, CardContent } from '@/components/ui/card'
 import ProductPrice from '@/components/shared/product/productPrice'
 import { Session } from 'next-auth';
+import AddToCartButton from '../add-to-cart-button'
+import AddStock from '../add-stock-component'
+import { useState } from 'react'
 
 interface AccessoryDisplayProps {
   product: Extract<UIStoreProduct, { type: 'ACCESSORY' }>
@@ -13,7 +16,8 @@ interface AccessoryDisplayProps {
 }
 
 export default function AccessoryDisplay({ product, session }: AccessoryDisplayProps) {
-  const { slug, price, stock, accessory } = product
+  const [stock,setStock] = useState(product.stock)
+  const { slug, price, accessory } = product
   if(session) console.log('User is logged.')
 
   return (
@@ -33,12 +37,30 @@ export default function AccessoryDisplay({ product, session }: AccessoryDisplayP
             <p className="text-xs text-muted-foreground">{accessory.brand}</p>
           </div>
         </Link>
-        <div className="flex justify-between items-center text-sm">
+        <div className="mt-4 space-y-1">
+          <p>{product.description}</p>
           <ProductPrice value={Number(price)} />
-          <span className={`text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {stock > 0 ? `${stock} in stock` : 'Out of stock'}
-          </span>
+           <span className={`text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {stock<5 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
+                      <AddToCartButton
+              storeProductId={product.id}
+              stock={stock}
+              onStockChange={(change) => setStock(stock + change)}
+            />
+            
+                      {session?.user?.role === 'admin' && (
+                        
+              <AddStock cardProductId={product.id} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
+            )}
+            </span>
         </div>
+        {/* <div className="flex justify-between items-center text-sm">
+          
+          <ProductPrice value={Number(price)} />
+         
+               
+          
+        </div> */}
       </CardContent>
     </Card>
   )

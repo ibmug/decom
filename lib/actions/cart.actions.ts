@@ -25,59 +25,6 @@ async function getCartIdentifiers() {
   return { sessionCartId, userId }
 }
 
-/** Resolve or initialize a cart: user cart > guest cart > create new */
-// async function resolveCart(sessionCartId: string, userId?: string): Promise<CartWithItems> {
-//   if (userId) {
-//     const userCart = await prisma.cart.findFirst({ where: { userId }, include: {items:{ include: {storeProduct: true}} }})
-//     if (userCart) return userCart
-//   }
-
-//   const guestCart = await prisma.cart.findFirst({
-//   where: { sessionCartId },
-//   include: { items: { include: { storeProduct: true } } },
-// })
-
-//   if (guestCart) return guestCart
-
-//   const pricing = await calcPrice([])
-//   return prisma.cart.create({
-//     data: {
-//       sessionCartId,
-//       itemsPrice:    pricing.itemsPrice,
-//       shippingPrice: pricing.shippingPrice,
-//       taxPrice:      pricing.taxPrice,
-//       totalPrice:    pricing.totalPrice,
-//       ...(userId && { userId }),
-//     },
-//     include:{
-//       items: {include: {storeProduct: true}}
-//     }
-//   })
-// }
-
-
-// export async function resolveCart(sessionCartId: string, userId?: string) {
-//   let validUserId: string | undefined = undefined;
-
-//   if (userId) {
-//     const existingUser = await prisma.user.findUnique({ where: { id: userId } });
-//     if (existingUser) {
-//       validUserId = userId;
-//     } else {
-//       console.warn(` resolveCart: userId "${userId}" does not exist. Skipping user association.`);
-//     }
-//   }
-
-//   return await prisma.cart.upsert({
-//     where: { sessionCartId },
-//     update: {},
-//     create: {
-//       sessionCartId,
-//       ...(validUserId && { userId: validUserId }),
-//     },
-//   });
-// }
-
 export async function resolveCart(sessionCartId: string, userId?: string) {
   const existingCart = await prisma.cart.findFirst({
     where: {
@@ -126,11 +73,11 @@ export async function resolveCart(sessionCartId: string, userId?: string) {
 // --- Public Actions -------------------------------------------
 
 /** Add a product (or increment qty) in the cart */
-export async function addItemToCart(data: { productId: string; qty?: number }) {
+export async function addItemToCart(data: { storeProductId: string; qty?: number }) {
   try {
     const { sessionCartId, userId } = await getCartIdentifiers()
     const prod = await prisma.storeProduct.findUnique({
-  where: { id: data.productId },
+  where: { id: data.storeProductId },
   include: {
     cardMetadata: true,
     accessory: true,
@@ -145,13 +92,13 @@ export async function addItemToCart(data: { productId: string; qty?: number }) {
   price: item.storeProduct.price.toString(),
 }))
     const items = [...existingItems]
-    const idx = items.findIndex(x => x.storeProductId === data.productId)
+    const idx = items.findIndex(x => x.storeProductId === data.storeProductId)
     if (idx >= 0) {
       if (prod.stock < items[idx].qty + 1) throw new Error('Not enough stock')
       items[idx].qty += 1
     } else {
       if (prod.stock < 1) throw new Error('Not enough stock')
-      items.push({ storeProductId: data.productId, qty: 1, price: prod.price.toString() })
+      items.push({ storeProductId: data.storeProductId, qty: 1, price: prod.price.toString() })
     }
 
     const pricing = await calcPrice(
@@ -179,9 +126,9 @@ export async function addItemToCart(data: { productId: string; qty?: number }) {
     ...(userExists && { userId }),
   },
 })
-
+    const name = prod.customName ?? prod.cardMetadata?.name ?? prod.accessory?.name ?? 'Unname Product'
     revalidatePath(`/product/${prod.slug}`)
-    return { success: true, message: `${prod.customName} added to cart.` }
+    return { success: true, message: `${name} added to cart.` }
   } catch (err) {
     return { success: false, message: formatError(err) }
   }

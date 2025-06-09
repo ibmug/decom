@@ -198,6 +198,8 @@ enum ShippingMethod {
   PICKUP
 }
 
+
+
 enum ProductType {
   CARD
   ACCESSORY

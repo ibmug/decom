@@ -11,6 +11,6 @@ export async function POST(req: NextRequest) {
     
   return Response.json({
     success:true,
-    redirect:'/searchCard'
+    redirect:'/search'
   })
 }

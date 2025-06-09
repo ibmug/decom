@@ -1,10 +1,13 @@
+'use client'
+
 import Image from 'next/image';
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import type { CardItem } from '@/types'
 import AddStock from '../add-stock-component';
 import { Session } from 'next-auth';
+import AddToCartButton from '../add-to-cart-button';
 
 
 interface CardDisplayProps {
@@ -13,6 +16,10 @@ interface CardDisplayProps {
 }
 
 const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
+
+
+  const [stock,setStock] = useState(product.stock)
+  
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className='p-0 items-center'>
@@ -27,10 +34,16 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
         <div className="mt-4 space-y-1">
           <p><strong>Colors:</strong> {product.colorIdentity.length ? product.colorIdentity.join(', ') : 'Colorless'}</p>
           <p><strong>Price:</strong> ${product.usdPrice?.toString() || 'n/a'}</p>
-          <p><strong>Stock:</strong> {product.stock}</p>
+          {stock<5 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
+          <AddToCartButton
+  storeProductId={product.storeProductId}
+  stock={stock}
+  onStockChange={(change) => setStock(stock + change)}
+/>
+
           {session?.user?.role === 'admin' && (
             
-  <AddStock cardProductId={product.id} initialStock={product.stock} />
+  <AddStock cardProductId={product.storeProductId} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
 )}
         </div>
       </CardContent>
