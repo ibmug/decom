@@ -7,6 +7,8 @@ import ViewAllProductsButton from '@/components/view-all-products-button';
 export const dynamic = "force-dynamic";
 
 const Homepage = async () => {
+
+  
   const latestProducts = await getLatestProducts();
   //const rawfeaturedProducts = await getFeaturedProducts();
   //const featuredProducts: BasicProduct[] = rawfeaturedProducts.map(serializeProduct) 
