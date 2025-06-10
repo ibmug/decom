@@ -9,7 +9,8 @@ export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD
 
 export const PAGE_SIZE= Number(process.env.PAGE_SIZE) || 10;
 
-export const APP_VERSION = process.env.APP_VERSION || '1.0.1'
+export const APP_VERSION = process.env.APP_VERSION ?? 'dev';
+
 
 export const productDefaultValues = {
     name: '',
