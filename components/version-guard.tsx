@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { APP_VERSION } from '@/lib/constants';
 
-const APP_VERSION_SERVER = process.env.APP_VERSION; 
-const APP_VERSION_CLIENT = APP_VERSION
+
 
 
 
