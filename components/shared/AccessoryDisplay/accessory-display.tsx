@@ -48,7 +48,7 @@ export default function AccessoryDisplay({ product, session }: AccessoryDisplayP
               onStockChange={(change) => setStock(stock + change)}
             />
             
-                      {session?.user?.role === 'admin' && (
+                      {session?.user?.role.toLowerCase() === 'admin'|| session?.user?.role.toLocaleLowerCase() === 'manager' && (
                         
               <AddStock cardProductId={product.id} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
             )}

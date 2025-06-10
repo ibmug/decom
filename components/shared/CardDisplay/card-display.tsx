@@ -41,7 +41,7 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
   onStockChange={(change) => setStock(stock + change)}
 />
 
-          {session?.user?.role === 'admin' && (
+          {session?.user?.role.toLowerCase() === 'admin'|| session?.user?.role.toLocaleLowerCase() === 'manager' && (
             
   <AddStock cardProductId={product.storeProductId} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
 )}
