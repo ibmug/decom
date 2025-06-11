@@ -22,29 +22,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SERVER_URL),
 };
 
-// export default function RootLayout({
-//   children,
-// }: Readonly<{
-//   children: React.ReactNode;
-// }>) {
-//   return (
-//     <html lang="en" suppressHydrationWarning>
-//       <body className={`${inter.className} antialiased`}>
-//         <ThemeProvider
-//           attribute="class"
-//           defaultTheme="dark"
-//           enableSystem
-//           disableTransitionOnChange
-//         >
-//           <AuthSessionProvider>
-//             {children}
-//             <Toaster />
-//           </AuthSessionProvider>
-//         </ThemeProvider>
-//       </body>
-//     </html>
-//   );
-// }
+
 export default function RootLayout({
   children,
 }: Readonly<{

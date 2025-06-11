@@ -82,27 +82,20 @@ import { Button } from "@/components/ui/button";
                 <Card className="my-2">
                     <CardContent className='p-4 gap-4'>
                         <h2 className="text-xl pb-4">Status</h2>
-                        <p className='mb-2'>{paymentMethod}</p>
-                        {
-                            <Badge variant='secondary'>
-                                {status}
-                            </Badge>
-                        }
+                       <p className='mb-2'><b>Payment Method:</b> {paymentMethod}</p>
+<Badge variant='secondary'>Status: {status}</Badge>
+
+                        
                     </CardContent>
                 </Card>
                 <Card className="my-2">
                     <CardContent className='p-4 gap-4'>
                         <h2 className="text-xl pb-4">PaymentMethod</h2>
                         <p className='mb-2'>{paymentMethod}</p>
-                        {paidAt ? (
-                            <Badge variant='secondary'>
-                                Paid at: {formatDateTime(paidAt!).dateTime}
-                            </Badge>
-                        ) : (
-                            <Badge variant='destructive'>
-                                Not Paid
-                            </Badge>
-                         ) }
+                        {<Badge variant={paidAt ? 'secondary' : 'destructive'}>
+  {paidAt ? `Paid at: ${formatDateTime(paidAt).dateTime}` : 'Not Paid'}
+</Badge>
+}
                     </CardContent>
                 </Card>
                 <Card className="my-2">
@@ -187,7 +180,7 @@ import { Button } from "@/components/ui/button";
                                         Items:
                                     </div>
                                     <div>
-                                        {itemsPrice}
+                                        {formatCurrency(itemsPrice.toString())}
                                     </div>
                                 </div>
                                 <div className="flex justify-between">

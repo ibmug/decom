@@ -1,4 +1,7 @@
+
 'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
@@ -12,14 +15,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { UserIcon } from 'lucide-react'
 
-const UserButton = () => {
+const UserButton = ({closeMenu}:{closeMenu: (href:string)=> void}) => {
   const { data: session, status } = useSession()
- 
+  const [open, setOpen] = useState(false)
 
   if (status === 'loading') {
-    return null // or a skeleton loader
+    return null
   }
-  
+
   if (!session?.user) {
     return (
       <Button asChild>
@@ -35,11 +38,12 @@ const UserButton = () => {
 
   return (
     <div className="flex gap-2 items-center">
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             className="relative w-8 h-8 rounded-full ml-2 flex items-center justify-center bg-gray-200"
+            onClick={() => setOpen(prev => !prev)}
           >
             {firstInitial}
           </Button>
@@ -54,34 +58,25 @@ const UserButton = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuItem>
-            <Link href='/user/profile' className='w-full'>
-            Profile
+            <Link href='/user/profile' className='w-full' onClick={()=>closeMenu('/user/profile')} >
+              Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <Link href='/user/orders' className='w-full'>
-            Order History
+            <Link href='/user/orders' className='w-full' onClick={()=>closeMenu('/user/orders')}>
+              Order History
             </Link>
           </DropdownMenuItem>
           {session?.user.role === 'admin' && (
             <DropdownMenuItem>
-            <Link href='/admin/dashboard' className='w-full'>
-            Dashboard
-            </Link>
-          </DropdownMenuItem>
+              <Link href='/admin/dashboard' className='w-full' onClick={()=>closeMenu('/admin/dashboard')}>
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
           )}
           <DropdownMenuItem className="p-0 mb-1">
-            <form
-              action={() => {
-                
-                signOut({ callbackUrl: '/sign-out' })}}
-              className="w-full"
-            >
-              <Button
-                type="submit"
-                className="w-full py-4 px-2 h-4 justify-start"
-                variant="ghost"
-              >
+            <form action={() => signOut({ callbackUrl: '/sign-out' })} className="w-full">
+              <Button type="submit" className="w-full py-4 px-2 h-4 justify-start" variant="ghost">
                 Sign out!
               </Button>
             </form>
@@ -93,3 +88,4 @@ const UserButton = () => {
 }
 
 export default UserButton
+

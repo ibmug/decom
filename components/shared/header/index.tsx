@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { APP_NAME } from '@/lib/constants';
 import Menu from "./menu"
 import FilterDrawer from './filter-drawer';
-//import ProductSearch from './product-search';
 
 import ProductSearchBar from './ProductSearchBar';
 

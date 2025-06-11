@@ -19,6 +19,8 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
 
 
   const [stock,setStock] = useState(product.stock)
+
+  console.log(session?.user.role)
   
   return (
     <Card className="w-full max-w-sm">
@@ -34,14 +36,15 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
         <div className="mt-4 space-y-1">
           <p><strong>Colors:</strong> {product.colorIdentity.length ? product.colorIdentity.join(', ') : 'Colorless'}</p>
           <p><strong>Price:</strong> ${product.usdPrice?.toString() || 'n/a'}</p>
-          {stock<5 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
+          <span className={`text-xs ${stock > 1 ? 'text-green-500' : 'text-red-500'}`}>
+            {stock>=1 ? <p><strong>Stock:</strong> {stock}</p> : <></>}</span>
           <AddToCartButton
   storeProductId={product.storeProductId}
   stock={stock}
   onStockChange={(change) => setStock(stock + change)}
 />
 
-          {session?.user?.role.toLowerCase() === 'admin'|| session?.user?.role.toLocaleLowerCase() === 'manager' && (
+          {session?.user?.role === 'admin' && (
             
   <AddStock cardProductId={product.storeProductId} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
 )}

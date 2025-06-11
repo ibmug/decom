@@ -90,6 +90,7 @@ model CardMetadata {
   setCode        String
   setName        String
   manaCost       String?
+  cmc Int?
   collectorNum   String
   oracleText     String?
   colorIdentity  String[]

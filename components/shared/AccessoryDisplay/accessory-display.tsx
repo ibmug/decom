@@ -9,6 +9,7 @@ import { Session } from 'next-auth';
 import AddToCartButton from '../add-to-cart-button'
 import AddStock from '../add-stock-component'
 import { useState } from 'react'
+import { userAgent } from 'next/server'
 
 interface AccessoryDisplayProps {
   product: Extract<UIStoreProduct, { type: 'ACCESSORY' }>
@@ -19,6 +20,7 @@ export default function AccessoryDisplay({ product, session }: AccessoryDisplayP
   const [stock,setStock] = useState(product.stock)
   const { slug, price, accessory } = product
   if(session) console.log('User is logged.')
+    console.log(session?.user.role)
 
   return (
     <Card>
@@ -41,18 +43,18 @@ export default function AccessoryDisplay({ product, session }: AccessoryDisplayP
           <p>{product.description}</p>
           <ProductPrice value={Number(price)} />
            <span className={`text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {stock<5 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
+            {stock>=1 ? <p><strong>Stock:</strong> {stock}</p> : <></>}</span>
                       <AddToCartButton
               storeProductId={product.id}
               stock={stock}
               onStockChange={(change) => setStock(stock + change)}
             />
             
-                      {session?.user?.role.toLowerCase() === 'admin'|| session?.user?.role.toLocaleLowerCase() === 'manager' && (
+                      {session?.user?.role === 'admin' && (
                         
               <AddStock cardProductId={product.id} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
             )}
-            </span>
+            
         </div>
         {/* <div className="flex justify-between items-center text-sm">
           

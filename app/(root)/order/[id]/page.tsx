@@ -15,9 +15,16 @@ export const metadata: Metadata = {
 const OrderDetailsPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
 
-  const session = await getServerSession(authOptions);
-  const order = await getOrderById(id);
-  if (!order) notFound();
+const session = await getServerSession(authOptions);
+const order = await getOrderById(id);
+if (!order) notFound();
+
+if (!order) notFound();
+
+if (order.userId !== session?.user.id && session?.user.role !== 'admin') {
+  notFound(); 
+}
+
 
   return (
     <OrderDetailsCard
