@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   const andClause: Prisma.StoreProductWhereInput[] = [];
 
-  // Full text search (more aggressive now)
+  // Full text search
   if (q) {
     andClause.push({
       OR: [
@@ -51,24 +51,24 @@ export async function GET(req: NextRequest) {
 
   // Colors filtering
   if (selectedColors.length > 0) {
-  const isColorlessSelected = selectedColors.length === 1 && selectedColors[0] === 'C';
+    const isColorlessSelected = selectedColors.length === 1 && selectedColors[0] === 'C';
 
-  if (isColorlessSelected) {
-    andClause.push({ cardMetadata: { colorIdentity: { equals: [] } } });
-  } else if (colorsExact) {
-    const sortedColors = [...selectedColors].sort();
-    andClause.push({ cardMetadata: { colorIdentity: { equals: sortedColors } } });
-  } else {
-    andClause.push({ cardMetadata: { colorIdentity: { hasSome: selectedColors } } });
+    if (isColorlessSelected) {
+      andClause.push({ cardMetadata: { colorIdentity: { equals: [] } } });
+    } else if (colorsExact) {
+      const sortedColors = [...selectedColors].sort();
+      andClause.push({ cardMetadata: { colorIdentity: { equals: sortedColors } } });
+    } else {
+      andClause.push({ cardMetadata: { colorIdentity: { hasSome: selectedColors } } });
+    }
   }
-}
 
   // Card type filtering
   if (cardType) {
     andClause.push({ cardMetadata: { type: { contains: cardType, mode: Prisma.QueryMode.insensitive } } });
   }
 
-  // // Price filters (safe parsing)
+  // Price filters (optional - currently unused)
   // const priceFilter: Prisma.StoreProductWhereInput = {};
   // if (minPrice) priceFilter.price = { ...(priceFilter.price ?? {}), gte: parseFloat(minPrice) };
   // if (maxPrice) priceFilter.price = { ...(priceFilter.price ?? {}), lte: parseFloat(maxPrice) };
@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
         accessory: true,
         cardMetadata: true,
       },
+      orderBy: { lastUpdated: 'desc' }, // ✅ The key change: stable ordering
       take: PAGE_SIZE,
       skip: (page - 1) * PAGE_SIZE,
     }),

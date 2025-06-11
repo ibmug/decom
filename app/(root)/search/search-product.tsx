@@ -63,7 +63,11 @@ export default function SearchProductClient({ session }: SearchProductClientProp
     const res = await fetch(url)
     const json: SearchResult = await res.json()
 
-    setResults(prev => [...prev, ...json.data])
+    setResults(prev => {
+  const existingIds = new Set(prev.map(p => p.id));
+  const newData = json.data.filter(product => !existingIds.has(product.id));
+  return [...prev, ...newData];
+});
     setTotalPages(json.totalPages)
     setCurrentPage(page)
     setLoading(false)
