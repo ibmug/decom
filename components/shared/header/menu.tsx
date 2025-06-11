@@ -22,7 +22,7 @@ const Menu = () => {
             <ShoppingCart /> Cart
           </Link>
         </Button>
-        <UserButton />
+        <UserButton closeMenu={handleNavigate} />
       </nav>
 
       <nav className="md:hidden">

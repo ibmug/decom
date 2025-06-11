@@ -9,7 +9,7 @@ import { Session } from 'next-auth';
 import AddToCartButton from '../add-to-cart-button'
 import AddStock from '../add-stock-component'
 import { useState } from 'react'
-import { userAgent } from 'next/server'
+
 
 interface AccessoryDisplayProps {
   product: Extract<UIStoreProduct, { type: 'ACCESSORY' }>
