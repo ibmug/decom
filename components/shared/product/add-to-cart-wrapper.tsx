@@ -1,12 +1,26 @@
-import { getMyCart } from '@/lib/actions/cart.actions'
-import AddToCart from './add-to-cart'
+
+
+import { getMyCart } from '@/lib/actions/cart.actions';
+import AddToCart from './add-to-cart';
 
 interface Props {
-  productId: string
+  productId: string;
+  inventoryId: string;
+  stock: number; // ✅ fully required now
 }
 
-export default async function AddToCartWrapper({ productId }: Props) {
-  const cart = await getMyCart()
-
-  return <AddToCart cart={cart} item={{ id: productId, quantity: 1 }} />
+export default async function AddToCartWrapper({ productId, inventoryId, stock }: Props) {
+  const response = await getMyCart()
+  const cart = response.success ? response.data :undefined;
+  return (
+    <AddToCart
+      cart={cart}
+      item={{
+        productId,
+        inventoryId,
+        qty: 1
+      }}
+      stock={stock} 
+    />
+  );
 }

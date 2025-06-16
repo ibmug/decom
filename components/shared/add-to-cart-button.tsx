@@ -5,31 +5,40 @@ import { addItemToCart } from '@/lib/actions/cart.actions';
 import { useToast } from '@/hooks/use-toast';
 import { formatError } from '@/lib/utils/utils';
 
-export default function AddToCartButton({
-  storeProductId,
-  stock,
-  onStockChange,
-}: {
-  storeProductId: string;
+interface AddToCartButtonProps {
+  productId: string;
+  inventoryId: string;
   stock: number;
   onStockChange?: (newStock: number) => void;
-}) {
+}
+
+export default function AddToCartButton({
+  productId,
+  inventoryId,
+  stock,
+  onStockChange,
+}: AddToCartButtonProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const handleAddToCart = async () => {
     setLoading(true);
     try {
-      const res = await addItemToCart({ storeProductId });
+      const res = await addItemToCart({
+        productId,
+        inventoryId,
+        qty: 1,  
+      });
+
       if (!res.success) {
         toast({ description: res.message, variant: 'destructive' });
         return;
       }
 
-      toast({ description: res.message, variant: 'default' });
+      toast({ description: 'Added to cart', variant: 'default' });
 
       if (typeof onStockChange === 'function') {
-        onStockChange(-1); // reduce stock by 1
+        onStockChange(stock - 1);
       }
     } catch (err) {
       console.error('Add to cart failed', err);

@@ -15,7 +15,7 @@ const Homepage = async () => {
   return (<div>
     {/* {featuredProducts.length > 0 && <ProductCarousel data={featuredProducts}/>} */}
     {latestProducts &&
-    <ProductList data={latestProducts.data} title="New Arrivals"
+    <ProductList data={latestProducts} title="New Arrivals"
     limit={4}/>}
     <ViewAllProductsButton/>
     </div>

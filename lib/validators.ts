@@ -1,121 +1,91 @@
 import { z } from "zod";
-import { formatNumberWithDecimal } from "./utils/utils";
 import { PAYMENT_METHODS } from "./constants";
+import { formatNumberWithDecimal } from "./utils/utils";
 
-//The following regex after (value)=> /^\d+(\.\d{2})?$ means 
-//^ start with, \d = digit, + means 1 or more, in this case, digits.
-//The parenthesis means(the ? means optional) which means should contain up to two digits AFTER the dot('.') .(\.\d{2})
-const currency = z.string().refine((value)=> /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))),'Price must have exactly two decimal places')
-//Schema for products.
-const baseProductSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(3, 'Name must be at least 3 chars long'),
-  slug: z.string().min(3, 'Slug must be at least 3 chars long'),
-  category: z.string().min(3, 'Category must be at least 3 chars long'),
-  brand: z.string().min(3, 'Brand must be at least 3 chars long'),
-  description: z.string().min(3, 'Description must be at least 3 chars long'),
-  stock: z.coerce.number(),
-  images: z.array(z.string()).min(1, 'Product must have at least one image'),
-  isFeatured: z.boolean(),
-  banner: z.string().nullable(),
+// --- Currency validator ---
+const currency = z.string().refine(
+  (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))),
+  "Price must have exactly two decimal places"
+);
+
+// --- Inventory validator ---
+const inventoryItemSchema = z.object({
+  id: z.string().uuid(),
   price: currency,
-  type: z.enum(['CARD', 'ACCESSORY']), // ✅ Add this line
+  stock: z.number().int().nonnegative(),
+  language: z.string().optional(),
+  condition: z.string().optional(),
 });
 
-
-// For creation, drop id entirely
-export const insertProductSchema = baseProductSchema.omit({ id: true })
-
-// For updating, require id
-export const updateProductSchema = baseProductSchema.extend({
-  id: z.string().min(1, 'id is required'),
-})
-
-//Schema for signing users in
-export const signInFormSchema = z.object({
-    email: z.string().email('Invalid Email Address'),
-    password: z.string().min(6, 'Password must be at least 6 characters.'),
+// --- Shared base product fields ---
+const baseProductSchema = z.object({
+  slug: z.string().min(3),
+  storeId: z.string().uuid().optional().nullable(),
+  rating: z.number().optional(),
+  numReviews: z.number().optional(),
+  images: z.array(z.string().url()).min(1),
+  inventory: z.array(inventoryItemSchema),
 });
 
-export const signUpFormSchema = z.object({
-    name: z.string().min(3,'Name must be at least 3 characters'),
-    email: z.string().email('Invalid Email Address'),
-    password: z.string().min(6, 'Password must be at least 6 characters.'),
-    confirmPassword: z.string().min(6, 'Password must be at least 6 characters.'),
-    //If it's true it'll pass(password=confirmPassword, if it doesnt it messages and shows the path where it failed)
-}).refine((data)=>data.password == data.confirmPassword, {
-    message:"Passwords don't match",
-    path:['confirmPassword'],
- });
+// --- CARD schema ---
+const cardSchema = baseProductSchema.extend({
+  type: z.literal("CARD"),
+  cardMetadataId: z.string().uuid(),
+});
 
+// --- ACCESSORY schema ---
+const accessorySchema = baseProductSchema.extend({
+  type: z.literal("ACCESSORY"),
+  accessoryId: z.string().uuid().optional().nullable(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  brand: z.string().optional(),
+  category: z.string().min(1),
+});
 
+// --- INSERT product schema ---
+export const insertProductSchema = z.discriminatedUnion("type", [
+  cardSchema,
+  accessorySchema,
+]);
 
- //Cart schemas
+// --- UPDATE product schema (✅ correctly handled discriminated union) ---
+export const updateProductSchema = z.discriminatedUnion("type", [
+  cardSchema.extend({ id: z.string().uuid() }),
+  accessorySchema.extend({ id: z.string().uuid() }),
+]);
 
- export const cartItemSchema = z.object({
-    productId: z.string().min(1,'Product is required.'),
-    name: z.string().min(1,'Name is required.'),
-    slug: z.string().min(1,'slug is required.'),
-    qty: z.number().int().nonnegative('Quantity is required to be postive'),
-    image: z.string().min(1,'Image is required'),
-    price: currency,
-
- });
-
- export const insertCartSchema = z.object({
-    items: z.array(cartItemSchema),
-    itemsPrice: currency,
-    totalPrice: currency,
-    shippingPrice: currency,
-    taxPrice: currency,
-    sessionCartId: z.string().min(1,'Session cart id is required'),
-    userId: z.string().optional().nullable(),
- });
-
-
-
-
- 
+// --- Shipping address ---
 export const shippingAddressSchema = z.object({
-  shippingMethod: z.enum(['DELIVERY', 'PICKUP']),
+  shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
   address: z.object({
-    fullName:   z.string().min(1, 'Full Name is required'),
-    country:    z.string().min(1, 'Country is required'),
-    streetName: z.string().min(1, 'Street name is required'),
-    city:       z.string().min(1, 'City is required'),
-    state:      z.string().min(1, 'State is required'),
-    postalCode: z.string().min(1, 'Postal code is required'),
-    phone:      z.string().optional(),
-    notes:      z.string().optional(),
+    fullName: z.string().min(1),
+    country: z.string().min(1),
+    streetName: z.string().min(1),
+    city: z.string().min(1),
+    state: z.string().min(1),
+    postalCode: z.string().min(1),
+    phone: z.string().optional(),
+    notes: z.string().optional(),
   }),
-  addressName: z.string().optional(), // e.g. “Sucursal Centro” or “Casa”
+  addressName: z.string().optional(),
 });
 
-//schema for payment methods.
+// --- Payment method ---
 export const paymentMethodSchema = z.object({
-  type:z.string().min(1, 'Payment method is required')
-}).refine((data)=> PAYMENT_METHODS.includes(data.type),{
-  path:['type'],
-  message:'Invalid Payment Method',
+  type: z.string().min(1).refine(
+    (val) => PAYMENT_METHODS.includes(val),
+    { message: "Invalid payment method", path: ["type"] }
+  ),
 });
 
+// --- Orders ---
 export const insertOrderSchema = z.object({
-  userId: z.string(),
+  userId: z.string().uuid(),
   updatedAt: z.string().optional(),
   createdAt: z.string().optional(),
   shippingMethod: z.enum(["DELIVERY", "PICKUP"]),
-  shippingAddress: z.object({
-  address: z.object({
-    fullName: z.string(),
-    country: z.string(),
-    streetName: z.string(),
-    city: z.string(),
-    state: z.string(),
-    postalCode: z.string(),
-    phone: z.string().optional(),
-  }),
-  addressName: z.string().optional(), // Optional for labeling pickup stores
-}),
+  shippingAddress: shippingAddressSchema,
   paymentMethod: z.string(),
   shippingPrice: z.number(),
   taxPrice: z.number(),
@@ -124,50 +94,66 @@ export const insertOrderSchema = z.object({
 });
 
 export const insertOrderItemSchema = z.object({
-  storeProductId: z.string(),
+  productId: z.string().uuid(),
+  inventoryId: z.string(),
   slug: z.string(),
   image: z.string(),
   name: z.string(),
   price: currency,
   qty: z.number(),
-})
-
-//schema to help us validate payment
-
-export const paymentResultSchema = z.object({
-  id:z.string(),
-  status:z.string(),
-  email_address:z.string(),
-  pricePaid:z.string()
-})
-
-//Schema for updating the user profile
-
-export const updateProfileSchema = z.object({
-  name: z.string().min(3,'Name bust be at least 3 chars long'),
-  email: z.string().min(3,'Email must be at least 3 characters long.')
-})
-
-
-///Schema to update users
-
-export const updateUserSchema = updateProfileSchema.extend({
-  id: z.string().min(1, 'ID is required'),
-  role: z.string().min(1, 'Role is required'),
-
 });
 
+// --- Payment result ---
+export const paymentResultSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  email_address: z.string(),
+  pricePaid: z.string(),
+});
 
+// --- User profile ---
+export const updateProfileSchema = z.object({
+  name: z.string().min(3),
+  email: z.string().min(3),
+});
 
+export const updateUserSchema = updateProfileSchema.extend({
+  id: z.string().uuid(),
+  role: z.string().min(1),
+});
+
+// --- Insert accessory standalone (for admin form) ---
 export const insertAccessoryProductSchema = z.object({
   slug: z.string().min(3),
   name: z.string().min(1),
   description: z.string().optional(),
   brand: z.string().optional(),
   category: z.string().min(1),
-  images: z.array(z.string().url()).min(1, "At least one image is required"),
-  price: currency, // or z.coerce.number().min(0.01)
-  stock: z.coerce.number().int().min(0),
-  storeId: z.string().uuid().optional(), // optional if you made storeId optional in Prisma schema
-  
+  images: z.array(z.string().url()).min(1),
+  price: currency,
+  stock: z.number().int().nonnegative(),
+  storeId: z.string().uuid().optional(),
+});
+
+// --- Sign up form ---
+export const signUpFormSchema = z.object({
+  name: z.string()
+    .min(3, 'Name must be at least 3 characters')
+    .max(50, 'Name too long')
+    .trim(),
+
+  email: z.string()
+    .email('Invalid Email Address')
+    .max(100, 'Email too long')
+    .transform(val => val.toLowerCase().trim()),
+
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters.')
+    .max(100, 'Password too long'),
+
+  confirmPassword: z.string()
+    .min(6, 'Password must be at least 6 characters.'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });

@@ -9,7 +9,10 @@ export const metadata = {
 
 const CartPage = async () => {
 
-  const cart = await getMyCart();
+  const result = await getMyCart();
+if (!result.success) throw new Error(result.message);
+const cart = result.data;
+
 
   return (<div>
     <CartTable cart={cart}/>

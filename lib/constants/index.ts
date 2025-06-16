@@ -12,20 +12,63 @@ export const PAGE_SIZE= Number(process.env.PAGE_SIZE) || 10;
 export const APP_VERSION = process.env.APP_VERSION ?? 'dev';
 
 
-export const productDefaultValues = {
-    name: '',
-    slug: '',
-    category: '',
-    images: [],
-    brand: '',
-    description: '',
-    price: '0',
-    stock: 0,
-    rating: '0',
-    numReviews: '0',
-    isFeatured: false,
-    banner: null,
-}
+import { insertProductSchema } from "@/lib/validators";
+import { z } from "zod";
+
+type ProductFormValues = z.infer<typeof insertProductSchema>;
+
+
+// ✅ Default values (split correctly for discriminated union)
+export const accessoryDefaultValues: ProductFormValues = {
+  type: "ACCESSORY",
+  slug: "",
+  name: "",
+  description: "",
+  brand: "",
+  category: "",
+  images: [],
+  storeId: null,
+  rating: 0,
+  numReviews: 0,
+  inventory: [],
+  accessoryId: null,
+};
+
+export const cardDefaultValues: ProductFormValues = {
+  type: "CARD",
+  slug: "",
+  cardMetadataId: "",   // required for CARD type
+  storeId: null,
+  rating: 0,
+  numReviews: 0,
+  images: [],
+  inventory: [],
+};
+
+
+export const STORE_PRODUCT_FULL_QUERY = {
+  include: {
+    cardMetadata: true,
+    accessory: true,
+    inventory: true,
+  },
+};
+
+export const CART_FULL_QUERY = {
+  include: {
+    items: {
+      include: {
+        storeProduct: {
+          include: {
+            cardMetadata: true,
+            accessory: true,
+          },
+        },
+        inventory: true,
+      },
+    },
+  },
+};
 
 
 export const USER_ROLES = process.env.USER_ROLES ? process.env.USER_ROLES.split(', ') : ['admin', 'user', 'manager'] 

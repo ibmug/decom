@@ -1,11 +1,14 @@
 -- CreateEnum
+CREATE TYPE "ProductType" AS ENUM ('CARD', 'ACCESSORY');
+
+-- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'READY4PICKUP', 'COMPLETED', 'CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "ShippingMethod" AS ENUM ('DELIVERY', 'PICKUP');
 
 -- CreateEnum
-CREATE TYPE "ProductType" AS ENUM ('CARD', 'ACCESSORY');
+CREATE TYPE "CardCondition" AS ENUM ('NM', 'LP', 'MP', 'HP', 'DMG');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -55,36 +58,6 @@ CREATE TABLE "Session" (
 );
 
 -- CreateTable
-CREATE TABLE "VerificationToken" (
-    "identifier" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "expires" TIMESTAMP(6) NOT NULL,
-
-    CONSTRAINT "VerificationToken_pkey" PRIMARY KEY ("identifier","token")
-);
-
--- CreateTable
-CREATE TABLE "Product" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "name" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
-    "images" TEXT[],
-    "brand" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "stock" INTEGER NOT NULL,
-    "price" DECIMAL(12,2) NOT NULL DEFAULT 0,
-    "rating" DECIMAL(3,2) NOT NULL DEFAULT 0,
-    "numReviews" INTEGER NOT NULL DEFAULT 0,
-    "isFeatured" BOOLEAN NOT NULL DEFAULT false,
-    "banner" TEXT,
-    "createdAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Store" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
@@ -99,9 +72,11 @@ CREATE TABLE "AccessoryProduct" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "brand" TEXT,
-    "imageUrl" TEXT,
     "category" TEXT NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "numReviews" INTEGER DEFAULT 0,
+    "rating" DOUBLE PRECISION DEFAULT 0,
+    "images" TEXT[],
 
     CONSTRAINT "AccessoryProduct_pkey" PRIMARY KEY ("id")
 );
@@ -114,10 +89,12 @@ CREATE TABLE "CardMetadata" (
     "setCode" TEXT NOT NULL,
     "setName" TEXT NOT NULL,
     "manaCost" TEXT,
+    "cmc" INTEGER,
     "collectorNum" TEXT NOT NULL,
     "oracleText" TEXT,
     "colorIdentity" TEXT[],
     "imageUrl" TEXT NOT NULL,
+    "backsideImageUrl" TEXT,
     "rarity" TEXT,
     "type" TEXT,
     "cardKingdomUri" TEXT,
@@ -134,6 +111,10 @@ CREATE TABLE "Cart" (
     "userId" UUID,
     "createdAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "itemsPrice" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
+    "shippingPrice" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
+    "taxPrice" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
+    "totalPrice" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
 
     CONSTRAINT "Cart_pkey" PRIMARY KEY ("id")
 );
@@ -142,7 +123,8 @@ CREATE TABLE "Cart" (
 CREATE TABLE "CartItem" (
     "id" UUID NOT NULL,
     "cartId" UUID NOT NULL,
-    "storeProductId" UUID NOT NULL,
+    "productId" UUID NOT NULL,
+    "inventoryId" UUID,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "addedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -188,22 +170,31 @@ CREATE TABLE "OrderItem" (
 CREATE TABLE "StoreProduct" (
     "id" UUID NOT NULL,
     "slug" TEXT NOT NULL,
-    "price" DECIMAL(65,30) NOT NULL,
-    "stock" INTEGER NOT NULL,
-    "customName" TEXT,
     "type" "ProductType" NOT NULL,
-    "storeId" UUID NOT NULL,
     "cardMetadataId" UUID,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "accessoryId" UUID,
+    "storeId" UUID,
+    "customName" TEXT,
 
     CONSTRAINT "StoreProduct_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "user_email_idx" ON "User"("email");
+-- CreateTable
+CREATE TABLE "Inventory" (
+    "id" UUID NOT NULL,
+    "productId" UUID NOT NULL,
+    "price" DECIMAL(65,30) NOT NULL,
+    "stock" INTEGER NOT NULL,
+    "language" TEXT,
+    "condition" "CardCondition",
+    "lastUpdated" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Inventory_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
-CREATE UNIQUE INDEX "product_slug_idx" ON "Product"("slug");
+CREATE UNIQUE INDEX "user_email_idx" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Store_name_key" ON "Store"("name");
@@ -215,7 +206,10 @@ CREATE UNIQUE INDEX "CardMetadata_scryfallId_key" ON "CardMetadata"("scryfallId"
 CREATE UNIQUE INDEX "Cart_sessionCartId_key" ON "Cart"("sessionCartId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "CartItem_cartId_storeProductId_key" ON "CartItem"("cartId", "storeProductId");
+CREATE UNIQUE INDEX "Cart_userId_key" ON "Cart"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CartItem_cartId_productId_inventoryId_key" ON "CartItem"("cartId", "productId", "inventoryId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "StoreProduct_slug_key" ON "StoreProduct"("slug");
@@ -230,10 +224,13 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Cart" ADD CONSTRAINT "Cart_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_storeProductId_fkey" FOREIGN KEY ("storeProductId") REFERENCES "StoreProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "StoreProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_inventoryId_fkey" FOREIGN KEY ("inventoryId") REFERENCES "Inventory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -242,13 +239,16 @@ ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") RE
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "StoreProduct" ADD CONSTRAINT "StoreProduct_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "StoreProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StoreProduct" ADD CONSTRAINT "StoreProduct_cardMetadataId_fkey" FOREIGN KEY ("cardMetadataId") REFERENCES "CardMetadata"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StoreProduct" ADD CONSTRAINT "StoreProduct_accessoryId_fkey" FOREIGN KEY ("accessoryId") REFERENCES "AccessoryProduct"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StoreProduct" ADD CONSTRAINT "StoreProduct_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_productId_fkey" FOREIGN KEY ("productId") REFERENCES "StoreProduct"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

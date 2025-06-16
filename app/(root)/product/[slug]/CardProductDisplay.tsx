@@ -1,28 +1,36 @@
-'use client'
+'use client';
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProductPrice from "@/components/shared/product/productPrice";
-
 import Image from "next/image";
+import { useState } from "react";
+import type { UIStoreProduct, UIInventory } from "@/types";
 
-
-import type {UIStoreProduct } from "@/types";
-
-
-// Restrict to only the "CARD" variant
 type CardOnly = Extract<UIStoreProduct, { type: "CARD" }>;
 
+export default function CardProductDisplay({ product }: { product: CardOnly }) {
+  const languages = [...new Set(product.inventory.map(inv => inv.language ?? 'Unknown'))];
+  const conditions = [...new Set(product.inventory.map(inv => inv.condition ?? 'Unknown'))];
 
-export default function CardProductDisplay({ product }: {product: CardOnly}) {
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(languages[0] ?? '');
+  const [selectedCondition, setSelectedCondition] = useState<string>(conditions[0] ?? '');
+
+  const filteredInventory: UIInventory | undefined = product.inventory.find(
+    inv => (inv.language ?? '') === selectedLanguage && (inv.condition ?? '') === selectedCondition
+  );
+
+  const inventoryAvailable = filteredInventory?.stock ?? 0;
+  const price = filteredInventory?.price ?? '0';
+
   return (
     <section>
-      <div className="grid grid-cols-1 md:grid-cols-5">
-        {/* Image Column */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Image */}
         <div className="col-span-2">
           <div className="relative w-full aspect-[3/4] rounded overflow-hidden border">
             <Image
-              src={product.cardMetadata.imageUrl}
+              src={product.images[0]}
               alt={product.cardMetadata.name}
               fill
               className="object-contain"
@@ -30,46 +38,57 @@ export default function CardProductDisplay({ product }: {product: CardOnly}) {
           </div>
         </div>
 
-        {/* Details Column */}
-        <div className="col-span-2 p-5">
-          <div className="flex flex-col gap-4">
-            <p className="text-muted-foreground">{product.cardMetadata.setName} • {product.cardMetadata.collectorNum}</p>
-            <h1 className="h3-bold">{product.cardMetadata.name}</h1>
-            {product.cardMetadata.manaCost && <p className="text-sm text-muted-foreground">Mana Cost: {product.cardMetadata.manaCost}</p>}
-            <p className="text-sm text-muted-foreground">{product.type} • {product.cardMetadata.rarity}</p>
-            <p className="text-sm text-muted-foreground">Colors: {product.cardMetadata.colorIdentity.join(', ')}</p>
-            <p className="italic mt-2">{product.cardMetadata.oracleText}</p>
+        {/* Info */}
+        <div className="col-span-2 p-5 space-y-4">
+          <p className="text-muted-foreground">{product.cardMetadata.setName} • {product.cardMetadata.collectorNum}</p>
+          <h1 className="h3-bold">{product.cardMetadata.name}</h1>
+          {product.cardMetadata.manaCost && (
+            <p className="text-sm text-muted-foreground">Mana Cost: {product.cardMetadata.manaCost}</p>
+          )}
+          <p className="text-sm text-muted-foreground">{product.type} • {product.cardMetadata.rarity}</p>
+          <p className="text-sm text-muted-foreground">Colors: {product.cardMetadata.colorIdentity.join(', ')}</p>
+          <p className="italic mt-2">{product.cardMetadata.oracleText}</p>
 
-            <div className="mt-6">
-              <ProductPrice
-                value={Number(product.price)}
-                className="w-24 rounded-full bg-green-100 text-green-700 px-5 py-2"
-              />
-              {product.cardMetadata.usdFoilPrice && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Foil: ${product.cardMetadata.usdFoilPrice.toFixed(2)}
-                </p>
-              )}
-            </div>
+          {/* Language selector */}
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Language:</span>
+            <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} className="border rounded px-2 py-1">
+              {languages.map(lang => (
+                <option key={lang} value={lang}>{lang}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Condition selector */}
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Condition:</span>
+            <select value={selectedCondition} onChange={(e) => setSelectedCondition(e.target.value)} className="border rounded px-2 py-1">
+              {conditions.map(cond => (
+                <option key={cond} value={cond}>{cond}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Action Column */}
+        {/* Pricing & Availability */}
         <div>
           <Card>
-            <CardContent className="p-4">
-              <div className="mb-2 flex justify-between">
-                <div>Price</div>
-                <ProductPrice value={Number(product.price)} />
+            <CardContent className="p-4 space-y-3">
+              <div className="flex justify-between">
+                <span>Price:</span>
+                <ProductPrice value={Number(price)} />
               </div>
-              <div className="mb-2 flex justify-between">
-                <div>Status</div>
-                {product.stock > 0 ? (
-                  <Badge variant="outline">En existencia!</Badge>
+              <div className="flex justify-between">
+                <span>Status:</span>
+                {inventoryAvailable > 0 ? (
+                  <Badge variant="outline">In stock ({inventoryAvailable})</Badge>
                 ) : (
-                  <Badge variant="destructive">Agotado</Badge>
+                  <Badge variant="destructive">Out of stock</Badge>
                 )}
               </div>
+
+              {/* You can wire up AddToCart here later */}
+              {/* <AddToCartButton productId={} inventoryId={} /> */}
             </CardContent>
           </Card>
         </div>

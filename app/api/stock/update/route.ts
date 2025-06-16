@@ -1,16 +1,31 @@
-
-import { NextRequest } from 'next/server'
-import { updateStock } from '@/lib/actions/store-product.actions'
-
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/db/prisma';
+import { formatError } from '@/lib/utils/utils';
 
 export async function POST(req: NextRequest) {
-  const { storeProductId, newStock } = await req.json()
+  try {
+    const { inventoryId, newStock } = await req.json();
 
-  const result = await updateStock({ storeProductId, newStock })
-  if (!result) {throw new Error ('Could not update stock')}
-    
-  return Response.json({
-    success:true,
-    redirect:'/search'
-  })
+    if (!inventoryId || typeof newStock !== 'number') {
+      throw new Error('Invalid input');
+    }
+
+    const updated = await prisma.inventory.update({
+      where: { id: inventoryId },
+      data: { stock: newStock },
+    });
+
+    return NextResponse.json({
+      success: true,
+      updated,
+      redirect: '/search',
+    });
+
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { success: false, message: formatError(err) },
+      { status: 500 }
+    );
+  }
 }

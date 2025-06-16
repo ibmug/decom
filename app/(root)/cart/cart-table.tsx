@@ -94,7 +94,7 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
             variant="outline"
             onClick={() =>
               startTransition(() =>
-                handleQuantityChange(item.storeProductId, -1)
+                handleQuantityChange(item.productId, -1)
               )
             }
           >
@@ -112,7 +112,7 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
             variant="outline"
             onClick={() =>
               startTransition(() =>
-                handleQuantityChange(item.storeProductId, 1)
+                handleQuantityChange(item.productId, 1)
               )
             }
           >

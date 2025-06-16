@@ -1,83 +1,68 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import qs from 'query-string'
-import { UIProduct } from "../actions/product.actions"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import qs from 'query-string';
+import { ApiResponse } from "@/types";
+import { ProductWithRelations } from "./transformers";
+import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
 
-
+// Tailwind class merger
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-
-//Convert prisma object into regular js object
-export function convertToPlainObject <T>(value: T): T{
-  //<T> is a Typescript generic placeholder, and value T is 'inferred', similar to 'var or ?' - But they need to match, thats why we use the 3 T's
+// Convert Prisma object into regular JS object
+export function convertToPlainObject<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
-  
 }
 
-//Format number with decimal places
-//export function formatNumberWithDecimal (num): string{
-  //const [int,decimal] = num.toString().split('.');
-  //if decimal exists, return decimal with some padding (ex. 1.9 will show 1.90, else(:) just return the int.00 (ex 2.00))
-  //return decimal ? `${int}.${decimal.padEnd(2,'0')}` : `${int}.00`
-//}
+// Format number with decimal places
 export function formatNumberWithDecimal(num: string | number): string {
   const [int, decimal] = num.toString().split('.');
   return decimal ? `${int}.${decimal.padEnd(2, '0')}` : `${int}.00`;
 }
 
-//Format Errors
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function formatError(error: any) {
-  if(error.name ==='ZodError'){
-    //Handle Zod Error
-    //errors is the object which contains type/includisve/exact/message..., we get the value 'message' from all the errors shown and pass them over as a joined string.
-    const fieldErrors = Object.keys(error.errors).map((field)=>error.errors[field].message);
-    return fieldErrors.join('.  ')
-  } else if (error.name === 'PrismaClientKnownRequestError' && error.code === 'P2002') {
-    //Prisma error
-    const field = error.meta?.target ? error.meta.target[0] : 'Field';
-    return `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.`
+// Error formatter (Zod + Prisma)
+export function formatError(error: unknown) {
+  if (error instanceof ZodError) {
+    const fieldErrors = error.errors.map((e) => e.message);
+    return fieldErrors.join('.  ');
+  } else if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2002'
+  ) {
+    const field = (error.meta?.target as string[] | undefined)?.[0] ?? 'Field';
+    return `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.`;
+  } else if (error instanceof Error) {
+    return error.message;
   } else {
-    //handle other errors.
-    return typeof error.message === 'string' ? error.message : JSON.stringify(error.message)
+    return JSON.stringify(error);
   }
 }
 
-
-//Round Number to two decimals
-
-export function roundtwo(value: number|string){
-
-  if(typeof value==='number'){
-    //We're rounding the number provided to two decimals, EPSILON * 100 and then divided b y 100
-    //help us with the rounding    
-    return Math.round((value + Number.EPSILON) * 100) / 100
-  } else if(typeof value ==='string') {
-    throw new Error ("You sent a string!") 
-
-  }else {
-    throw new Error ("Wrong type for rounding")
+// Round number to two decimals
+export function roundtwo(value: number | string) {
+  if (typeof value === 'number') {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  } else {
+    throw new Error("Wrong type for rounding");
   }
 }
 
+const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
+  currency: 'USD',
+  style: 'currency',
+  minimumFractionDigits: 2
+});
 
-const CURRENCY_FORMATER =  new Intl.NumberFormat('en-US', {
-  currency:'USD',
-  style:'currency',
-  minimumFractionDigits:2
-})
-
-//Format Currency using the 'currencyFormater'
-
-export function formatCurrency(amount: number|string|null){
-  if(typeof amount==='number'){
-    return CURRENCY_FORMATER.format(amount)
-  } else if (typeof amount ==='string'){
-    return CURRENCY_FORMATER.format(Number(amount))
+// Format currency
+export function formatCurrency(amount: number | string | null) {
+  if (typeof amount === 'number') {
+    return CURRENCY_FORMATTER.format(amount);
+  } else if (typeof amount === 'string') {
+    return CURRENCY_FORMATTER.format(Number(amount));
   } else {
-    return 'NaN'
+    return 'NaN';
   }
 }
 
@@ -87,114 +72,116 @@ export function isSafeRedirect(url: string) {
   return dest.origin === base.origin;
 }
 
-
-//Shorten de order id.
-
-export function formatId(id: string){
+export function formatId(id: string) {
   return `...${id.substring(id.length - 6)}`;
 }
 
-
-//Format dates.
 export const formatDateTime = (dateString: Date) => {
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
-    month: 'short', // abbreviated month name (e.g., 'Oct')
-    year: 'numeric', // abbreviated month name (e.g., 'Oct')
-    day: 'numeric', // numeric day of the month (e.g., '25')
-    hour: 'numeric', // numeric hour (e.g., '8')
-    minute: 'numeric', // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+    month: 'short',
+    year: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
   };
   const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: 'short', // abbreviated weekday name (e.g., 'Mon')
-    month: 'short', // abbreviated month name (e.g., 'Oct')
-    year: 'numeric', // numeric year (e.g., '2023')
-    day: 'numeric', // numeric day of the month (e.g., '25')
+    weekday: 'short',
+    month: 'short',
+    year: 'numeric',
+    day: 'numeric',
   };
   const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: 'numeric', // numeric hour (e.g., '8')
-    minute: 'numeric', // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
   };
-  const formattedDateTime: string = new Date(dateString).toLocaleString(
-    'en-US',
-    dateTimeOptions
-  );
-  const formattedDate: string = new Date(dateString).toLocaleString(
-    'en-US',
-    dateOptions
-  );
-  const formattedTime: string = new Date(dateString).toLocaleString(
-    'en-US',
-    timeOptions
-  );
   return {
-    dateTime: formattedDateTime,
-    dateOnly: formattedDate,
-    timeOnly: formattedTime,
+    dateTime: new Date(dateString).toLocaleString('en-US', dateTimeOptions),
+    dateOnly: new Date(dateString).toLocaleString('en-US', dateOptions),
+    timeOnly: new Date(dateString).toLocaleString('en-US', timeOptions),
   };
 };
 
-//form the pagination links
 export function formUrlQuery({
   params,
   key,
   value
 }: {
-  key:string,
-  params:string,
+  key: string,
+  params: string,
   value: string | null
-}){
-  const query = qs.parse(params)
+}) {
+  const query = qs.parse(params);
   query[key] = value;
   return qs.stringifyUrl({
-    url:window.location.pathname,
+    url: window.location.pathname,
     query,
-  },{
+  }, {
     skipNull: true
-  })
-
+  });
 }
-
-
-///format Number
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
-
 export function formatNumber(number: number) {
-  return NUMBER_FORMATTER.format(number)
+  return NUMBER_FORMATTER.format(number);
 }
 
-
-//check if the value is indeed a uuid.
 export function isUuid(v: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 }
-
 
 export type BasicProduct = {
-  id:     string;
-  slug:   string;
-  name:   string;
+  id: string;
+  slug: string;
+  name: string;
   banner: string | null;
 };
-//function to serrialize the product, this is for the carousel
-//serialize products, function to help turn the product into a json-safe object.
-export function serializeProduct(product: UIProduct) {
+
+// 🔧 FULLY SCHEMA-SYNCED serializeProduct()
+export function serializeProduct(product: ProductWithRelations) {
   return {
     id: product.id,
-    name: product.name,
     slug: product.slug,
-    category: product.category,
-    brand: product.brand,
-    description: product.description,
-    stock: product.stock,
+    type: product.type,
     images: product.images,
-    isFeatured: product.isFeatured,
-    banner: product.banner,
-    price: product.price.toString(),
-    rating: product.rating.toString(),
-    numReviews: product.numReviews,
-    createdAt: new Date(product.createdAt),
+    rating: product.rating ?? 0,
+    numReviews: product.numReviews ?? 0,
+    inventory: product.inventory.map((inv) => ({
+      id: inv.id,
+      price: inv.price.toString(),
+      stock: inv.stock,
+      language: inv.language ?? undefined,
+      condition: inv.condition ?? undefined,
+    })),
+    cardMetadata: product.cardMetadata ? {
+      id: product.cardMetadata.id,
+      name: product.cardMetadata.name,
+      setCode: product.cardMetadata.setCode,
+      setName: product.cardMetadata.setName,
+      manaCost: product.cardMetadata.manaCost ?? undefined,
+      oracleText: product.cardMetadata.oracleText ?? undefined,
+      collectorNum: product.cardMetadata.collectorNum,
+      colorIdentity: product.cardMetadata.colorIdentity,
+      rarity: product.cardMetadata.rarity ?? undefined,
+      type: product.cardMetadata.type ?? undefined,
+      usdPrice: product.cardMetadata.usdPrice ?? undefined,
+      usdFoilPrice: product.cardMetadata.usdFoilPrice ?? undefined,
+    } : null,
+    accessory: product.accessory ? {
+      id: product.accessory.id,
+      name: product.accessory.name,
+      description: product.accessory.description ?? undefined,
+      brand: product.accessory.brand ?? undefined,
+      category: product.accessory.category ?? undefined,
+      updatedAt: product.accessory.updatedAt,
+    } : null
   };
+}
+
+export function assertApiSuccess<T>(res: ApiResponse<T>): T {
+  if (!res.success) {
+    throw new Error(res.message);
+  }
+  return res.data!;
 }

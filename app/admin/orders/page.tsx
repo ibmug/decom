@@ -1,181 +1,123 @@
-
-//import { getServerSession } from "next-auth";
-//import { authOptions } from "@/lib/authOptions";
 import { getAllFilteredOrders } from "@/lib/actions/order.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDateTime,formatId } from "@/lib/utils/utils";
+import { formatCurrency, formatDateTime, formatId } from "@/lib/utils/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
 import { shippingAddressSchema } from "@/lib/validators";
-import {z} from 'zod'
+import { z } from 'zod';
 import { SortOption } from "@/components/admin/sortselector.types";
-import { Order} from "@prisma/client"
 import SortSelector from "@/components/admin/sort-control";
-// Pull in the real return type of your fetch helper
-type OrdersData = Awaited<ReturnType<typeof getAllFilteredOrders>>;
 
-//  Extract the single‐item type from the `data` array
-//    (if getAllFilteredOrders returns `{ data: T[]; totalPages: number }`)
-type RawOrder = OrdersData["data"][number];
+// --- Sorting definitions (future proofing, not used right now)
+const orderSortOptions: SortOption[] = [
+  { value: "createdAt", label: "Date" },
+  { value: "totalPrice", label: "Total Price" },
+  { value: "status", label: "Status" },
+];
 
-// Infer the parsed address shape from your Zod schema
+// --- Infer schema types from zod validator
 type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
-//  Build the “view” type you actually render
+// --- Final type returned by getAllFilteredOrders()
+type OrdersData = Awaited<ReturnType<typeof getAllFilteredOrders>>;
+type RawOrder = OrdersData['orders'][number];
+
 type ViewOrder = Omit<RawOrder, "shippingAddress"> & {
   shippingAddress: ShippingAddress;
 };
 
-///Sort Filters
-
-// 1) Define the fields you can sort by
-const orderSortOptions: SortOption[] = [
-    { value: "createdAt",   label: "Date"            },
-    { value: "totalPrice",  label: "Total Price"    },
-    {value:"status", label:"Status"},
-  ]
-
- // Create a literal union type of those values:
-const ALLOWED_ORDER_FIELDS = [
-  "createdAt",
-  "totalPrice",
-  "status",
-] as const;
-type AllowedOrderField = typeof ALLOWED_ORDER_FIELDS[number];
-
-
-
-export const metadata : Metadata = {
-    title: 'Admin Orders',
-}
-
-
+export const metadata: Metadata = {
+  title: 'Admin Orders',
+};
 
 const AdminOrdersPage = async (props: {
-    searchParams: Promise<{
-        page?: string
-        query?: string
-        orderby?: keyof Order
-        order?: 'asc' | 'desc'
-    }>
+  searchParams: Promise<{
+    page?: string;
+  }>;
 }) => {
-    const {page:pageStr = '1', query='', orderby:rawOrderBy = 'createdAt',order: rawOrder ='desc'} = await props.searchParams;
-    
-    const page = Number(pageStr)
+  const { page: pageStr = '1' } = await props.searchParams;
+  const page = Number(pageStr);
 
+  const orders = await getAllFilteredOrders({
+    page,
+    pageSize: 10,
+    status: undefined, // default: fetch all orders
+  });
 
+  const viewOrders: ViewOrder[] = orders.orders.flatMap((order) => {
+    if (!order.shippingAddress) {
+      console.warn(`Skipping order ${order.id} due to missing shippingAddress`);
+      return [];
+    }
 
+    try {
+      const sa = shippingAddressSchema.parse({
+        ...(order.shippingAddress as object),
+        shippingMethod: order.shippingMethod,
+      });
 
-    // const orders = await getAllFilteredOrders({
-    //     page: Number(page),
-    //     limit: 10,
-    //     query,
-    //     //orderBy: orderby,
-    //     orderby?: string;
-    //     order,
-    // });
+      return [{ ...order, shippingAddress: sa }];
+    } catch (err) {
+      console.warn(`Skipping order ${order.id} due to invalid schema`, err);
+      return [];
+    }
+  });
 
-       // 2) Narrow and validate the `orderby` field:
-  const orderByField: AllowedOrderField = ALLOWED_ORDER_FIELDS.includes(
-     rawOrderBy as AllowedOrderField
-   )
-     ? (rawOrderBy as AllowedOrderField)
-     : 'createdAt';
-   // 3) Ensure `order` is 'asc' | 'desc'
-   const orderDir = rawOrder === 'asc' ? 'asc' : 'desc';
-   const orders = await getAllFilteredOrders({
-     page,
-     limit: 10,
-     query,
-     orderBy: orderByField,
-     order:   orderDir,
-   });
-
-    
-    const viewOrders: ViewOrder[] = orders.data.flatMap((order: RawOrder) => {
-        // parse+validate shippingAddress, throws if invalid
-        if (!order.shippingAddress) {
-  console.warn(`Skipping order ${order.id} due to missing shippingAddress`);
-  return [];
-}
-
- try {
-    const sa = shippingAddressSchema.parse({
-      ...(order.shippingAddress as object),
-      shippingMethod: order.shippingMethod,
-    });
-
-    return [{ ...order, shippingAddress: sa }];
-  } catch (err) {
-    console.warn(`Skipping order ${order.id} due to invalid schema`, err);
-    return [];
-  }
-});
-
-
-    return (<div className="space-y-2">
-        <h2 className="h2-bold">Orders</h2>
-        <div className="overflow-x-auto">
-            <div className="flex items-center justify-between">
-                <SortSelector options={orderSortOptions} />
-            </div>
-                    <Table className=''>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Orden</TableHead>
-                                <TableHead>Comprador</TableHead>
-                                <TableHead>Fecha de Compra</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Shipping Address</TableHead>
-                                <TableHead>Total</TableHead>
-                                <TableHead>Current Status</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {viewOrders.map((order)=>(
-                                
-                                <TableRow key={order.id}>
-                                    <TableCell>
-                                        {formatId(order.id)}
-                                    </TableCell>
-                                    <TableCell>
-                                        {order?.user?.name ? order.user.name : 'Deleted User'}
-                                    </TableCell>
-                                    <TableCell>
-                                        {formatDateTime(order.createdAt).dateOnly}
-                                    </TableCell>
-                                    <TableCell>
-                                        {order?.shippingAddress?.shippingMethod}
-                                    </TableCell>
-                                    <TableCell className=''>
-                                        {order?.shippingAddress?.shippingMethod ==='PICKUP' ? (order?.shippingAddress.addressName) : (`${order?.shippingAddress.address.streetName} ${order?.shippingAddress.address.city} ${order?.shippingAddress.address.postalCode}`) }
-                                    </TableCell>
-                                    <TableCell>
-                                        {formatCurrency(order.totalPrice.toString())}
-                                    </TableCell>
-                                    <TableCell>
-                                        {order.status}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button asChild variant='outline' size='sm'>
-                                        <Link href={`/order/${order.id}`}>Details</Link>
-                                        </Button>
-                                        <DeleteDialog id={order.id} />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>  
-                    </Table>
-            {orders.totalPages > 1 && (
-                <Pagination page={Number(page)} totalPages={orders?.totalPages}/>
-            )}
+  return (
+    <div className="space-y-2">
+      <h2 className="h2-bold">Orders</h2>
+      <div className="overflow-x-auto">
+        <div className="flex items-center justify-between">
+          <SortSelector options={orderSortOptions} />
         </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Orden</TableHead>
+              <TableHead>Comprador</TableHead>
+              <TableHead>Fecha de Compra</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Shipping Address</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Current Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {viewOrders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>{formatId(order.id)}</TableCell>
+                <TableCell>{order.user?.name || 'Deleted User'}</TableCell>
+                <TableCell>{formatDateTime(order.createdAt).dateOnly}</TableCell>
+                <TableCell>{order.shippingAddress?.shippingMethod}</TableCell>
+                <TableCell>
+                  {order.shippingAddress.shippingMethod === 'PICKUP'
+                    ? order.shippingAddress.addressName
+                    : `${order.shippingAddress.address.streetName} ${order.shippingAddress.address.city} ${order.shippingAddress.address.postalCode}`}
+                </TableCell>
+                <TableCell>{formatCurrency(order.totalPrice.toString())}</TableCell>
+                <TableCell>{order.status}</TableCell>
+                <TableCell>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/order/${order.id}`}>Details</Link>
+                  </Button>
+                  <DeleteDialog id={order.id} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {orders.totalPages > 1 && (
+          <Pagination page={page} totalPages={orders.totalPages} />
+        )}
+      </div>
     </div>
   );
-}
- 
+};
+
 export default AdminOrdersPage;

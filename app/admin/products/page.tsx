@@ -1,115 +1,68 @@
-
-import Link from "next/link";
 import { getAllProducts } from "@/lib/actions/product.actions";
-import { formatCurrency, formatId } from "@/lib/utils/utils";
-import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatCurrency, formatId } from "@/lib/utils/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { UICatalogProduct } from "@/types";
+import { toUICatalogProduct } from "@/lib/utils/transformers";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
-import { Product,  UIStoreProduct } from "@/types";
-import SortSelector from "@/components/admin/sort-control";
-import { SortOption } from "@/components/admin/sortselector.types";
-import { PAGE_SIZE } from "@/lib/constants";
 
+export const metadata: Metadata = {
+  title: "Admin Products",
+};
 
+const AdminProductsPage = async () => {
+  const productsRaw = await getAllProducts();
 
+  // Correct type: UICatalogProduct[]
+  const viewProducts: UICatalogProduct[] = productsRaw.map((p) => toUICatalogProduct(p));
 
-const productSortOptions: SortOption[] = [
-    { value: 'id',       label: 'ID' },
-    { value: 'name',     label: 'Name' },
-    { value: 'price',    label: 'Price' },
-    { value: 'category', label: 'Category' },
-    { value: 'stock',    label: 'Stock' },
-    { value: 'rating',   label: 'Rating' },
-  ]
+  const getPrice = (product: UICatalogProduct) => product.price;
+  const getStock = (product: UICatalogProduct) => product.stock;
 
-
-const AdminProductsPage = async (props: {
-    searchParams: Promise<{
-        page:string;
-        query?:string;
-        category?:string;
-        orderby?: keyof Product;
-        order?: 'asc'| 'desc'
-    }>
-}) => {
-    const {
-        page:   pageStr = "1",
-        query    = "",
-        category = "",
-        orderby: ob = "createdAt",
-        order    = "desc",
-      } = await props.searchParams
-      const page = Number(pageStr)
-
-    // const products = await getAllFilteredProducts({
-    //     page,
-    //     query,
-    //     limit: PAGE_SIZE,
-    //     category,
-    //     orderBy: ob,
-    //     order,
-    // })
-    console.log(query,category,ob,order)
-    const products = await getAllProducts({limit:PAGE_SIZE});
-
-    // const viewProducts : StoreProduct[] = products.data.map((p: StoreProduct)=>({
-    //     ...p,
-    //     price: p.price.toString(
-    // }));
-
-    const viewProducts = products;
-
-    return (<div className="space--y-2">
-        
-            <h1 className="h2-bold">Products</h1>
-            <div className='overflow-x-auto'>
-                        <div className="flex items-center justify-between">
-                            <SortSelector options={productSortOptions} />
-                            <Button asChild variant='default'>
-                                <Link href='/admin/products/create'>Create Product</Link>
-                            </Button>
-                        </div>
-
+  return (
+    <div className="space-y-2">
+      <h2 className="h2-bold">Products</h2>
+      <div className="overflow-x-auto">
         <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>NAME</TableHead>
-                    <TableHead className='text-right'>PRICE</TableHead>
-                    <TableHead>STOCK</TableHead>
-                    <TableHead>RATING</TableHead>
-                    <TableHead className='w-[100px]'>ACTIONS</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {viewProducts.data.map((product: UIStoreProduct)=>(
-                    <TableRow key={product.id}>
-                        <TableCell>{formatId(product.id)}</TableCell>
-                        <TableCell>{product.type === 'ACCESSORY' ? product.name : product.cardMetadata.name}</TableCell>
-                        <TableCell className='text-right'>{formatCurrency(product.price)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
-                        <TableCell>{product.type === 'ACCESSORY' ? product.accessory?.rating ?? '-' : '-'}</TableCell>
-                        <TableCell className='flex gap-1'>
-                            <Button asChild variant='outline' size='sm'>
-                                {product.type === 'ACCESSORY' 
-  ? <Link href={`/admin/products/${product.id}`}>Edit</Link> 
-  : <Link href={`/card/${product.slug}`}>Edit</Link>}
-
-                            </Button>
-                            <DeleteDialog id={product.id}/>
-                        </TableCell>
-
-                    </TableRow>
-                ))}
-            </TableBody>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Rating</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {viewProducts.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell>{formatId(product.id)}</TableCell>
+                <TableCell>
+                  {product.type === "ACCESSORY" ? product.accessory.name : product.name}
+                </TableCell>
+                <TableCell className="text-right">{formatCurrency(getPrice(product))}</TableCell>
+                <TableCell>{getStock(product)}</TableCell>
+                <TableCell>
+                  {product.type === "ACCESSORY" ? product.rating ?? "-" : "-"}
+                </TableCell>
+                <TableCell className="flex gap-1">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                  </Button>
+                  <DeleteDialog id={product.id} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
-        
-        {products?.totalPages && products.totalPages > 1 && (
-            <Pagination page={page} totalPages = {products.totalPages} />
-        )}
-        </div>
-    </div>  );
-}
- 
+        <Pagination page={1} totalPages={1} />
+      </div>
+    </div>
+  );
+};
+
 export default AdminProductsPage;

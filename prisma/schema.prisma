@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// USERS / AUTH
+//
+
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String    @default("NO_NAME")
@@ -53,15 +57,9 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// model VerificationToken {
-//   identifier String
-//   token      String
-//   expires    DateTime @db.Timestamp(6)
-
-//   @@id([identifier, token])
-// }
-
-
+//
+// STORES
+//
 
 model Store {
   id       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -77,60 +75,68 @@ model AccessoryProduct {
   brand       String?
   category    String
   updatedAt   DateTime       @updatedAt
-  numReviews  Int?           @default(0)
-  rating      Float?         @default(0)
-  images      String[]
   products    StoreProduct[] @relation("AccessoryToStoreProduct")
 }
 
+//
+// CARD METADATA
+//
+
 model CardMetadata {
-  id             String         @id @default(uuid()) @db.Uuid
-  scryfallId     String         @unique
-  name           String
-  setCode        String
-  setName        String
-  manaCost       String?
-  cmc Int?
-  collectorNum   String
-  oracleText     String?
-  colorIdentity  String[]
-  imageUrl       String
-  backsideImageUrl String?
-  rarity         String?
-  type           String?
-  cardKingdomUri String?
-  usdPrice       Float?
-  usdFoilPrice   Float?
-  products       StoreProduct[] @relation("MetadataToStoreProduct")
+  id               String         @id @default(uuid()) @db.Uuid
+  scryfallId       String         @unique
+  name             String
+  setCode          String
+  setName          String
+  manaCost         String?
+  cmc              Int?
+  collectorNum     String
+  oracleText       String?
+  colorIdentity    String[]
+  rarity           String?
+  type             String?
+  cardKingdomUri   String?
+  usdPrice         Float?
+  usdFoilPrice     Float?
+  products         StoreProduct[] @relation("MetadataToStoreProduct")
 }
 
+//
+// CART
+//
+
 model Cart {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionCartId String   @unique
-  userId        String?  @unique @db.Uuid
-  createdAt     DateTime @default(now()) @db.Timestamp(6)
-  updatedAt     DateTime @updatedAt
-
-  itemsPrice    Decimal @default(0.00)
-  shippingPrice Decimal @default(0.00)
-  taxPrice      Decimal @default(0.00)
-  totalPrice    Decimal @default(0.00)
-
-  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items CartItem[]
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionCartId String     @unique
+  userId        String?    @unique @db.Uuid
+  createdAt     DateTime   @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime   @updatedAt
+  itemsPrice    Decimal    @default(0.00)
+  shippingPrice Decimal    @default(0.00)
+  taxPrice      Decimal    @default(0.00)
+  totalPrice    Decimal    @default(0.00)
+  user          User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         CartItem[]
 }
 
 model CartItem {
-  id             String       @id @default(uuid()) @db.Uuid
-  cartId         String       @db.Uuid
-  storeProductId String       @db.Uuid
-  quantity       Int          @default(1)
-  addedAt        DateTime     @default(now())
-  cart           Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  storeProduct   StoreProduct @relation(fields: [storeProductId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid()) @db.Uuid
+  cartId         String   @db.Uuid
+  productId      String   @db.Uuid
+  inventoryId    String   @db.Uuid
+  quantity       Int      @default(1)
+  addedAt        DateTime @default(now())
 
-  @@unique([cartId, storeProductId])
+  cart         Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  storeProduct StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory    Inventory?   @relation(fields: [inventoryId], references: [id])
+
+  @@unique([cartId, productId, inventoryId])
 }
+
+//
+// ORDERS
+//
 
 model Order {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -155,34 +161,65 @@ model Order {
 
 model OrderItem {
   orderId        String       @db.Uuid
-  storeProductId String       @db.Uuid
+  productId      String       @db.Uuid
+  inventoryId    String
   qty            Int
   price          Decimal      @db.Decimal(12, 2)
   name           String
   slug           String
   image          String
   order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  storeProduct   StoreProduct @relation(fields: [storeProductId], references: [id], onDelete: Cascade)
+  storeProduct   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@id([orderId, storeProductId])
+  @@id([orderId, productId])
 }
 
+//
+// STOREPRODUCT & INVENTORY
+//
+
 model StoreProduct {
-  id             String            @id @default(uuid()) @db.Uuid
-  slug           String            @unique
+  id             String      @id @default(uuid()) @db.Uuid
+  slug           String      @unique
+  type           ProductType
+  cardMetadataId String?     @db.Uuid
+  updatedAt      DateTime    @default(now())
+  accessoryId    String?     @db.Uuid
+  storeId        String?     @db.Uuid
+
+  // Unified shared fields
+  rating     Float?   @default(0)
+  numReviews Int?     @default(0)
+  images     String[] @default([])
+
+  cardMetadata CardMetadata?     @relation("MetadataToStoreProduct", fields: [cardMetadataId], references: [id])
+  accessory    AccessoryProduct? @relation("AccessoryToStoreProduct", fields: [accessoryId], references: [id])
+  store        Store?            @relation("StoreToProducts", fields: [storeId], references: [id])
+  inventory    Inventory[]
+  orderItems   OrderItem[]
+  CartItem     CartItem[]
+}
+
+model Inventory {
+  id             String         @id @default(uuid()) @db.Uuid
+  productId      String         @db.Uuid
   price          Decimal
   stock          Int
-  customName     String?
-  type           ProductType
-  storeId        String?           @db.Uuid
-  cardMetadataId String?           @db.Uuid
-  accessoryId    String?           @db.Uuid
-  lastUpdated    DateTime          @default(now()) @updatedAt
-  CartItem       CartItem[]
-  accessory      AccessoryProduct? @relation("AccessoryToStoreProduct", fields: [accessoryId], references: [id])
-  cardMetadata   CardMetadata?     @relation("MetadataToStoreProduct", fields: [cardMetadataId], references: [id])
-  store          Store?            @relation("StoreToProducts", fields: [storeId], references: [id])
-  orderItems     OrderItem[]
+  language       String?
+  condition      CardCondition?
+  lastUpdated    DateTime       @default(now()) @updatedAt
+
+  storeProduct StoreProduct @relation(fields: [productId], references: [id])
+  cartItems    CartItem[]
+}
+
+//
+// ENUMS
+//
+
+enum ProductType {
+  CARD
+  ACCESSORY
 }
 
 enum OrderStatus {
@@ -200,9 +237,10 @@ enum ShippingMethod {
   PICKUP
 }
 
-
-
-enum ProductType {
-  CARD
-  ACCESSORY
+enum CardCondition {
+  NM
+  LP
+  MP
+  HP
+  DMG
 }

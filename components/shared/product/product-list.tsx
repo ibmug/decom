@@ -1,7 +1,7 @@
 import CardDisplay from "../CardDisplay/card-display";
 import AccessoryDisplay from "../AccessoryDisplay/accessory-display";
 import { UIStoreProduct } from "@/types";
-import { toCardItem } from "@/lib/utils/transformers";
+import { toUICatalogProduct } from "@/lib/utils/transformers";
 
 const ProductList = ({
   data,
@@ -21,22 +21,24 @@ const ProductList = ({
       {data.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {limitedData.map((product) => {
-            if (product.type === "CARD" && product.cardMetadata) {
+            const catalogProduct = toUICatalogProduct(product);
+
+            if (catalogProduct.type === "CARD") {
               return (
                 <CardDisplay
-                  key={product.id}
-                  product={toCardItem(product)}
-                  session={null} // or pass session if needed
+                  key={catalogProduct.id}
+                  product={catalogProduct}
+                  session={null}
                 />
               );
             }
 
-            if (product.type === "ACCESSORY" && product.accessory) {
+            if (catalogProduct.type === "ACCESSORY") {
               return (
                 <AccessoryDisplay
-                  key={product.id}
-                  product={product}
-                  session={null} // or pass session if needed
+                  key={catalogProduct.id}
+                  product={catalogProduct}
+                  session={null}
                 />
               );
             }

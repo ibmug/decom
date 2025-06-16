@@ -1,28 +1,23 @@
-
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import ProductPrice from "@/components/shared/product/productPrice";    // if you want price styling
-//import AddToCart from "@/components/shared/product/add-to-cart";       // if cards are purchasable
+import ProductPrice from "@/components/shared/product/productPrice";
 import ManaCost from "@/components/shared/manacost";
 import Image from "next/image";
 import OracleText from "@/components/shared/oracletext";
-import { getSingleCardBySlug} from "@/lib/actions/card.actions";
-
-
-export const dynamic = "force-dynamic";
-
+import { getSingleCardBySlug } from "@/lib/actions/card.actions";
+import { UIInventory } from "@/types";
 
 
 
-export default async function CardDetailsPage(props: {params: Promise<{slug: string}>}) {
+export default async function CardDetailsPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params;
   const card = await getSingleCardBySlug(slug);
   if (!card) notFound();
 
   const imageUrl = card.imageUrl ?? "/images/cardPlaceholder.png";
-  
 
   return (
     <section>
@@ -30,8 +25,7 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
         {/* Images */}
         <div className="col-span-2">
           <Link href={`/card/${slug}`}>
-          
-              <Image src={imageUrl}  alt='product image' width={1000} height={1000} className='min-h-[300px] object-cover object-center'/>
+            <Image src={imageUrl} alt="product image" width={1000} height={1000} className="min-h-[300px] object-cover object-center" />
           </Link>
         </div>
 
@@ -40,24 +34,23 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
           <h1 className="text-3xl font-bold">{card.name}</h1>
           <p className="text-sm text-gray-600">{card.setName}</p>
 
-          {/* Show any metadata fields you’ve got */}
           <ul className="space-y-2">
             <li><strong>Type:</strong> {card.type}</li>
             <li><strong>Rarity:</strong> {card.rarity}</li>
-            <li><strong>Mana Cost:</strong> {<ManaCost cost={card.manaCost ?? "No Mana Cost"} size={18}/>}</li>
-            <li><strong>Text:</strong> {<OracleText text={card.oracleText ?? "No Oracle Text."} iconSize={14}/>}</li>
-            {/* …and so on */}
+            <li><strong>Mana Cost:</strong> {<ManaCost cost={card.manaCost ?? "No Mana Cost"} size={18} />}</li>
+            <li><strong>Text:</strong> {<OracleText text={card.oracleText ?? "No Oracle Text."} iconSize={14} />}</li>
           </ul>
         </div>
 
-        {/* Action / Purchase */}
+        {/* Action / Inventory Selector */}
         <div className="col-span-1">
           <Card>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Price</span>
-                <ProductPrice value={Number(card.usdPrice)} />
+                <ProductPrice value={Number(card.inventory[0]?.price ?? "0.00")} />
               </div>
+
               <div className="flex justify-between items-center">
                 <span>Status</span>
                 {card.stock > 0
@@ -65,10 +58,19 @@ export default async function CardDetailsPage(props: {params: Promise<{slug: str
                   : <Badge variant="destructive">Sold Out</Badge>}
               </div>
 
-              {card.stock > 0 && (
-                <div className="text-center">
-                </div>
-              )}
+              {/* Show all inventory rows */}
+              <div className="space-y-3 mt-4">
+                {card.inventory.map((inv: UIInventory) => (
+                  <div key={inv.id} className="flex justify-between items-center border p-2 rounded">
+                    <div className="text-sm">
+                      <div><strong>Condition:</strong> {inv.condition ?? "Unknown"}</div>
+                      <div><strong>Language:</strong> {inv.language ?? "Unknown"}</div>
+                      {inv.stock<5 && inv.stock>0 ? <div><strong>Stock:</strong> {inv.stock}</div> : <></>}
+                    </div>
+                   
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>

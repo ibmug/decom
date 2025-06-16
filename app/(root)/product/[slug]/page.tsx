@@ -1,82 +1,50 @@
-///We're using [slug] under root/product because it's our route.(That's how typescript handles it)
-
 import { getSingleProductBySlug } from "@/lib/actions/product.actions";
 import { notFound } from "next/navigation";
 import { getMyCart } from "@/lib/actions/cart.actions";
 import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
 import { isCardProduct } from "@/lib/utils/transformers";
-import {  UIStoreProduct } from "@/types";
+import { UIStoreProduct } from "@/types";
 import AddToCartWrapper from "@/components/shared/product/add-to-cart-wrapper";
 
+export default async function ProductDetailsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-export const dynamic = "force-dynamic";
+  const rawProduct = await getSingleProductBySlug(slug);
+  if (!rawProduct) notFound();
 
+  const cart = await getMyCart();
+  if (!cart) notFound();
 
+  const product: UIStoreProduct = rawProduct;
 
-const ProductDetailsPage = async ({params}: { params: Promise<{ slug: string }> }) => {
+  const isCard = isCardProduct(product);
 
+  const firstInventory = product.inventory[0];
+  if(!firstInventory) notFound();
 
+  return (
+    <>
+      {isCard ? (
+        <CardProductDisplay product={product as Extract<UIStoreProduct, { type: "CARD" }>} />
+      ) : (
+        <AccessoryProductDisplay product={product as Extract<UIStoreProduct, { type: "ACCESSORY" }>} />
+      )}
 
-    const {slug} = await params;
-
-    console.log(slug)
-
-    
-    const rawProduct = await getSingleProductBySlug(slug);
-
-
-    if(!rawProduct) notFound();
-
-    const cart = await getMyCart();
-    if(!cart) notFound();
-
-
-
-// Ensure this is the version with included `card` or `accessory`
-
-const product: UIStoreProduct =
-  rawProduct.cardMetadata
-    ? {
-        id: rawProduct.id,
-        slug: rawProduct.slug ?? "missing-slug",
-        price: rawProduct.price.toString(),
-        stock: rawProduct.stock,
-        customName: rawProduct.customName,
-        type: "CARD",
-        cardMetadata: rawProduct.cardMetadata,
-      }
-    : {
-        id: rawProduct.id,
-        slug: rawProduct.slug ?? "missing-slug",
-        price: rawProduct.price.toString(),
-        stock: rawProduct.stock,
-        customName: rawProduct.customName,
-        name: rawProduct.accessory?.name ?? "noName",
-        type: "ACCESSORY",
-        accessory: rawProduct.accessory!,
-        rating:rawProduct.accessory?.rating ?? 0,
-        numReviews: rawProduct.accessory?.numReviews ?? 0,
-        images:rawProduct.accessory!.images ?? [],
-        category: rawProduct.accessory?.category ?? undefined,
-        description: rawProduct.accessory?.description ?? undefined,
-      };
-
-
-
-const isCard = isCardProduct(product)
-
-
-    return <>
-    
-
-
-                        {/*I'm assuming here goes our new component. */}
-                        {isCard ? <CardProductDisplay product={product}/> : <AccessoryProductDisplay product= {{ ...product, rating: product.rating ?? 0, numReviews: product.numReviews ?? 0 }} />
+      {product.inventory.length > 0 && (
+        <div className="flex-center">
+          <AddToCartWrapper
+            productId={product.id}
+            inventoryId={product.inventory[0].id}
+            stock={product.inventory[0].stock}
+            
+          />
+        </div>
+      )}
+    </>
+  );
 }
-                        {product.stock > 0 && (<div className="flex-center">
-                           <AddToCartWrapper productId={product.id} />
-                        </div>)}
-    </>;
-}
-export default ProductDetailsPage;

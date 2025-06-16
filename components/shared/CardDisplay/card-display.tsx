@@ -4,50 +4,84 @@ import Image from 'next/image';
 import { useState, type FC } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import type { CardItem } from '@/types'
+import type { UICatalogProduct, UIInventory } from '@/types';
 import AddStock from '../add-stock-component';
 import { Session } from 'next-auth';
 import AddToCartButton from '../add-to-cart-button';
 
+// Priority order for condition sorting
+const CONDITION_PRIORITY = ['NM', 'LP', 'MP', 'HP', 'DMG'];
+
+function selectBestInventory(inventories: UIInventory[]): UIInventory | undefined {
+  return [...inventories].sort((a, b) => {
+    const priceCompare = Number(b.price) - Number(a.price);
+    if (priceCompare !== 0) return priceCompare;
+
+    const condA = CONDITION_PRIORITY.indexOf(a.condition ?? 'NM');
+    const condB = CONDITION_PRIORITY.indexOf(b.condition ?? 'NM');
+    return condA - condB;
+  })[0];
+}
 
 interface CardDisplayProps {
-  product: CardItem;
-  session: Session | null;
+  product: Extract<UICatalogProduct, { type: "CARD" }>;
+  session?: Session | null;
 }
 
 const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
+  const bestInventory = selectBestInventory(product.inventory);
+  const [stock, setStock] = useState(bestInventory?.stock ?? 0);
 
+  if (!bestInventory) {
+    return <div>No available inventory.</div>;
+  }
 
-  const [stock,setStock] = useState(product.stock)
-
-  console.log(session?.user.role)
-  
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className='p-0 items-center'>
-            <Link href={`/card/${product.slug}`}>
+        <Link href={`/card/${product.slug}`}>
+          <Image 
+            src={product.images?.[0] ?? '/images/cardPlaceholder.png'}
+            alt={product.name || "Image loading..."}
+            height={300}
+            width={300}
+            priority={false}
+            loading='lazy'
+          />
+        </Link>
+      </CardHeader>
 
-            <Image src={product.imageUrl} alt={product.name||"Image loading..."} height={300} width={300} priority={false} loading='lazy'/>
-            </Link>
-        </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 truncate">Set: {product.setCode.toUpperCase()} #{product.collectorNum}</p>
-        <p className="mt-2 text-sm text-gray-700">{product.oracleText || 'No description available.'}</p>
+        <p className="text-sm text-gray-600 truncate">
+          Set: {product.setCode.toUpperCase()} #{product.collectorNum}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-700">
+          {product.oracleText || 'No description available.'}
+        </p>
+
         <div className="mt-4 space-y-1">
           <p><strong>Colors:</strong> {product.colorIdentity.length ? product.colorIdentity.join(', ') : 'Colorless'}</p>
-          <p><strong>Price:</strong> ${product.usdPrice?.toString() || 'n/a'}</p>
+          <p><strong>Price:</strong> ${bestInventory.price.toString()}</p>
           <span className={`text-xs ${stock > 1 ? 'text-green-500' : 'text-red-500'}`}>
-            {stock>=1 ? <p><strong>Stock:</strong> {stock}</p> : <></>}</span>
+            {stock >= 1 ? <p><strong>Stock:</strong> {stock}</p> : null}
+          </span>
+
           <AddToCartButton
-  storeProductId={product.storeProductId}
-  stock={stock}
-  onStockChange={(change) => setStock(stock + change)}
-/>
+            productId={product.id}
+            inventoryId={bestInventory.id}
+            stock={stock}
+            onStockChange={(change) => setStock(stock + change)}
+          />
 
           {session?.user?.role === 'admin' && (
-            
-  <AddStock cardProductId={product.storeProductId} initialStock={product.stock} onStockChange={(change)=> setStock(stock+change)} />
-)}
+            <AddStock
+              productId={product.id}
+              inventoryId={bestInventory.id}
+              initialStock={stock}
+              onStockChange={(change) => setStock(stock + change)}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

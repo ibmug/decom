@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 
 interface AddStockProps {
-  cardProductId: string
+  productId: string
+  inventoryId: string
   initialStock: number
   onStockChange?: (delta: number) => void
 }
 
-export default function AddStock({ cardProductId, initialStock, onStockChange }: AddStockProps) {
+export default function AddStock({ productId, inventoryId, initialStock, onStockChange }: AddStockProps) {
   const [stock, setStock] = useState(initialStock)
   const [input, setInput] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -36,7 +37,8 @@ export default function AddStock({ cardProductId, initialStock, onStockChange }:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          storeProductId: cardProductId,
+          productId,
+          inventoryId,
           newStock,
         }),
       })

@@ -1,92 +1,232 @@
-import { AppUser, CardItem, StoreProduct, UIStoreProduct } from "@/types"; // or wherever it’s defined
+import { Prisma, StoreProduct, Inventory, CardMetadata, AccessoryProduct } from "@prisma/client";
+import { CardItem, UIStoreProduct, UIInventory, UICatalogProduct } from "@/types";
 
-
-
-
-
-export function toUIAccessoryDisplay(product: StoreProduct) {
-  if (!product.accessory) throw new Error("Missing accessory data");
-
-  return {
-    id: product.accessory.id,
-    name: product.accessory.name,
-    images: product.accessory.images ? [product.accessory.images] : [],
-    price: product.price.toString(),
-    stock: product.stock,
-    brand: product.accessory.brand ?? undefined,
-    category: product.accessory.category,
-    description: product.accessory.description ?? undefined,
-    rating: product.accessory.rating ?? "0.0",
-    numReviews: product.accessory.numReviews ?? 0,
-  };
+// === INVENTORY MAPPER ===
+export function mapInventory(
+  inventories: {
+    id: string;
+    price: Prisma.Decimal;
+    stock: number;
+    language?: string | null;
+    condition?: string | null;
+  }[]
+): UIInventory[] {
+  return inventories.map((inv) => ({
+    id: inv.id,
+    price: inv.price.toString(),
+    stock: inv.stock,
+    language: inv.language ?? undefined,
+    condition: inv.condition ?? undefined,
+  }));
 }
 
+// === STORE PRODUCT -> UIStoreProduct ===
+export function storeProductToUIStoreProduct(p: {
+  id: string;
+  slug: string;
+  type: "CARD" | "ACCESSORY";
+  cardMetadata?: CardMetadata | null;
+  accessory?: AccessoryProduct | null;
+  inventory: {
+    id: string;
+    price: Prisma.Decimal;
+    stock: number;
+    language?: string | null;
+    condition?: string | null;
+  }[];
+  rating?: number | null;
+  numReviews?: number | null;
+  images?: string[] | null;
+  brand?: string | null;
+  category?: string | null;
+  description?: string | null;
+}): UIStoreProduct {
+  const inventory = mapInventory(p.inventory);
 
+  if (p.type === "CARD") {
+    if (!p.cardMetadata) throw new Error("Missing cardMetadata for CARD product");
+    return {
+      id: p.id,
+      slug: p.slug,
+      type: "CARD",
+      cardMetadata: p.cardMetadata,
+      inventory,
+      rating: p.rating ?? 0,
+      numReviews: p.numReviews ?? 0,
+      images: p.images ?? [],
+    };
+  }
+
+  if (p.type === "ACCESSORY") {
+    if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
+    return {
+      id: p.id,
+      slug: p.slug,
+      type: "ACCESSORY",
+      accessory: p.accessory,
+      inventory,
+      rating: p.rating ?? 0,
+      numReviews: p.numReviews ?? 0,
+      images: p.images ?? [],
+      description: p.description ?? undefined,
+      category: p.category ?? undefined,
+      brand: p.brand ?? undefined,
+    };
+  }
+
+  throw new Error("Unknown product type");
+}
+
+// === UIStoreProduct -> UICatalogProduct ===
+export function toUICatalogProduct(product: UIStoreProduct): UICatalogProduct {
+  const sortedInventory = [...product.inventory].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  const bestInventory = sortedInventory[0];
+  const price = bestInventory?.price ?? "0";
+  const stock = product.inventory.reduce((sum, i) => sum + i.stock, 0);
+
+  if (product.type === "CARD") {
+    const meta = product.cardMetadata;
+    return {
+      id: product.id,
+      slug: product.slug,
+      type: "CARD",
+      name: meta.name,
+      setCode: meta.setCode,
+      setName: meta.setName,
+      collectorNum: meta.collectorNum,
+      oracleText: meta.oracleText ?? undefined,
+      colorIdentity: meta.colorIdentity,
+      images: product.images ?? [],
+      price,
+      stock,
+      rating: product.rating ?? 0,
+      numReviews: product.numReviews ?? 0,
+      inventory: product.inventory,
+    };
+  }
+
+  if (product.type === "ACCESSORY") {
+    const firstInventory = product.inventory[0];
+    return {
+      id: product.id,
+      slug: product.slug,
+      type: "ACCESSORY",
+      name: product.accessory.name,
+      accessory: product.accessory,
+      inventory: product.inventory,
+      rating: product.rating ?? 0,
+      numReviews: product.numReviews ?? 0,
+      images: product.images ?? [],
+      description: product.description ?? undefined,
+      category: product.category ?? undefined,
+      brand: product.brand ?? undefined,
+      price: firstInventory?.price ?? "0",
+      stock: firstInventory?.stock ?? 0,
+    };
+  }
+
+  throw new Error("Unknown product type");
+}
+
+// === UIStoreProduct -> CardItem (frontend use) ===
 export function toCardItem(product: Extract<UIStoreProduct, { type: "CARD" }>): CardItem {
-  if (!product.cardMetadata) throw new Error("Missing card");
+  const meta = product.cardMetadata;
   return {
-    id: product.cardMetadata.id,
-    storeProductId: product.id,
-    name: product.cardMetadata.name,
-    setCode: product.cardMetadata.setCode,
-    setName: product.cardMetadata.setName,
-    manaCost: product.cardMetadata.manaCost ?? undefined,
-    collectorNum: product.cardMetadata.collectorNum,
-    oracleText: product.cardMetadata.oracleText ?? undefined,
-    colorIdentity: product.cardMetadata.colorIdentity,
-    imageUrl: product.cardMetadata.imageUrl,
-    rarity: product.cardMetadata.rarity ?? undefined,
-    type: product.cardMetadata.type ?? undefined,
-    cardKingdomUri: product.cardMetadata.cardKingdomUri ?? undefined,
-    usdPrice: product.cardMetadata.usdPrice ?? undefined,
-    usdFoilPrice: product.cardMetadata.usdFoilPrice ?? undefined,
-    stock: product.stock,
-    slug: product.slug ?? "missing-slug",
-    price: product.price.toString(),
-    numReviews: product.numReviews ?? 0,
+    id: meta.id,
+    productId: product.id,
+    name: meta.name,
+    setCode: meta.setCode,
+    setName: meta.setName,
+    manaCost: meta.manaCost ?? undefined,
+    collectorNum: meta.collectorNum,
+    oracleText: meta.oracleText ?? undefined,
+    colorIdentity: meta.colorIdentity,
+    imageUrl: product.images?.[0] ?? "",
+    backsideImageUrl: undefined,
+    rarity: meta.rarity ?? undefined,
+    type: meta.type ?? undefined,
+    usdPrice: meta.usdPrice ?? undefined,
+    usdFoilPrice: meta.usdFoilPrice ?? undefined,
+    slug: product.slug,
+    price: product.inventory[0]?.price ?? "0",
+    stock: product.inventory.reduce((sum, i) => sum + i.stock, 0),
     rating: product.rating ?? 0,
+    numReviews: product.numReviews ?? 0,
+    inventory: product.inventory,
   };
 }
 
+// === ProductWithRelations for backend reads ===
+export type ProductWithRelations = StoreProduct & {
+  cardMetadata: CardMetadata | null;
+  accessory: AccessoryProduct | null;
+  inventory: Inventory[];
+};
 
-export function isCardProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'CARD' }> {
-  return product.type === 'CARD';
-}
+// === CartRecord for cart actions ===
+export type CartRecord = Prisma.CartGetPayload<{
+  include: {
+    items: {
+      include: {
+        storeProduct: {
+          include: { cardMetadata: true; accessory: true };
+        };
+        inventory: true;
+      };
+    };
+  };
+}>;
 
-export function isAccessoryProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: 'ACCESSORY' }> {
-  return product.type === 'ACCESSORY';
-}
-
-
-export function toUIAccessoryDisplayGetLatest(
-  p: Extract<StoreProduct, { type: 'ACCESSORY' }>
-): UIStoreProduct {
-  if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
-
+// === Transform Cart Record ===
+export function transformCartRecord(cart: CartRecord) {
   return {
-    type: 'ACCESSORY',
-    id: p.id,
-    slug: p.slug,
-    price: p.price.toString(),
-    stock: p.stock,
-    customName: p.customName ?? null,
-    accessory: p.accessory,
-    name: p.accessory.name,
-    rating: Number(p.accessory.rating ?? 0),
-    numReviews: p.accessory.numReviews ?? 0,
-    description: p.accessory.description ?? undefined,
-    category: p.accessory.category,
-    brand: p.accessory.brand ?? undefined,
-    images: p.accessory.images, // assuming always defined
+    ...cart,
+    items: cart.items.map(item => ({
+      id: item.id,
+      productId: item.productId,
+      inventoryId: item.inventoryId,
+      quantity: item.quantity,
+      storeProduct: {
+        id: item.storeProduct.id,
+        slug: item.storeProduct.slug,
+        type: item.storeProduct.type,
+        images: item.storeProduct.images ?? [],
+        cardMetadata: item.storeProduct.cardMetadata
+          ? { name: item.storeProduct.cardMetadata.name }
+          : null,
+        accessory: item.storeProduct.accessory
+          ? { name: item.storeProduct.accessory.name }
+          : null,
+      },
+      inventory: item.inventory
+        ? {
+            id: item.inventory.id,
+            price: item.inventory.price.toString(),
+            stock: item.inventory.stock,
+            language: item.inventory.language ?? undefined,
+            condition: item.inventory.condition ?? undefined,
+          }
+        : {
+            id: "",
+            price: "0.00",
+            stock: 0,
+            language: undefined,
+            condition: undefined,
+          },
+    })),
+    itemsPrice: cart.itemsPrice.toString(),
+    shippingPrice: cart.shippingPrice.toString(),
+    taxPrice: cart.taxPrice.toString(),
+    totalPrice: cart.totalPrice.toString(),
   };
 }
 
 
-
-export function isAdmin(user: AppUser) {
-  return user.role === 'ADMIN';
+// === Type guards ===
+export function isCardProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: "CARD" }> {
+  return product.type === "CARD";
 }
 
-export function isManager(user: AppUser) {
-  return user.role === 'MANAGER' || user.role === 'ADMIN';
+export function isAccessoryProduct(product: UIStoreProduct): product is Extract<UIStoreProduct, { type: "ACCESSORY" }> {
+  return product.type === "ACCESSORY";
 }
