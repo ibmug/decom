@@ -3,7 +3,7 @@
 import { prisma } from '@/db/prisma';
 import { UIStoreProduct } from '@/types';
 import { ProductWithRelations, storeProductToUIStoreProduct } from '@/lib/utils/transformers';
-import {  isNotNull, isUIStoreProduct } from '../utils/typeguards';
+
 
 // Common include fields (StoreProduct level + relations)
 const baseInclude = {
@@ -68,17 +68,22 @@ export async function getSingleProductBySlug(slug: string): Promise<UIStoreProdu
 
 // Get latest products for homepage:
 export async function getLatestProducts(): Promise<UIStoreProduct[]> {
-  const raw = await prisma.storeProduct.findMany({ /* ... */ });
-  return raw
-    .map(p => {
-      try {
-        return storeProductToUIStoreProduct(p as ProductWithRelations);
-      } catch (err) {
-        console.warn('Skipping invalid product', p.id, err);
-        return null;
-      }
-    })
-    .filter(isNotNull);
+  const products = await prisma.storeProduct.findMany({
+    orderBy: { updatedAt: 'desc' },
+    take: 8,
+    include: baseInclude,
+  });
+
+  const converted = products.map((p) => {
+    try {
+      return storeProductToUIStoreProduct(p as ProductWithRelations);
+    } catch (err) {
+      console.warn('Skipping invalid product', p.id, err);
+      return null;
+    }
+  });
+
+  return converted.filter((p): p is UIStoreProduct => p !== null);
 }
 
 
@@ -88,16 +93,17 @@ export async function getAllProducts(): Promise<UIStoreProduct[]> {
   const products = await prisma.storeProduct.findMany({
     orderBy: { updatedAt: 'desc' },
     include: baseInclude,
-  })
+  });
 
-  return products
-    .map(p => {
-      try {
-        return storeProductToUIStoreProduct(p as ProductWithRelations)
-      } catch (err) {
-        console.warn('Skipping invalid product', p.id, err)
-        return null
-      }
-    })
-    .filter(isUIStoreProduct)
+  const converted = products.map((p) => {
+    try {
+      return storeProductToUIStoreProduct(p as ProductWithRelations);
+    } catch (err) {
+      console.warn('Skipping invalid product', p.id, err);
+      return null;
+    }
+  });
+
+  // Type-safe filter to remove nulls
+  return converted.filter((p): p is UIStoreProduct => p !== null);
 }
