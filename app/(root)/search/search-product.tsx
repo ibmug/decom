@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { UICatalogProduct, UIStoreProduct } from '@/types';
 import { Session } from 'next-auth';
 import CardDisplay from '@/components/shared/CardDisplay/card-display';
@@ -37,10 +37,10 @@ export default function SearchProductClient({ session }: SearchProductClientProp
   const [loading, setLoading] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
 
-  const buildQueryParams = useCallback((page: number) => {
+  // Helper to build query string
+  function buildQueryParams(page: number): string {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
-    if (page) params.set('page', page.toString());
     if (type) params.set('type', type);
     if (set) params.set('set', set);
     if (cardType) params.set('cardType', cardType);
@@ -49,17 +49,40 @@ export default function SearchProductClient({ session }: SearchProductClientProp
     if (manaCost) params.set('manaCost', manaCost);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
+    params.set('page', page.toString());
     return params.toString();
+  }
+
+  // Initial load: reset results when filters change
+  useEffect(() => {
+    async function fetchFirstPage() {
+      setResults([]);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setLoading(true);
+
+      try {
+        const res = await fetch(`/api/products?${buildQueryParams(1)}`);
+        const json: SearchResult = await res.json();
+        setResults(json.data);
+        setTotalPages(json.totalPages);
+      } catch (error) {
+        console.error("Failed to fetch page:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchFirstPage();
   }, [q, type, set, cardType, colors, colorsExact, manaCost, minPrice, maxPrice]);
 
-  const fetchPage = useCallback(async (page: number) => {
-    if (loading || page > totalPages) return;
+  // Load next pages via infinite scroll
+  async function loadNextPage() {
+    if (loading || currentPage >= totalPages) return;
 
     setLoading(true);
-    const url = `/api/products?${buildQueryParams(page)}`;
-
     try {
-      const res = await fetch(url);
+      const res = await fetch(`/api/products?${buildQueryParams(currentPage + 1)}`);
       const json: SearchResult = await res.json();
 
       setResults(prev => {
@@ -68,34 +91,26 @@ export default function SearchProductClient({ session }: SearchProductClientProp
         return [...prev, ...newData];
       });
 
-      setTotalPages(json.totalPages);
-      setCurrentPage(page);
+      setCurrentPage(currentPage + 1);
     } catch (error) {
-      console.error("Failed to fetch page:", error);
+      console.error("Failed to fetch next page:", error);
     } finally {
       setLoading(false);
     }
-  }, [loading, totalPages, buildQueryParams]);
-
-  useEffect(() => {
-    setResults([]);
-    setCurrentPage(1);
-    setTotalPages(1);
-    fetchPage(1);
-  }, [fetchPage]);
+  }
 
   useEffect(() => {
     if (!observerRef.current) return;
 
     const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && currentPage < totalPages) {
-        fetchPage(currentPage + 1);
+      if (entries[0].isIntersecting) {
+        loadNextPage();
       }
     }, { threshold: 1.0 });
 
     observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [currentPage, totalPages, fetchPage]);
+  }, [currentPage, totalPages, loading]);  // observer only depends on state
 
   const safeSession = session ?? null;
 

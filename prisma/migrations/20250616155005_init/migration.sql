@@ -74,9 +74,6 @@ CREATE TABLE "AccessoryProduct" (
     "brand" TEXT,
     "category" TEXT NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "numReviews" INTEGER DEFAULT 0,
-    "rating" DOUBLE PRECISION DEFAULT 0,
-    "images" TEXT[],
 
     CONSTRAINT "AccessoryProduct_pkey" PRIMARY KEY ("id")
 );
@@ -85,6 +82,7 @@ CREATE TABLE "AccessoryProduct" (
 CREATE TABLE "CardMetadata" (
     "id" UUID NOT NULL,
     "scryfallId" TEXT NOT NULL,
+    "oracleId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "setCode" TEXT NOT NULL,
     "setName" TEXT NOT NULL,
@@ -93,8 +91,6 @@ CREATE TABLE "CardMetadata" (
     "collectorNum" TEXT NOT NULL,
     "oracleText" TEXT,
     "colorIdentity" TEXT[],
-    "imageUrl" TEXT NOT NULL,
-    "backsideImageUrl" TEXT,
     "rarity" TEXT,
     "type" TEXT,
     "cardKingdomUri" TEXT,
@@ -124,7 +120,7 @@ CREATE TABLE "CartItem" (
     "id" UUID NOT NULL,
     "cartId" UUID NOT NULL,
     "productId" UUID NOT NULL,
-    "inventoryId" UUID,
+    "inventoryId" UUID NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "addedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -157,6 +153,7 @@ CREATE TABLE "Order" (
 CREATE TABLE "OrderItem" (
     "orderId" UUID NOT NULL,
     "productId" UUID NOT NULL,
+    "inventoryId" TEXT NOT NULL,
     "qty" INTEGER NOT NULL,
     "price" DECIMAL(12,2) NOT NULL,
     "name" TEXT NOT NULL,
@@ -175,7 +172,9 @@ CREATE TABLE "StoreProduct" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "accessoryId" UUID,
     "storeId" UUID,
-    "customName" TEXT,
+    "rating" DOUBLE PRECISION DEFAULT 0,
+    "numReviews" INTEGER DEFAULT 0,
+    "images" TEXT[] DEFAULT ARRAY[]::TEXT[],
 
     CONSTRAINT "StoreProduct_pkey" PRIMARY KEY ("id")
 );
@@ -230,7 +229,7 @@ ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_cartId_fkey" FOREIGN KEY ("cartI
 ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "StoreProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_inventoryId_fkey" FOREIGN KEY ("inventoryId") REFERENCES "Inventory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_inventoryId_fkey" FOREIGN KEY ("inventoryId") REFERENCES "Inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

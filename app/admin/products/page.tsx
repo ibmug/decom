@@ -1,4 +1,4 @@
-import { getAllProducts } from "@/lib/actions/product.actions";
+import { getProductsPaginated, getProductsTotalCount } from "@/lib/actions/product.actions";
 import { Metadata } from "next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatId } from "@/lib/utils/utils";
@@ -13,11 +13,28 @@ export const metadata: Metadata = {
   title: "Admin Products",
 };
 
-const AdminProductsPage = async () => {
-  const productsRaw = await getAllProducts();
+// You can later wire up real pagination param from URL
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 50;
 
-  // Correct type: UICatalogProduct[]
-  const viewProducts: UICatalogProduct[] = productsRaw.map((p) => toUICatalogProduct(p));
+const AdminProductsPage = async () => {
+  const [productsRaw, totalCount] = await Promise.all([
+    getProductsPaginated(DEFAULT_PAGE, DEFAULT_LIMIT),
+    getProductsTotalCount()
+  ]);
+
+  const viewProducts: UICatalogProduct[] = [];
+
+  for (const p of productsRaw) {
+    try {
+      const transformed = toUICatalogProduct(p);
+      if (transformed) {
+        viewProducts.push(transformed);
+      }
+    } catch (err) {
+      console.error("Skipping product transform error:", p.id, err);
+    }
+  }
 
   const getPrice = (product: UICatalogProduct) => product.price;
   const getStock = (product: UICatalogProduct) => product.stock;
@@ -25,42 +42,44 @@ const AdminProductsPage = async () => {
   return (
     <div className="space-y-2">
       <h2 className="h2-bold">Products</h2>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {viewProducts.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{formatId(product.id)}</TableCell>
-                <TableCell>
-                  {product.type === "ACCESSORY" ? product.accessory.name : product.name}
-                </TableCell>
-                <TableCell className="text-right">{formatCurrency(getPrice(product))}</TableCell>
-                <TableCell>{getStock(product)}</TableCell>
-                <TableCell>
-                  {product.type === "ACCESSORY" ? product.rating ?? "-" : "-"}
-                </TableCell>
-                <TableCell className="flex gap-1">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/products/${product.id}`}>Edit</Link>
-                  </Button>
-                  <DeleteDialog id={product.id} />
-                </TableCell>
+
+      {viewProducts.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Pagination page={1} totalPages={1} />
-      </div>
+            </TableHeader>
+            <TableBody>
+              {viewProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>{formatId(product.id)}</TableCell>
+                  <TableCell>{product.type === "ACCESSORY" ? product.accessory.name : product.name}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(getPrice(product))}</TableCell>
+                  <TableCell>{getStock(product)}</TableCell>
+                  <TableCell>{product.type === "ACCESSORY" ? product.rating ?? "-" : "-"}</TableCell>
+                  <TableCell className="flex gap-1">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                    </Button>
+                    <DeleteDialog id={product.id} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <Pagination page={DEFAULT_PAGE} totalPages={Math.ceil(totalCount / DEFAULT_LIMIT)} />
+        </div>
+      )}
     </div>
   );
 };

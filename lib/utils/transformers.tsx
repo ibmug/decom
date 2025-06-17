@@ -1,7 +1,9 @@
 import { Prisma, StoreProduct, Inventory, CardMetadata, AccessoryProduct } from "@prisma/client";
 import { CardItem, UIStoreProduct, UIInventory, UICatalogProduct } from "@/types";
 
-// === INVENTORY MAPPER ===
+
+
+// === STORE PRODUCT -> UIStoreProduct ===
 export function mapInventory(
   inventories: {
     id: string;
@@ -9,7 +11,7 @@ export function mapInventory(
     stock: number;
     language?: string | null;
     condition?: string | null;
-  }[]
+  }[] = []  // <-- default empty if undefined
 ): UIInventory[] {
   return inventories.map((inv) => ({
     id: inv.id,
@@ -27,7 +29,7 @@ export function storeProductToUIStoreProduct(p: {
   type: "CARD" | "ACCESSORY";
   cardMetadata?: CardMetadata | null;
   accessory?: AccessoryProduct | null;
-  inventory: {
+  inventory?: {
     id: string;
     price: Prisma.Decimal;
     stock: number;
@@ -40,11 +42,14 @@ export function storeProductToUIStoreProduct(p: {
   brand?: string | null;
   category?: string | null;
   description?: string | null;
-}): UIStoreProduct {
-  const inventory = mapInventory(p.inventory);
+}): UIStoreProduct | null {
+  const inventory = mapInventory(p.inventory ?? []);
 
   if (p.type === "CARD") {
-    if (!p.cardMetadata) throw new Error("Missing cardMetadata for CARD product");
+    if (!p.cardMetadata) {
+      console.warn("Skipping CARD without metadata:", p.id);
+      return null;
+    }
     return {
       id: p.id,
       slug: p.slug,
@@ -58,7 +63,10 @@ export function storeProductToUIStoreProduct(p: {
   }
 
   if (p.type === "ACCESSORY") {
-    if (!p.accessory) throw new Error("Missing accessory for ACCESSORY product");
+    if (!p.accessory) {
+      console.warn("Skipping ACCESSORY without accessory relation:", p.id);
+      return null;
+    }
     return {
       id: p.id,
       slug: p.slug,
@@ -74,28 +82,33 @@ export function storeProductToUIStoreProduct(p: {
     };
   }
 
-  throw new Error("Unknown product type");
+  console.warn("Unknown product type:", p);
+  return null;
 }
+
 
 // === UIStoreProduct -> UICatalogProduct ===
 export function toUICatalogProduct(product: UIStoreProduct): UICatalogProduct {
   const sortedInventory = [...product.inventory].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
   const bestInventory = sortedInventory[0];
+
   const price = bestInventory?.price ?? "0";
   const stock = product.inventory.reduce((sum, i) => sum + i.stock, 0);
 
   if (product.type === "CARD") {
     const meta = product.cardMetadata;
+
+    // Added extra defensive layer even though storeProductToUIStoreProduct already handles missing cardMetadata
     return {
       id: product.id,
       slug: product.slug,
       type: "CARD",
-      name: meta.name,
-      setCode: meta.setCode,
-      setName: meta.setName,
-      collectorNum: meta.collectorNum,
-      oracleText: meta.oracleText ?? undefined,
-      colorIdentity: meta.colorIdentity,
+      name: meta?.name ?? "Unknown Card",
+      setCode: meta?.setCode ?? "",
+      setName: meta?.setName ?? "",
+      collectorNum: meta?.collectorNum ?? "",
+      oracleText: meta?.oracleText ?? undefined,
+      colorIdentity: meta?.colorIdentity ?? [],
       images: product.images ?? [],
       price,
       stock,
@@ -106,13 +119,14 @@ export function toUICatalogProduct(product: UIStoreProduct): UICatalogProduct {
   }
 
   if (product.type === "ACCESSORY") {
-    const firstInventory = product.inventory[0];
+    const acc = product.accessory;
+
     return {
       id: product.id,
       slug: product.slug,
       type: "ACCESSORY",
-      name: product.accessory.name,
-      accessory: product.accessory,
+      name: acc?.name ?? "Unknown Accessory",
+      accessory: acc,
       inventory: product.inventory,
       rating: product.rating ?? 0,
       numReviews: product.numReviews ?? 0,
@@ -120,13 +134,14 @@ export function toUICatalogProduct(product: UIStoreProduct): UICatalogProduct {
       description: product.description ?? undefined,
       category: product.category ?? undefined,
       brand: product.brand ?? undefined,
-      price: firstInventory?.price ?? "0",
-      stock: firstInventory?.stock ?? 0,
+      price: bestInventory?.price ?? "0",
+      stock: bestInventory?.stock ?? 0,
     };
   }
 
   throw new Error("Unknown product type");
 }
+
 
 // === UIStoreProduct -> CardItem (frontend use) ===
 export function toCardItem(product: Extract<UIStoreProduct, { type: "CARD" }>): CardItem {
