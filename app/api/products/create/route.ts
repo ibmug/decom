@@ -1,7 +1,7 @@
 import { prisma } from '@/db/prisma';
 import { formatError } from '@/lib/utils/utils';
 import { insertAccessoryProductSchema } from '@/lib/validators';
-import { Prisma } from '@prisma/client';
+
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = insertAccessoryProductSchema.parse(body);
 
-    const { slug, price, stock, ...accessoryFields } = data;
+    const { slug, stock, ...accessoryFields } = data;
 
     // First: create StoreProduct + Accessory relation
     const storeProduct = await prisma.storeProduct.create({
@@ -28,7 +28,6 @@ export async function POST(req: Request) {
     await prisma.inventory.create({
       data: {
         productId: storeProduct.id,
-        price: new Prisma.Decimal(price),
         stock: stock,
         language: 'en',      // default language (or allow admin input)
         condition: 'NM',     // default condition (can adjust)

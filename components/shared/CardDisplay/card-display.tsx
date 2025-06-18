@@ -14,14 +14,17 @@ const CONDITION_PRIORITY = ['NM', 'LP', 'MP', 'HP', 'DMG'];
 
 function selectBestInventory(inventories: UIInventory[]): UIInventory | undefined {
   return [...inventories].sort((a, b) => {
-    const priceCompare = Number(b.price) - Number(a.price);
-    if (priceCompare !== 0) return priceCompare;
-
     const condA = CONDITION_PRIORITY.indexOf(a.condition ?? 'NM');
     const condB = CONDITION_PRIORITY.indexOf(b.condition ?? 'NM');
-    return condA - condB;
-  })[0];
+
+    const langA = a.language ?? '';
+    const langB = b.language ?? '';
+
+    if (condA !== condB) return condA - condB;
+    return langA.localeCompare(langB);
+  })[0]; // Return the top inventory
 }
+
 
 interface CardDisplayProps {
   product: Extract<UICatalogProduct, { type: "CARD" }>;
@@ -62,7 +65,7 @@ const CardDisplay: FC<CardDisplayProps> = ({ product, session }) => {
 
         <div className="mt-4 space-y-1">
           <p><strong>Colors:</strong> {product.colorIdentity.length ? product.colorIdentity.join(', ') : 'Colorless'}</p>
-          <p><strong>Price:</strong> ${bestInventory.price.toString()}</p>
+          <p><strong>Price:</strong> ${product.price.toString()}</p>
           <span className={`text-xs ${stock > 1 ? 'text-green-500' : 'text-red-500'}`}>
             {stock >= 1 ? <p><strong>Stock:</strong> {stock}</p> : null}
           </span>

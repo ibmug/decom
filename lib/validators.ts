@@ -11,7 +11,6 @@ const currency = z.string().refine(
 // --- Inventory validator ---
 const inventoryItemSchema = z.object({
   id: z.string().uuid(),
-  price: currency,
   stock: z.number().int().nonnegative(),
   language: z.string().optional(),
   condition: z.string().optional(),
@@ -25,6 +24,7 @@ const baseProductSchema = z.object({
   numReviews: z.number().optional(),
   images: z.array(z.string().url()).min(1),
   inventory: z.array(inventoryItemSchema),
+  price: currency,
 });
 
 // --- CARD schema ---

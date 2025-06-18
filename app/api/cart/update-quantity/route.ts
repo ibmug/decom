@@ -1,22 +1,22 @@
-import { NextResponse } from "next/server";
 import { updateCartItemQuantity } from "@/lib/actions/cart.actions";
 
 export async function POST(req: Request) {
-  const { productId, inventoryId, quantity } = await req.json();
-
   try {
+    const { productId, inventoryId, quantity } = await req.json();
+
+    if (!productId || !inventoryId)
+      return Response.json({ success: false, message: "Missing productId or inventoryId" });
+
     const result = await updateCartItemQuantity({
       productId,
       inventoryId,
-      quantity
+      quantity: Number(quantity),
     });
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "An error occurred." },
-      { status: 500 }
-    );
+    return Response.json(result);
+
+  } catch (err) {
+    console.error(err);
+    return Response.json({ success: false, message: "Failed to update quantity" });
   }
 }

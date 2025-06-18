@@ -32,17 +32,20 @@ export const accessoryDefaultValues: ProductFormValues = {
   numReviews: 0,
   inventory: [],
   accessoryId: null,
+  price: "0.00",  
 };
+
 
 export const cardDefaultValues: ProductFormValues = {
   type: "CARD",
   slug: "",
-  cardMetadataId: "",   // required for CARD type
+  cardMetadataId: "",   
   storeId: null,
   rating: 0,
   numReviews: 0,
   images: [],
   inventory: [],
+  price: "0.00"
 };
 
 
@@ -173,4 +176,6 @@ export const CARD_TYPES = [
   'Instant',
   'Sorcery',
   'Battle',
+  'Equipment',
+  'Aura',
 ]

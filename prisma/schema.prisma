@@ -188,10 +188,10 @@ model StoreProduct {
   accessoryId    String?     @db.Uuid
   storeId        String?     @db.Uuid
 
-  // Unified shared fields
-  rating     Float?   @default(0)
-  numReviews Int?     @default(0)
-  images     String[] @default([])
+  price          Decimal     @default(0.00)  // ✅ <-- this is your main price
+  rating         Float?      @default(0)
+  numReviews     Int?        @default(0)
+  images         String[]    @default([])
 
   cardMetadata CardMetadata?     @relation("MetadataToStoreProduct", fields: [cardMetadataId], references: [id])
   accessory    AccessoryProduct? @relation("AccessoryToStoreProduct", fields: [accessoryId], references: [id])
@@ -204,7 +204,7 @@ model StoreProduct {
 model Inventory {
   id             String         @id @default(uuid()) @db.Uuid
   productId      String         @db.Uuid
-  price          Decimal
+  //price          Decimal
   stock          Int
   language       String?
   condition      CardCondition?

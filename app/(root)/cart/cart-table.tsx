@@ -24,23 +24,26 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const handleQuantityChange = async (itemId: string, quantity: number) => {
-    try {
-      const response = await fetch("/api/cart/update-quantity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId, quantity }),
-      });
+  const handleQuantityChange = async (productId: string, inventoryId: string, quantity: number) => {
+  try {
+    const response = await fetch("/api/cart/update-quantity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, inventoryId, quantity }),
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (!result.success) {
-        toast({ description: result.message, variant: "destructive" });
-      }
-    } catch (err) {
-      toast({ description: formatError(err), variant: "destructive" });
+    if (!result.success) {
+      toast({ description: result.message, variant: "destructive" });
+    } else {
+      router.refresh(); // optional — reload page
     }
-  };
+  } catch (err) {
+    toast({ description: formatError(err), variant: "destructive" });
+  }
+};
+
 
   return (
     <>
@@ -94,7 +97,7 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
             variant="outline"
             onClick={() =>
               startTransition(() =>
-                handleQuantityChange(item.productId, -1)
+                handleQuantityChange(item.productId, item.inventoryId, item.qty - 1)
               )
             }
           >
@@ -112,7 +115,7 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
             variant="outline"
             onClick={() =>
               startTransition(() =>
-                handleQuantityChange(item.productId, 1)
+                handleQuantityChange(item.productId, item.inventoryId, item.qty + 1)
               )
             }
           >

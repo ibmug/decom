@@ -4,7 +4,7 @@ import {
   insertOrderItemSchema,
   paymentResultSchema,
 } from "@/lib/validators";
-import { AccessoryProduct, CardMetadata, OrderStatus, Inventory, StoreProduct, Prisma } from "@prisma/client";
+import { AccessoryProduct, CardMetadata, OrderStatus, Inventory, StoreProduct } from "@prisma/client";
 
 // --- SHIPPING ---
 export type ShippingMethod = 'DELIVERY' | 'PICKUP';
@@ -14,20 +14,20 @@ export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 // --- INVENTORY ---
 export type UIInventory = {
   id: string;
-  price: string;
   stock: number;
   language?: string;
   condition?: string;
 };
 
-// --- STORE PRODUCT (now fully aligned with schema) ---
+// --- STORE PRODUCT ---
 export type UIStoreProduct =
   | {
       id: string;
       slug: string;
       type: "CARD";
-      cardMetadata: Omit<CardMetadata, 'imageUrl' | 'backsideImageUrl'>;
+      cardMetadata: Omit<CardMetadata, never>;
       inventory: UIInventory[];
+      price: string;
       rating?: number;
       numReviews?: number;
       images: string[];
@@ -36,8 +36,9 @@ export type UIStoreProduct =
       id: string;
       slug: string;
       type: "ACCESSORY";
-      accessory: Omit<AccessoryProduct, 'images'>;
+      accessory: Omit<AccessoryProduct, never>;
       inventory: UIInventory[];
+      price: string;
       rating?: number;
       numReviews?: number;
       images: string[];
@@ -46,7 +47,7 @@ export type UIStoreProduct =
       description?: string;
     };
 
-// --- UICatalogProduct (flattened product for client display) ---
+// --- UICatalogProduct ---
 export type UICatalogProduct =
   | {
       id: string;
@@ -70,7 +71,7 @@ export type UICatalogProduct =
       slug: string;
       name: string;
       type: "ACCESSORY";
-      accessory: Omit<AccessoryProduct, 'images'>;
+      accessory: Omit<AccessoryProduct, never>;
       inventory: UIInventory[];
       rating: number;
       numReviews: number;
@@ -93,7 +94,7 @@ export interface CardItem {
   collectorNum: string;
   oracleText?: string;
   colorIdentity: string[];
-  imageUrl: string;
+  images: string[];
   backsideImageUrl?: string | null;
   rarity?: string;
   type?: string;
@@ -139,8 +140,8 @@ export interface UICartItem {
   qty: number;
   stock: number;
   type: 'CARD' | 'ACCESSORY';
-  language?: string;
-  condition?: string;
+  language: string;
+  condition: string;
 }
 
 export interface UICart {
@@ -149,8 +150,6 @@ export interface UICart {
   sessionCartId: string;
   items: UICartItem[];
   itemsPrice: string;
-  shippingPrice: string;
-  taxPrice: string;
   totalPrice: string;
   createdAt: string;
   updatedAt: string | null;
@@ -164,6 +163,29 @@ export type AddToCartInput = {
   price: string;
   qty: number;
   image: string;
+};
+
+// --- CartItemWithProductAndInventory ---
+export type CartItemWithProductAndInventory = {
+  id: string;
+  productId: string;
+  inventoryId: string;
+  quantity: number;
+  storeProduct: {
+    id: string;
+    slug: string;
+    type: "CARD" | "ACCESSORY";
+    images: string[];
+    price: string;
+    cardMetadata?: { name: string } | null;
+    accessory?: { name: string } | null;
+  };
+  inventory: {
+    id: string;
+    stock: number;
+    language: string;
+    condition: string;
+  };
 };
 
 // --- ORDERS ---
@@ -231,7 +253,7 @@ export interface PageProps<Params = {}, Search = {}> {
 export type SlugParam = { slug: string };
 export type IdParam = { id: string };
 
-// --- PRODUCT UPDATE INPUT (for backend) ---
+// --- PRODUCT UPDATE INPUT ---
 export type ProductType = "CARD" | "ACCESSORY";
 
 export interface UpdateProductInput {
@@ -250,7 +272,7 @@ export interface UpdateProductInput {
   category?: string;
 }
 
-// --- UI Order List (Admin Dashboard) ---
+// --- UI Order List ---
 export interface UIOrderListItem {
   id: string;
   createdAt: Date;
@@ -259,7 +281,17 @@ export interface UIOrderListItem {
   itemCount: number;
 }
 
-// --- API Response pattern ---
+// --- API Response ---
 export type ApiResponse<T = void> =
   | { success: true; message: string; data?: T }
   | { success: false; message: string };
+
+
+export type TransformedCart = {
+  id: string;
+  userId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  sessionCartId: string;
+  items: CartItemWithProductAndInventory[];
+};

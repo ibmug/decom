@@ -21,7 +21,7 @@ const AdminProductUpdatePage = async ({ params }: AdminProductUpdatePageProps) =
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <h1 className="h2-bold">Update Product</h1>
-      <ProductForm type="UPDATE" product={productRaw} productId={productRaw.id} />
+      <ProductForm type="UPDATE" product={productRaw}/>
     </div>
   );
 };

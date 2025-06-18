@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const placeholder = '/images/cardPlaceholder.png';
 const BATCH_SIZE = 250;
 const CONCURRENCY_LIMIT = 20;
-const limit = pLimit(CONCURRENCY_LIMIT);  // <-- small typo fixed here
+const limit = pLimit(CONCURRENCY_LIMIT);
 const DEFAULT_LANGUAGE = 'EN';
 const DEFAULT_CONDITION = 'NM';
 const DEFAULT_STOCK = 0;
@@ -84,6 +84,7 @@ async function main() {
 
       const slug = normalizeSlug(name, set, collector_number);
       const safeOracleId = oracleId ?? 'UNKNOWN';
+      const finalPrice = calculatePrice(prices?.usd ? parseFloat(prices.usd) : null);
 
       // Sequential transaction: first CardMetadata, then StoreProduct
       return prisma.$transaction(async (tx) => {
@@ -128,15 +129,16 @@ async function main() {
             type: 'CARD',
             cardMetadataId: cardMetadata.id,
             images: cardImages,
+            price: finalPrice,
           },
           create: {
             slug,
             type: ProductType.CARD,
             cardMetadataId: cardMetadata.id,
             images: cardImages,
+            price: finalPrice,
             inventory: {
               create: {
-                price: calculatePrice(prices?.usd ? parseFloat(prices.usd) : null),
                 stock: DEFAULT_STOCK,
                 language: DEFAULT_LANGUAGE,
                 condition: DEFAULT_CONDITION,

@@ -1,79 +1,63 @@
 import { prisma } from "@/db/prisma";
-import { CardItem } from "@/types";
+import { CardItem, UIStoreProduct } from "@/types";
 import { Prisma } from "@prisma/client";
+import { storeProductToUIStoreProduct, toCardItem } from "@/lib/utils/transformers";
+
+// Shared select for cardMetadata (✅ full fields required by transformer)
+const cardMetadataSelect = {
+  id: true,
+  name: true,
+  oracleText: true,
+  setCode: true,
+  setName: true,
+  manaCost: true,
+  cmc: true,
+  collectorNum: true,
+  colorIdentity: true,
+  type: true,
+  rarity: true,
+  usdPrice: true,
+  usdFoilPrice: true,
+  scryfallId: true,
+  oracleId: true,
+  cardKingdomUri: true,
+} as const;
 
 // --- Get Single Card by Slug ---
-export async function getSingleCardBySlug(slug: string) {
+
+export async function getSingleCardBySlug(slug: string): Promise<UIStoreProduct | null> {
   const raw = await prisma.storeProduct.findUnique({
     where: { slug },
     select: {
       id: true,
       slug: true,
-      images: true, // ✅ now coming from StoreProduct
-      cardMetadata: {
-        select: {
-          id: true,
-          name: true,
-          oracleText: true,
-          setCode: true,
-          manaCost: true,
-          collectorNum: true,
-          colorIdentity: true,
-          type: true,
-          rarity: true,
-          setName: true,
-          usdPrice: true,
-          usdFoilPrice: true,
-        }
-      },
+      type: true,
+      price: true,
+      rating: true,
+      numReviews: true,
+      images: true,
+      cardMetadata: { select: cardMetadataSelect },
       inventory: {
         select: {
           id: true,
-          price: true,
           stock: true,
           language: true,
           condition: true,
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
-  if (!raw || !raw.cardMetadata) return null;
+  if (!raw || raw.type !== "CARD" || !raw.cardMetadata) return null;
 
-  const inv = raw.inventory[0];
-  const imageUrl = raw.images?.[0] ?? '/images/cardPlaceholder.png';
-
-  return {
-    id: raw.cardMetadata.id,
-    productId: raw.id,
-    slug: raw.slug ?? "",
-    name: raw.cardMetadata.name,
-    setCode: raw.cardMetadata.setCode,
-    setName: raw.cardMetadata.setName,
-    manaCost: raw.cardMetadata.manaCost ?? "",
-    collectorNum: raw.cardMetadata.collectorNum,
-    oracleText: raw.cardMetadata.oracleText ?? "",
-    colorIdentity: raw.cardMetadata.colorIdentity,
-    imageUrl: imageUrl,
-    backsideImageUrl: undefined,  // ✅ handled in storeProduct.images if needed later
-    rarity: raw.cardMetadata.rarity ?? "",
-    type: raw.cardMetadata.type ?? "",
-    cardKingdomUri: undefined,
-    usdPrice: raw.cardMetadata.usdPrice ?? undefined,
-    usdFoilPrice: raw.cardMetadata.usdFoilPrice ?? undefined,
-    price: inv?.price.toString() ?? "0.00",
-    stock: inv?.stock ?? 0,
-    inventory: raw.inventory.map((i) => ({
-      id: i.id,
-      price: i.price.toString(),
-      stock: i.stock,
-      language: i.language ?? undefined,
-      condition: i.condition ?? undefined
-    }))
-  };
+  return storeProductToUIStoreProduct({
+    ...raw,
+    inventory: raw.inventory,
+    price: raw.price,
+  });
 }
 
-// --- Search Cards with Inventory support ---
+// --- Search Cards with Pagination ---
 
 export async function searchCards({
   query = '',
@@ -97,6 +81,7 @@ export async function searchCards({
   }
 
   const where: Prisma.StoreProductWhereInput = {
+    type: "CARD",
     cardMetadata: { is: metadataWhere },
   };
 
@@ -104,9 +89,23 @@ export async function searchCards({
 
   const rows = await prisma.storeProduct.findMany({
     where,
-    include: {
-      cardMetadata: true,
-      inventory: true,
+    select: {
+      id: true,
+      slug: true,
+      type: true,
+      price: true,
+      rating: true,
+      numReviews: true,
+      images: true,
+      cardMetadata: { select: cardMetadataSelect },
+      inventory: {
+        select: {
+          id: true,
+          stock: true,
+          language: true,
+          condition: true,
+        },
+      },
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -115,38 +114,14 @@ export async function searchCards({
   const data: CardItem[] = rows
     .filter((r) => r.cardMetadata)
     .map((r) => {
-      const m = r.cardMetadata!;
-      const inv = r.inventory[0];
-      const imageUrl = r.images?.[0] ?? '/images/cardPlaceholder.png';
+      const product = storeProductToUIStoreProduct({
+        ...r,
+        inventory: r.inventory,
+        price: r.price,
+      });
 
-      return {
-        id: m.id,
-        productId: r.id,
-        slug: r.slug ?? '',
-        name: m.name,
-        setCode: m.setCode,
-        setName: m.setName,
-        manaCost: m.manaCost ?? '',
-        collectorNum: m.collectorNum,
-        oracleText: m.oracleText ?? '',
-        colorIdentity: m.colorIdentity,
-        imageUrl: imageUrl,
-        backsideImageUrl: undefined,
-        rarity: m.rarity ?? '',
-        type: m.type ?? '',
-        cardKingdomUri: undefined,
-        usdPrice: m.usdPrice ?? undefined,
-        usdFoilPrice: m.usdFoilPrice ?? undefined,
-        price: inv?.price.toString() ?? "0.00",
-        stock: inv?.stock ?? 0,
-        inventory: r.inventory.map((i) => ({
-          id: i.id,
-          price: i.price.toString(),
-          stock: i.stock,
-          language: i.language ?? undefined,
-          condition: i.condition ?? undefined
-        }))
-      };
+      return toCardItem(product as Extract<UIStoreProduct, { type: "CARD" }>);
+
     });
 
   return {

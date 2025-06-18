@@ -2,16 +2,11 @@
 
 import { prisma } from "@/db/prisma";
 import { cookies } from "next/headers";
-import { serializeCart } from "../utils/cartUtils";
-import { transformCartRecord } from "../utils/transformers";
+import { serializeCart, toTransformedCart } from "../utils/cartUtils";
+import { calcPrice } from "../utils/cartUtils";
+import { ApiResponse } from "@/types";
 
-// ✅ GLOBAL API RESPONSE TYPE
-export type ApiResponse<T = void> = 
-  | { success: true; message: string; data?: T }
-  | { success: false; message: string };
-
-// === Get identifiers ===
-
+// === Session Cart Identifiers ===
 async function getCartIdentifiers() {
   const cookieStore = await cookies();
   let sessionCartId = cookieStore.get("sessionCartId")?.value;
@@ -25,75 +20,92 @@ async function getCartIdentifiers() {
 }
 
 // === Resolve or create cart ===
-async function resolveCartFixed(sessionCartId: string) {
-  const existing = await prisma.cart.findFirst({
+async function resolveCart(sessionCartId: string) {
+  const cart = await prisma.cart.findUnique({
     where: { sessionCartId },
     include: {
       items: {
         include: {
           storeProduct: {
-            include: { 
-              cardMetadata: true, 
-              accessory: true
-            }
+            select: {
+              id: true,
+              slug: true,
+              type: true,
+              price: true,
+              images: true,
+              cardMetadata: { select: { name: true } },
+              accessory: { select: { name: true } },
+            },
           },
-          inventory: true
-        }
-      }
-    }
+          inventory: true,
+        },
+      },
+    },
   });
 
-  if (existing) return existing;
-
-  return await prisma.cart.create({
-    data: { sessionCartId },
-    include: {
-      items: {
-        include: {
-          storeProduct: {
-            include: { 
-              cardMetadata: true, 
-              accessory: true
-            }
+  if (!cart) {
+    const newCart = await prisma.cart.create({
+      data: { sessionCartId },
+      include: {
+        items: {
+          include: {
+            storeProduct: {
+              select: {
+                id: true,
+                slug: true,
+                type: true,
+                price: true,
+                images: true,
+                cardMetadata: { select: { name: true } },
+                accessory: { select: { name: true } },
+              },
+            },
+            inventory: true,
           },
-          inventory: true
-        }
-      }
-    }
-  });
+        },
+      },
+    });
+
+    return {
+      ...newCart,
+      items: newCart.items.filter((i): i is typeof i & { inventory: NonNullable<typeof i.inventory> } => i.inventory !== null),
+    };
+  }
+
+  // Filter out null inventory
+  return {
+    ...cart,
+    items: cart.items.filter((i): i is typeof i & { inventory: NonNullable<typeof i.inventory> } => i.inventory !== null),
+  };
 }
 
 // === Add item to cart ===
 export async function addItemToCart(data: { productId: string; inventoryId: string; qty?: number }): Promise<ApiResponse> {
   try {
     const { sessionCartId } = await getCartIdentifiers();
-    const cart = await resolveCartFixed(sessionCartId);
+    const cart = await resolveCart(sessionCartId);
 
-    const inventory = await prisma.inventory.findUnique({ where: { id: data.inventoryId } });
-    if (!inventory) return { success: false, message: "Inventory not found" };
+    const inv = await prisma.inventory.findUnique({
+      where: { id: data.inventoryId },
+      select: { id: true, stock: true },
+    });
+    if (!inv) return { success: false, message: "Inventory not found" };
 
-    const existing = cart.items.find(i => i.productId === data.productId && i.inventory?.id === data.inventoryId);
-    const requestedQty = data.qty ?? 1;
-    const currentQty = existing?.quantity ?? 0;
-    const totalQty = currentQty + requestedQty;
+    const existing = cart.items.find(item => item.productId === data.productId && item.inventory.id === data.inventoryId);
+    const qtyToAdd = data.qty ?? 1;
+    const totalQty = (existing?.quantity ?? 0) + qtyToAdd;
 
-    if (inventory.stock < totalQty) return { success: false, message: "Not enough stock available" };
+    if (totalQty > inv.stock) return { success: false, message: "Not enough stock available" };
 
     if (existing) {
       await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: totalQty } });
     } else {
       await prisma.cartItem.create({
-        data: {
-          productId: data.productId,
-          inventoryId: data.inventoryId,
-          quantity: requestedQty,
-          cartId: cart.id
-        }
+        data: { cartId: cart.id, productId: data.productId, inventoryId: data.inventoryId, quantity: qtyToAdd },
       });
     }
 
     return { success: true, message: "Item added to cart" };
-
   } catch (err) {
     console.error(err);
     return { success: false, message: "An unexpected error occurred" };
@@ -103,13 +115,11 @@ export async function addItemToCart(data: { productId: string; inventoryId: stri
 // === Remove item from cart ===
 export async function removeItemFromCart(cartItemId: string): Promise<ApiResponse> {
   try {
-    const cartItem = await prisma.cartItem.findUnique({ where: { id: cartItemId } });
-    if (!cartItem) return { success: false, message: "Cart item not found" };
+    const found = await prisma.cartItem.findUnique({ where: { id: cartItemId } });
+    if (!found) return { success: false, message: "Cart item not found" };
 
     await prisma.cartItem.delete({ where: { id: cartItemId } });
-
     return { success: true, message: "Item removed from cart" };
-
   } catch (err) {
     console.error(err);
     return { success: false, message: "An unexpected error occurred" };
@@ -117,48 +127,73 @@ export async function removeItemFromCart(cartItemId: string): Promise<ApiRespons
 }
 
 // === Update quantity directly ===
-export async function updateCartItemQuantity({
-  productId,
-  inventoryId,
-  quantity
-}: {
-  productId: string;
-  inventoryId: string;
-  quantity: number;
-}): Promise<ApiResponse> {
+export async function updateCartItemQuantity(data: { productId: string; inventoryId: string; quantity: number }): Promise<ApiResponse> {
   try {
     const { sessionCartId } = await getCartIdentifiers();
-    const cart = await resolveCartFixed(sessionCartId);
+    const cart = await resolveCart(sessionCartId);
 
-    const existingItem = cart.items.find(
-      item => item.productId === productId && item.inventory?.id === inventoryId
-    );
+    const existing = cart.items.find(item => item.productId === data.productId && item.inventory.id === data.inventoryId);
 
-    if (!existingItem && quantity > 0) {
+    if (!existing && data.quantity > 0) {
       await prisma.cartItem.create({
-        data: { cartId: cart.id, productId, inventoryId, quantity },
+        data: { cartId: cart.id, productId: data.productId, inventoryId: data.inventoryId, quantity: data.quantity },
       });
-    } else if (existingItem && quantity > 0) {
-      await prisma.cartItem.update({ where: { id: existingItem.id }, data: { quantity } });
-    } else if (existingItem && quantity <= 0) {
-      await prisma.cartItem.delete({ where: { id: existingItem.id } });
+    } else if (existing && data.quantity > 0) {
+      await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: data.quantity } });
+    } else if (existing && data.quantity <= 0) {
+      await prisma.cartItem.delete({ where: { id: existing.id } });
     }
 
     return { success: true, message: "Quantity updated" };
-
   } catch (err) {
     console.error(err);
     return { success: false, message: "An unexpected error occurred" };
   }
 }
 
-// === Get my cart (serialized + wrapped) ===
+// === Get my cart (serialized) ===
 export async function getMyCart(): Promise<ApiResponse<ReturnType<typeof serializeCart>>> {
   try {
     const { sessionCartId } = await getCartIdentifiers();
-    const cart = await resolveCartFixed(sessionCartId);
-    const transformedCart = transformCartRecord(cart);
-    const serialized = serializeCart(transformedCart);
+    const cart = await resolveCart(sessionCartId);
+
+    const transformed = toTransformedCart({
+      id: cart.id,
+      userId: cart.userId,
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt,
+      sessionCartId: cart.sessionCartId,
+      items: cart.items.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        inventoryId: item.inventoryId,
+        quantity: item.quantity,
+        storeProduct: {
+          id: item.storeProduct.id,
+          slug: item.storeProduct.slug,
+          type: item.storeProduct.type,
+          images: item.storeProduct.images,
+          price: item.storeProduct.price.toString(),
+          name: item.storeProduct.type === "CARD"
+            ? item.storeProduct.cardMetadata?.name ?? "Unnamed"
+            : item.storeProduct.accessory?.name ?? "Unnamed",
+        },
+        inventory: {
+          id: item.inventory.id,
+          stock: item.inventory.stock,
+          language: item.inventory.language ?? "English",
+          condition: item.inventory.condition ?? "NM",
+        },
+      })),
+    });
+
+    // Calculate totals (extensible later)
+    const totals = calcPrice(transformed.items.map(i => ({
+      price: i.storeProduct.price,
+      qty: i.quantity
+    })));
+
+    const serialized = serializeCart({ ...transformed, ...totals });
     return { success: true, message: "Cart loaded", data: serialized };
   } catch (err) {
     console.error(err);

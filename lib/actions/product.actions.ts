@@ -7,33 +7,33 @@ import { ProductWithRelations, storeProductToUIStoreProduct } from '@/lib/utils/
 
 // Common include fields (StoreProduct level + relations)
 const baseInclude = {
+  id: true,
+  slug: true,
+  type: true,
   cardMetadata: true,
   accessory: true,
   inventory: true,
+  rating: true,
+  numReviews: true,
+  images: true,
+  storeId: true,
 };
 
 
 ///get produts paginated:
-export async function getProductsPaginated(page: number = 1, limit: number = 50): Promise<UIStoreProduct[]> {
-  const offset = (page - 1) * limit;
+export async function getProductsPaginated(page: number, limit: number) {
+  const skip = (page - 1) * limit;
 
-  const products = await prisma.storeProduct.findMany({
-    skip: offset,
+  return prisma.storeProduct.findMany({
+    skip,
     take: limit,
-    orderBy: { updatedAt: 'desc' },
-    include: baseInclude,
+    orderBy: { updatedAt: "desc" },
+    include: {
+      inventory: true,
+      cardMetadata: true,
+      accessory: true,
+    },
   });
-
-  return products
-    .map(p => {
-      try {
-        return storeProductToUIStoreProduct(p as ProductWithRelations);
-      } catch (err) {
-        console.error("Skipping broken product:", p.id, err);
-        return null;
-      }
-    })
-    .filter((p): p is UIStoreProduct => p !== null);
 }
 
 // Optional: count total pages (optional for now)

@@ -5,7 +5,7 @@ import { formatCurrency, formatId } from "@/lib/utils/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UICatalogProduct } from "@/types";
-import { toUICatalogProduct } from "@/lib/utils/transformers";
+import { storeProductToUIStoreProduct, toUICatalogProduct } from "@/lib/utils/transformers";
 import Pagination from "@/components/shared/pagination";
 import DeleteDialog from "@/components/shared/delete-dialog";
 
@@ -25,16 +25,17 @@ const AdminProductsPage = async () => {
 
   const viewProducts: UICatalogProduct[] = [];
 
-  for (const p of productsRaw) {
-    try {
-      const transformed = toUICatalogProduct(p);
-      if (transformed) {
-        viewProducts.push(transformed);
-      }
-    } catch (err) {
-      console.error("Skipping product transform error:", p.id, err);
-    }
+ for (const p of productsRaw) {
+  try {
+    const uiProduct = storeProductToUIStoreProduct(p);
+    if (!uiProduct) continue;
+
+    const transformed = toUICatalogProduct(uiProduct);
+    viewProducts.push(transformed);
+  } catch (err) {
+    console.error("Skipping product transform error:", p.id, err);
   }
+}
 
   const getPrice = (product: UICatalogProduct) => product.price;
   const getStock = (product: UICatalogProduct) => product.stock;

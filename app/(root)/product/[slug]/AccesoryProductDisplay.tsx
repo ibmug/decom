@@ -11,9 +11,9 @@ type AccessoryProduct = Extract<UIStoreProduct, { type: "ACCESSORY" }>;
 
 export default function AccessoryProductDisplay({ product }: { product: AccessoryProduct }) {
   // Pull first inventory record (since we have no conditions or languages yet)
-  const firstInventory = product.inventory[0];
-  const price = firstInventory?.price ?? "0";
-  const stock = firstInventory?.stock ?? 0;
+  //const firstInventory = product.inventory[0];
+  const price = product.price ?? "0";
+  const stock = product.inventory.reduce((sum, inv) => sum + inv.stock, 0);
 
   return (
     <section>

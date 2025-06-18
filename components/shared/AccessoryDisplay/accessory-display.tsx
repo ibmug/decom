@@ -47,7 +47,7 @@ if (!firstInventory) {
 
         <div className="mt-4 space-y-1">
           <p>{product.description}</p>
-          <ProductPrice value={Number(firstInventory.price)} />
+          <ProductPrice value={Number(product.price)} />
           <span className={`text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
             {stock >= 1 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
           </span>
@@ -55,7 +55,7 @@ if (!firstInventory) {
           <AddToCartButton
             productId={product.id}
             inventoryId={firstInventory.id}
-            stock={stock}
+            stock={stock}           
             onStockChange={(change) => setStock(stock + change)}
           />
 
