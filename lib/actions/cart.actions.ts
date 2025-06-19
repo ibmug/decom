@@ -147,24 +147,76 @@ export async function updateCartItemQuantity(data: { productId: string; inventor
     const { sessionCartId } = await getCartIdentifiers();
     const cart = await resolveCart(sessionCartId);
 
-    const existing = cart.items.find(item => item.productId === data.productId && item.inventory.id === data.inventoryId);
+    const existing = cart.items.find(item => 
+      item.productId === data.productId && 
+      item.inventory.id === data.inventoryId
+    );
 
+    // Always recheck inventory!
+    const inv = await prisma.inventory.findUnique({
+      where: { id: data.inventoryId },
+      select: { id: true, stock: true },
+    });
+    if (!inv) return { success: false, message: "Inventory not found" };
+
+    // ---- Handle cases ----
+
+    // 1️⃣ Create new (if doesn't exist & qty > 0 and stock available)
     if (!existing && data.quantity > 0) {
+      const qtyToAdd = Math.min(data.quantity, inv.stock);
+
       await prisma.cartItem.create({
-        data: { cartId: cart.id, productId: data.productId, inventoryId: data.inventoryId, quantity: data.quantity },
+        data: {
+          cartId: cart.id,
+          productId: data.productId,
+          inventoryId: data.inventoryId,
+          quantity: qtyToAdd,
+        },
       });
-    } else if (existing && data.quantity > 0) {
-      await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: data.quantity } });
-    } else if (existing && data.quantity <= 0) {
-      await prisma.cartItem.delete({ where: { id: existing.id } });
+
+      return { success: true, message: "Item added to cart" };
     }
 
-    return { success: true, message: "Quantity updated" };
+    // 2️⃣ Update existing
+    if (existing) {
+      if (data.quantity <= 0) {
+        // Remove item
+        await prisma.cartItem.delete({ where: { id: existing.id } });
+        return { success: true, message: "Item removed from cart" };
+      }
+
+      if (data.quantity > inv.stock) {
+        // Adjust down to stock
+        await prisma.cartItem.update({
+          where: { id: existing.id },
+          data: { quantity: inv.stock },
+        });
+
+        return { 
+          success: true, 
+          message: `We can't add more, you already have max available in stock! (${inv.stock})` 
+        };
+      }
+
+      // Normal update (qty within stock)
+      await prisma.cartItem.update({
+        where: { id: existing.id },
+        data: { quantity: data.quantity },
+      });
+
+      return { success: true, message: "Quantity updated" };
+    }
+
+    // Should not reach here
+    return { success: false, message: "Unexpected cart state" };
+
   } catch (err) {
     console.error(err);
     return { success: false, message: "An unexpected error occurred" };
   }
 }
+
+
 
 // === Get my cart (serialized) ===
 export async function getMyCart(): Promise<ApiResponse<ReturnType<typeof serializeCart>>> {

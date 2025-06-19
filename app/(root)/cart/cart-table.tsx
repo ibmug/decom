@@ -35,10 +35,14 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
       const result = await response.json();
 
       if (!result.success) {
-        toast({ description: result.message, variant: "destructive" });
-      } else {
-        router.refresh(); // optional — reload page
-      }
+  toast({ description: result.message, variant: "destructive" });
+} else {
+  if (result.message.includes("We can't")) {
+    toast({ description: result.message, variant: "default" });
+  }
+  router.refresh();
+}
+
     } catch (err) {
       toast({ description: formatError(err), variant: "destructive" });
     }
