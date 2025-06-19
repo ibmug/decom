@@ -11,6 +11,7 @@ export function toTransformedCart(cart: {
   sessionCartId: string;
   items: CartItemWithProductAndInventory[];
 }): TransformedCart {
+  
   return {
     id: cart.id,
     userId: cart.userId ?? undefined,
@@ -27,11 +28,9 @@ export function toTransformedCart(cart: {
         slug: item.storeProduct.slug,
         type: item.storeProduct.type,
         images: item.storeProduct.images,
-        price: item.storeProduct.price.toString(),  // always string here
-        name:
-          item.storeProduct.type === "CARD"
-            ? item.storeProduct.cardMetadata?.name ?? "Unnamed"
-            : item.storeProduct.accessory?.name ?? "Unnamed",
+        price: +item.storeProduct.price,  
+        cardMetadata: item.storeProduct.cardMetadata ?? null,
+  accessory: item.storeProduct.accessory ?? null,
       },
       inventory: {
         id: item.inventory.id,
@@ -44,7 +43,8 @@ export function toTransformedCart(cart: {
 }
 // --- calcPrice ---
 
-export function calcPrice(items: { price: string; qty: number }[]) {
+export function calcPrice(items: { price: number
+; qty: number }[]) {
   const itemsValue = items.reduce((sum, i) => sum + Number(i.price) * i.qty, 0);
   const itemsPrice = roundtwo(itemsValue);
   const shippingPrice = roundtwo(itemsPrice > 100 ? 0 : 10);

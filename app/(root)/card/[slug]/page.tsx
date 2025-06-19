@@ -12,7 +12,7 @@ export default async function CardDetailsPage(
   const { slug } = await props.params;
   const card = await getSingleCardBySlug(slug);
   if (!card) notFound();
-  console.log(card)
+  //console.log(card)
 
   const session = await getServerSession(authOptions);
   const userRole = session?.user?.role ?? "USER";

@@ -12,6 +12,7 @@ const CartPage = async () => {
   const result = await getMyCart();
 if (!result.success) throw new Error(result.message);
 const cart = result.data;
+//console.log("CARTPAGE:", JSON.stringify(cart,null, 2))
 
 
   return (<div>

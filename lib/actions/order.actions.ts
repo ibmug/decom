@@ -141,10 +141,11 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     status: res.status,
     orderItems: res.orderItems.map((oi) => ({
       productId: oi.productId,
+      inventoryId: oi.inventoryId,
       name: oi.name,
       slug: oi.slug,
       image: oi.image,
-      price: oi.price.toString(),
+      price: +oi.price,
       qty: oi.qty,
     })) as UIOrderItem[],
   };
@@ -200,7 +201,7 @@ export async function getAllFilteredOrders({ status, page = 1, pageSize = 10 }: 
       orderItems: order.orderItems.map(item => ({
         name: item.name,
         qty: item.qty,
-        price: item.price.toString(),
+        price: item.price,
       })),
     })),
     totalPages: Math.ceil(totalOrders / pageSize),

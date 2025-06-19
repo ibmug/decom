@@ -147,10 +147,9 @@ export function serializeProduct(product: ProductWithRelations) {
     images: product.images,
     rating: product.rating ?? 0,
     numReviews: product.numReviews ?? 0,
-    price: product.price.toString() ?? "0.0",
+    price: product.price ?? 0.0,
     inventory: product.inventory.map((inv) => ({
       id: inv.id,
-      //price: inv.price.toString(),
       stock: inv.stock,
       language: inv.language ?? undefined,
       condition: inv.condition ?? undefined,

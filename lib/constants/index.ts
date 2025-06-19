@@ -32,7 +32,7 @@ export const accessoryDefaultValues: ProductFormValues = {
   numReviews: 0,
   inventory: [],
   accessoryId: null,
-  price: "0.00",  
+  price: 0.00,  
 };
 
 
@@ -45,7 +45,7 @@ export const cardDefaultValues: ProductFormValues = {
   numReviews: 0,
   images: [],
   inventory: [],
-  price: "0.00"
+  price: 0.00
 };
 
 

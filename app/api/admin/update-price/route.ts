@@ -4,17 +4,15 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { z } from "zod";
 
-// ✅ Strict input validation schema
 const updatePriceSchema = z.object({
-  productId: z.string(),
+  productId: z.string(),  // <--- match what you're sending!
   price: z.number().min(0),
 });
 
 export async function POST(req: Request) {
   try {
-    // ✅ Session check
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER')) {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'manager')) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,14 +25,16 @@ export async function POST(req: Request) {
 
     const { productId, price } = parsed.data;
 
-    // ✅ Check if product exists
+    console.warn("ENDPOSTING:",productId, price)
+
+    // ✅ Check if inventory exists
     const product = await prisma.storeProduct.findUnique({
       where: { id: productId },
       select: { id: true },
     });
 
     if (!product) {
-      return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Product item not found" }, { status: 404 });
     }
 
     // ✅ Perform price update

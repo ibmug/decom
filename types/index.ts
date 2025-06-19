@@ -27,7 +27,8 @@ export type UIStoreProduct =
       type: "CARD";
       cardMetadata: Omit<CardMetadata, never>;
       inventory: UIInventory[];
-      price: string;
+      price: number
+;
       rating?: number;
       numReviews?: number;
       images: string[];
@@ -38,7 +39,8 @@ export type UIStoreProduct =
       type: "ACCESSORY";
       accessory: Omit<AccessoryProduct, never>;
       inventory: UIInventory[];
-      price: string;
+      price: number
+;
       rating?: number;
       numReviews?: number;
       images: string[];
@@ -60,7 +62,8 @@ export type UICatalogProduct =
       oracleText?: string;
       colorIdentity: string[];
       images: string[];
-      price: string;
+      price: number
+;
       stock: number;
       rating: number;
       numReviews: number;
@@ -79,7 +82,8 @@ export type UICatalogProduct =
       description?: string;
       category?: string;
       brand?: string;
-      price: string;
+      price: number
+;
       stock: number;
     };
 
@@ -101,7 +105,8 @@ export interface CardItem {
   usdPrice?: number;
   usdFoilPrice?: number;
   slug: string;
-  price: string;
+  price: number
+;
   stock: number;
   rating?: number;
   numReviews?: number;
@@ -135,7 +140,8 @@ export interface UICartItem {
   inventoryId: string;
   name: string;
   slug: string;
-  price: string;
+  price: number
+;
   image: string;
   qty: number;
   stock: number;
@@ -160,7 +166,8 @@ export type AddToCartInput = {
   inventoryId: string;
   name: string;
   slug: string;
-  price: string;
+  price: number
+;
   qty: number;
   image: string;
 };
@@ -176,7 +183,7 @@ export type CartItemWithProductAndInventory = {
     slug: string;
     type: "CARD" | "ACCESSORY";
     images: string[];
-    price: string;
+    price: number;
     cardMetadata?: { name: string } | null;
     accessory?: { name: string } | null;
   };
@@ -222,7 +229,8 @@ export type UIOrder = Omit<Order, 'createdAt' | 'paidAt' | 'deliveredAt' | 'item
 export type UIOrderItem = {
   name: string;
   slug: string;
-  price: string;
+  price: number
+;
   image: string;
   productId: string;
   inventoryId: string;

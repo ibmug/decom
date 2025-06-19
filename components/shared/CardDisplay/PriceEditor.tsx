@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface PriceEditorProps {
-  inventoryId: string;
+  productId: string;
   currentPrice: number | string;
 }
 
-export default function PriceEditor({ inventoryId, currentPrice }: PriceEditorProps) {
+export default function PriceEditor({ productId, currentPrice }: PriceEditorProps) {
   const [price, setPrice] = useState<string>(currentPrice.toString());
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -18,14 +18,17 @@ export default function PriceEditor({ inventoryId, currentPrice }: PriceEditorPr
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/update-price', {
+      const theUrl = new URL('/api/admin/update-price',window.location.origin).toString()
+      const res = await fetch(theUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          inventoryId,
+          productId,
           price: parseFloat(price),
         }),
       });
+
+      console.warn("FRONTPOSTING:",productId, price)
 
       if (!res.ok) throw new Error('Failed to update price');
       toast({ description: "Price updated successfully" });

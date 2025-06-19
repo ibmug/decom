@@ -25,25 +25,24 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
   const [isPending, startTransition] = useTransition();
 
   const handleQuantityChange = async (productId: string, inventoryId: string, quantity: number) => {
-  try {
-    const response = await fetch("/api/cart/update-quantity", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, inventoryId, quantity }),
-    });
+    try {
+      const response = await fetch("/api/cart/update-quantity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, inventoryId, quantity }),
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (!result.success) {
-      toast({ description: result.message, variant: "destructive" });
-    } else {
-      router.refresh(); // optional — reload page
+      if (!result.success) {
+        toast({ description: result.message, variant: "destructive" });
+      } else {
+        router.refresh(); // optional — reload page
+      }
+    } catch (err) {
+      toast({ description: formatError(err), variant: "destructive" });
     }
-  } catch (err) {
-    toast({ description: formatError(err), variant: "destructive" });
-  }
-};
-
+  };
 
   return (
     <>
@@ -64,76 +63,86 @@ const CartTable = ({ cart }: { cart?: UICart }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-  {cart.items.map((item) => {
-    const productUrl =
-      item.type === "CARD"
-        ? `/card/${item.slug}`
-        : `/product/${item.slug}`;
+                {cart.items.map((item) => {
+                  const productUrl =
+                    item.type === "CARD"
+                      ? `/card/${item.slug}`
+                      : `/product/${item.slug}`;
 
-    const hasStockIssue = item.qty > item.stock;
+                  const hasStockIssue = item.qty > item.stock;
 
-    return (
-      <TableRow key={item.id}>
-        <TableCell>
-          <Link href={productUrl} className="flex items-center">
-            <Image
-              src={item.image}
-              alt={item.name}
-              width={50}
-              height={50}
-            />
-            <span className="px-2">{item.name}</span>
-          </Link>
-          {hasStockIssue && (
-            <div className="text-sm text-red-500">
-              Solo quedan {item.stock} disponibles
-            </div>
-          )}
-        </TableCell>
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <Link href={productUrl} className="flex items-center gap-2">
+                          <Image
+                            src={item.image}
+                            alt={item.name || "Unnamed product"}
+                            width={50}
+                            height={50}
+                          />
+                          <div>
+                            <div className="font-semibold">
+                              {item.name || "Unnamed product"}
+                            </div>
+                            {item.type === "CARD" && (
+                              <div className="text-sm text-muted-foreground">
+                                {item.language} — {item.condition}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
 
-        <TableCell className="flex-center gap-2">
-          <Button
-            disabled={isPending}
-            variant="outline"
-            onClick={() =>
-              startTransition(() =>
-                handleQuantityChange(item.productId, item.inventoryId, item.qty - 1)
-              )
-            }
-          >
-            {isPending ? (
-              <Loader className="w-4 h-4 animate-spin" />
-            ) : (
-              <Minus className="w-4 h-4" />
-            )}
-          </Button>
+                        {hasStockIssue && (
+                          <div className="text-sm text-red-500 mt-1">
+                            Solo quedan {item.stock} disponibles
+                          </div>
+                        )}
+                      </TableCell>
 
-          <span className="px-2">{item.qty}</span>
+                      <TableCell className="flex-center gap-2">
+                        <Button
+                          disabled={isPending}
+                          variant="outline"
+                          onClick={() =>
+                            startTransition(() =>
+                              handleQuantityChange(item.productId, item.inventoryId, item.qty - 1)
+                            )
+                          }
+                        >
+                          {isPending ? (
+                            <Loader className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Minus className="w-4 h-4" />
+                          )}
+                        </Button>
 
-          <Button
-            disabled={isPending}
-            variant="outline"
-            onClick={() =>
-              startTransition(() =>
-                handleQuantityChange(item.productId, item.inventoryId, item.qty + 1)
-              )
-            }
-          >
-            {isPending ? (
-              <Loader className="w-4 h-4 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-          </Button>
-        </TableCell>
+                        <span className="px-2">{item.qty}</span>
 
-        <TableCell className="text-right">
-          {item.price}
-        </TableCell>
-      </TableRow>
-    );
-  })}
-</TableBody>
+                        <Button
+                          disabled={isPending}
+                          variant="outline"
+                          onClick={() =>
+                            startTransition(() =>
+                              handleQuantityChange(item.productId, item.inventoryId, item.qty + 1)
+                            )
+                          }
+                        >
+                          {isPending ? (
+                            <Loader className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Plus className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        {item.price}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
             </Table>
           </div>
 

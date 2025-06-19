@@ -40,7 +40,8 @@ export function storeProductToUIStoreProduct(p: {
   description?: string | null;
 }): UIStoreProduct | null {
   const inventory = mapInventory(p.inventory ?? []);
-  const priceString = typeof p.price === "string" ? p.price : p.price.toString();
+  const priceNumber = typeof p.price === "number" ? p.price : +p.price;
+
 
   if (p.type === "CARD") {
     if (!p.cardMetadata) {
@@ -53,7 +54,7 @@ export function storeProductToUIStoreProduct(p: {
       type: "CARD",
       cardMetadata: p.cardMetadata,
       inventory,
-      price: priceString,
+      price: priceNumber,
       rating: p.rating ?? 0,
       numReviews: p.numReviews ?? 0,
       images: p.images ?? [],
@@ -71,7 +72,7 @@ export function storeProductToUIStoreProduct(p: {
       type: "ACCESSORY",
       accessory: p.accessory,
       inventory,
-      price: priceString,
+      price: priceNumber,
       rating: p.rating ?? 0,
       numReviews: p.numReviews ?? 0,
       images: p.images ?? [],

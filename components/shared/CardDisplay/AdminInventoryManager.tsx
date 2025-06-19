@@ -14,14 +14,13 @@ interface AdminInventoryManagerProps {
 const AdminInventoryManager: React.FC<AdminInventoryManagerProps> = ({ productId, onInventoryAdded }) => {
   const [language, setLanguage] = useState<string>('EN');
   const [condition, setCondition] = useState<string>('NM');
-  const [price, setPrice] = useState<string>('');
   const [stock, setStock] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!price || !stock) {
-      toast({ description: "Price and Stock are required", variant: 'destructive' });
+    if (!stock) {
+      toast({ description: "Stock is required", variant: 'destructive' });
       return;
     }
 
@@ -30,11 +29,11 @@ const AdminInventoryManager: React.FC<AdminInventoryManagerProps> = ({ productId
       const res = await fetch('/api/admin/add-inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           productId,
           language,
           condition,
-          price: parseFloat(price),
           stock: parseInt(stock),
         }),
       });
@@ -43,7 +42,6 @@ const AdminInventoryManager: React.FC<AdminInventoryManagerProps> = ({ productId
 
       if (onInventoryAdded) onInventoryAdded();
       toast({ description: "Inventory added successfully!" });
-      setPrice('');
       setStock('');
     } catch (err) {
       console.error(err);
@@ -90,10 +88,10 @@ const AdminInventoryManager: React.FC<AdminInventoryManagerProps> = ({ productId
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        {/* <div>
           <label className="font-semibold">Price</label>
           <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
-        </div>
+        </div> */}
         <div>
           <label className="font-semibold">Stock</label>
           <Input type="number" value={stock} onChange={e => setStock(e.target.value)} placeholder="0" />

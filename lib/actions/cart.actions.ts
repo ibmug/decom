@@ -21,50 +21,65 @@ async function getCartIdentifiers() {
 
 // === Resolve or create cart ===
 async function resolveCart(sessionCartId: string) {
+
   const cart = await prisma.cart.findUnique({
-    where: { sessionCartId },
-    include: {
-      items: {
-        include: {
-          storeProduct: {
-            select: {
-              id: true,
-              slug: true,
-              type: true,
-              price: true,
-              images: true,
-              cardMetadata: { select: { name: true } },
-              accessory: { select: { name: true } },
-            },
+  where: { sessionCartId },
+  include: {
+    items: {
+      include: {
+        storeProduct: {
+          select: {
+            id: true,
+            slug: true,
+            type: true,
+            price: true,
+            images: true,
+            cardMetadata: { select: { name: true } },
+            accessory: { select: { name: true } },
           },
-          inventory: true,
+        },
+        inventory: {
+          select: {
+            id: true,
+            stock: true,
+            language: true,
+            condition: true
+          }
         },
       },
     },
-  });
+  },
+});
 
   if (!cart) {
     const newCart = await prisma.cart.create({
-      data: { sessionCartId },
+  data: { sessionCartId },
+  include: {
+    items: {
       include: {
-        items: {
-          include: {
-            storeProduct: {
-              select: {
-                id: true,
-                slug: true,
-                type: true,
-                price: true,
-                images: true,
-                cardMetadata: { select: { name: true } },
-                accessory: { select: { name: true } },
-              },
-            },
-            inventory: true,
+        storeProduct: {
+          select: {
+            id: true,
+            slug: true,
+            type: true,
+            price: true,
+            images: true,
+            cardMetadata: { select: { name: true } },
+            accessory: { select: { name: true } },
           },
         },
+        inventory: {
+          select: {
+            id: true,
+            stock: true,
+            language: true,
+            condition: true
+          }
+        },
       },
-    });
+    },
+  },
+});
 
     return {
       ...newCart,
@@ -156,36 +171,39 @@ export async function getMyCart(): Promise<ApiResponse<ReturnType<typeof seriali
   try {
     const { sessionCartId } = await getCartIdentifiers();
     const cart = await resolveCart(sessionCartId);
+    //console.log("DEBUG CART ITEMS:", JSON.stringify(cart.items, null, 2));
+
 
     const transformed = toTransformedCart({
-      id: cart.id,
-      userId: cart.userId,
-      createdAt: cart.createdAt,
-      updatedAt: cart.updatedAt,
-      sessionCartId: cart.sessionCartId,
-      items: cart.items.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        inventoryId: item.inventoryId,
-        quantity: item.quantity,
-        storeProduct: {
-          id: item.storeProduct.id,
-          slug: item.storeProduct.slug,
-          type: item.storeProduct.type,
-          images: item.storeProduct.images,
-          price: item.storeProduct.price.toString(),
-          name: item.storeProduct.type === "CARD"
-            ? item.storeProduct.cardMetadata?.name ?? "Unnamed"
-            : item.storeProduct.accessory?.name ?? "Unnamed",
-        },
-        inventory: {
-          id: item.inventory.id,
-          stock: item.inventory.stock,
-          language: item.inventory.language ?? "English",
-          condition: item.inventory.condition ?? "NM",
-        },
-      })),
-    });
+  id: cart.id,
+  userId: cart.userId,
+  createdAt: cart.createdAt,
+  updatedAt: cart.updatedAt,
+  sessionCartId: cart.sessionCartId,
+  items: cart.items.map(item => ({
+    id: item.id,
+    productId: item.productId,
+    inventoryId: item.inventoryId,
+    quantity: item.quantity,
+    storeProduct: {
+      id: item.storeProduct.id,
+      slug: item.storeProduct.slug,
+      type: item.storeProduct.type,
+      images: item.storeProduct.images,
+      price: +item.storeProduct.price,  // Decimal --> number
+      cardMetadata: item.storeProduct.cardMetadata,
+      accessory: item.storeProduct.accessory,
+    },
+    inventory: {
+      id: item.inventory.id,
+      stock: item.inventory.stock,
+      language: item.inventory.language ?? "English",  // add this
+      condition: item.inventory.condition ?? "NM",     // add this
+    },
+  })),
+});
+
+
 
     // Calculate totals (extensible later)
     const totals = calcPrice(transformed.items.map(i => ({

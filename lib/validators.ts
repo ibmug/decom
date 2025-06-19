@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { PAYMENT_METHODS } from "./constants";
-import { formatNumberWithDecimal } from "./utils/utils";
+// import { formatNumberWithDecimal } from "./utils/utils";
 
-// --- Currency validator ---
-const currency = z.string().refine(
-  (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))),
-  "Price must have exactly two decimal places"
-);
+// // --- Currency validator ---
+// const currency = z.string().refine(
+//   (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(Number(value))),
+//   "Price must have exactly two decimal places"
+// );
 
 // --- Inventory validator ---
 const inventoryItemSchema = z.object({
@@ -24,7 +24,7 @@ const baseProductSchema = z.object({
   numReviews: z.number().optional(),
   images: z.array(z.string().url()).min(1),
   inventory: z.array(inventoryItemSchema),
-  price: currency,
+  price: z.number().min(0),
 });
 
 // --- CARD schema ---
@@ -99,7 +99,7 @@ export const insertOrderItemSchema = z.object({
   slug: z.string(),
   image: z.string(),
   name: z.string(),
-  price: currency,
+  price: z.number().min(0),
   qty: z.number(),
 });
 
@@ -130,7 +130,7 @@ export const insertAccessoryProductSchema = z.object({
   brand: z.string().optional(),
   category: z.string().min(1),
   images: z.array(z.string().url()).min(1),
-  price: currency,
+  price: z.number().min(0),
   stock: z.number().int().nonnegative(),
   storeId: z.string().uuid().optional(),
 });

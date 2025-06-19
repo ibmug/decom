@@ -90,7 +90,7 @@ export default function CardDetailsDisplay({ product, isAdminOrManager }: Props)
               <div className="flex justify-between">
                 <span>Price:</span>
                 {isAdminOrManager && filteredInventory ? (
-                  <PriceEditor inventoryId={filteredInventory.id} currentPrice={price} />
+                  <PriceEditor productId={product.id} currentPrice={price} />
                 ) : (
                   <ProductPrice value={Number(price)} />
                 )}

@@ -62,7 +62,7 @@ export default function ProductForm({ type, product }: ProductFormProps) {
           type: 'ACCESSORY',
           slug: '',
           accessoryId: '',
-          price: '0.00',
+          price: 0.00,
           rating: 0,
           numReviews: 0,
           images: [],

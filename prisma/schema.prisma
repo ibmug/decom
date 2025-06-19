@@ -188,7 +188,7 @@ model StoreProduct {
   accessoryId    String?     @db.Uuid
   storeId        String?     @db.Uuid
 
-  price          Decimal     @default(0.00)  // ✅ <-- this is your main price
+  price          Decimal     @default(0.00)  
   rating         Float?      @default(0)
   numReviews     Int?        @default(0)
   images         String[]    @default([])
