@@ -124,16 +124,15 @@ export const updateUserSchema = updateProfileSchema.extend({
 
 // --- Insert accessory standalone (for admin form) ---
 export const insertAccessoryProductSchema = z.object({
-  slug: z.string().min(3),
-  name: z.string().min(1),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   brand: z.string().optional(),
-  category: z.string().min(1),
-  images: z.array(z.string().url()).min(1),
-  price: z.number().min(0),
-  stock: z.number().int().nonnegative(),
-  storeId: z.string().uuid().optional(),
+  category: z.string().min(1, "Category is required"),
+  images: z.array(z.string().url()).min(1, "At least 1 image required"),
+  price: z.number().min(0, "Price must be at least 0"),
+  stock: z.number().int().min(0, "Stock must be 0 or more")
 });
+
 
 // --- Sign up form ---
 export const signUpFormSchema = z.object({

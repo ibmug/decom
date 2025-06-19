@@ -42,8 +42,12 @@ const AdminProductsPage = async () => {
 
   return (
     <div className="space-y-2">
+      <div className='flex items-center justify-between'>
       <h2 className="h2-bold">Products</h2>
-
+    <Button asChild>
+  <Link href="/admin/products/create">Create Product</Link>
+</Button>
+</div>
       {viewProducts.length === 0 ? (
         <p>No products found.</p>
       ) : (
