@@ -71,7 +71,20 @@ export async function getLatestProducts(): Promise<UIStoreProduct[]> {
   const products = await prisma.storeProduct.findMany({
     orderBy: { updatedAt: 'desc' },
     take: 8,
-    include: baseInclude,
+    select: {
+      id: true,
+      slug: true,
+      type: true,
+      rating: true,
+      numReviews: true,
+      images: true,
+      updatedAt: true,
+      storeId: true,
+      cardMetadata: true,
+      accessory: true,
+      inventory: true,
+      price: true,
+    },
   });
 
   const converted = products.map((p) => {
@@ -85,7 +98,6 @@ export async function getLatestProducts(): Promise<UIStoreProduct[]> {
 
   return converted.filter((p): p is UIStoreProduct => p !== null);
 }
-
 
 
 // Get all products for admin products page:
