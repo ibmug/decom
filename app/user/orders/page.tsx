@@ -6,6 +6,8 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@
 import { formatCurrency, formatDateTime, formatId } from '@/lib/utils/utils'
 import Pagination from '@/components/shared/pagination'
 import { PAGE_SIZE } from '@/lib/constants'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/authOptions'
 
 export const metadata: Metadata = { title: 'My Orders' }
 
@@ -21,7 +23,16 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const pageParam = Array.isArray(page) ? page[0] : page
   const pageNumber = pageParam ? Number(pageParam) : 1
 
-  const { data: orderList, totalPages } = await getMyOrders({ userId: 'USER-ID-HERE', page: pageNumber, limit: PAGE_SIZE });
+  // ✅ Get the real userId from session
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) throw new Error('User Not Found');
+
+  const { data: orderList, totalPages } = await getMyOrders({
+    userId: session.user.id,
+    page: pageNumber,
+    limit: PAGE_SIZE
+  });
 
   if (!orderList || orderList.length === 0) {
     return (

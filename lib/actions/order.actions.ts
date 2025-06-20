@@ -152,6 +152,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 // ================= GET MY ORDERS =================
 export async function getMyOrders({ userId, page = 1, limit = 10 }: { userId: string; page?: number; limit?: number; }) {
   const skip = (page - 1) * limit;
+
   const [orders, totalCount] = await prisma.$transaction([
     prisma.order.findMany({
       where: { userId },
@@ -167,13 +168,15 @@ export async function getMyOrders({ userId, page = 1, limit = 10 }: { userId: st
     id: order.id,
     createdAt: order.createdAt,
     status: order.status,
-    totalPrice: order.totalPrice.toFixed(2),
+    totalPrice: order.totalPrice.toNumber(),  
     itemCount: order.orderItems.length,
   }));
 
   const totalPages = Math.ceil(totalCount / limit);
+
   return { data, totalPages };
 }
+
 
 // ================= ADMIN FILTERED ORDERS =================
 export async function getAllFilteredOrders({ status, page = 1, pageSize = 10 }: { status?: OrderStatus; page?: number; pageSize?: number; }) {

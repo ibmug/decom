@@ -285,7 +285,7 @@ export interface UIOrderListItem {
   id: string;
   createdAt: Date;
   status: OrderStatus;
-  totalPrice: string;
+  totalPrice: number;
   itemCount: number;
 }
 
