@@ -25,9 +25,9 @@ export default function AccessoryProductDisplay({ product }: { product: Accessor
 
         {/* Details Column */}
         <div className="col-span-2 p-5 flex flex-col gap-6">
-          <p>{product.brand} {product.category}</p>
+          <p>{product.brand} {product.accessory.category}</p>
           <h1 className="h3-bold">{product.accessory.name}</h1>
-          <p>{product.rating} of {product.numReviews}</p>
+          {/* <p>{product.rating} out of {product.numReviews}</p> */}
 
           <div className="flex-col sm:flex-row sm:items-center gap-3">
             <ProductPrice
@@ -38,7 +38,7 @@ export default function AccessoryProductDisplay({ product }: { product: Accessor
 
           <div className="mt-10">
             <p className="font-semibold">Description:</p>
-            <p>{product.description}</p>
+            <p>{product.accessory.description}</p>
           </div>
         </div>
 

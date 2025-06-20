@@ -5,7 +5,7 @@ import AccessoryProductDisplay from "./AccesoryProductDisplay";
 import CardProductDisplay from "./CardProductDisplay";
 import { isCardProduct } from "@/lib/utils/transformers";
 import { UIStoreProduct } from "@/types";
-import AddToCartWrapper from "@/components/shared/product/add-to-cart-wrapper";
+//import AddToCartWrapper from "@/components/shared/product/add-to-cart-wrapper";
 
 export default async function ProductDetailsPage({
   params,
@@ -23,7 +23,7 @@ export default async function ProductDetailsPage({
   const product: UIStoreProduct = rawProduct;
 
   const isCard = isCardProduct(product);
-  console.log(product)
+  
 
   const firstInventory = product.inventory[0];
   if(!firstInventory) notFound();
@@ -36,7 +36,7 @@ export default async function ProductDetailsPage({
         <AccessoryProductDisplay product={product as Extract<UIStoreProduct, { type: "ACCESSORY" }>} />
       )}
 
-      {product.inventory.length > 0 && (
+      {/* {product.inventory.length > 0 && (
         <div className="flex-center">
           <AddToCartWrapper
             productId={product.id}
@@ -45,7 +45,7 @@ export default async function ProductDetailsPage({
             
           />
         </div>
-      )}
+      )} */}
     </>
   );
 }

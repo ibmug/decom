@@ -23,7 +23,7 @@ if (!firstInventory) {
   return <div>Inventory not found.</div>;
 }
 
-
+console.log(product)
 
   const { slug, accessory } = product
 
@@ -46,7 +46,7 @@ if (!firstInventory) {
         </Link>
 
         <div className="mt-4 space-y-1">
-          <p>{product.description}</p>
+          <p>{accessory.description}</p>
           <ProductPrice value={Number(product.price)} />
           <span className={`text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
             {stock >= 1 ? <p><strong>Stock:</strong> {stock}</p> : <></>}
