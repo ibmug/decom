@@ -229,8 +229,8 @@ export type UIOrder = Omit<Order, 'createdAt' | 'paidAt' | 'deliveredAt' | 'item
 export type UIOrderItem = {
   name: string;
   slug: string;
-  price: number
-;
+  price: number;
+  type: 'CARD' | 'ACCESSORY'
   image: string;
   productId: string;
   inventoryId: string;

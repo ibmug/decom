@@ -1,41 +1,64 @@
-'use client'
-import { useRouter } from "next/navigation";
-import { Check, Loader } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useFormStatus } from "react-dom";
-import { createOrder } from "@/lib/actions/order.actions";
+'use client';
 
-const PlaceOrderForm = () => {
-    const router = useRouter();
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Check, Loader } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ShippingAddress } from '@/types';
+import { ShippingMethod } from '@prisma/client';
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        const res = await createOrder();
+const PlaceOrderForm = ({
+  userAddress,
+  shippingMethod,
+}: {
+  userAddress: ShippingAddress;
+  shippingMethod: ShippingMethod;
+}) => {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-        if (res.success && res.data?.orderId) {
-            router.push(`/order/${res.data.orderId}`);
-        }
-    };
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
 
-    const PlaceOrderButton = () => {
-        const { pending } = useFormStatus();
-        return (
-            <Button disabled={pending} className="w-full">
-                {pending ? (
-                    <Loader className="w-full h-4 animate-spin" />
-                ) : (
-                    <Check className="w-full h-4" />
-                )}
-                {' '} Place Order
-            </Button>
-        );
-    };
+    try {
+      const res = await fetch('/api/order/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shippingAddress: userAddress,
+          shippingMethod,
+        }),
+      });
 
-    return (
-        <form onSubmit={handleSubmit} className="w-full">
-            <PlaceOrderButton />
-        </form>
-    );
+      const result = await res.json();
+
+      if (result.success && result.orderId) {
+        router.push(`/order/${result.orderId}`);
+      } else {
+        console.error('Order failed:', result.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full">
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? (
+          <Loader className="w-4 h-4 animate-spin" />
+        ) : (
+          <>
+            <Check className="w-4 h-4 mr-2" />
+            Place Order
+          </>
+        )}
+      </Button>
+    </form>
+  );
 };
 
 export default PlaceOrderForm;

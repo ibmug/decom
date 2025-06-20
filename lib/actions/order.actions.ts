@@ -5,7 +5,7 @@ import { authOptions } from '../authOptions';
 import { getServerSession } from 'next-auth';
 import { ShippingAddress, UIOrderItem, Order, PaymentResult, UIOrderListItem } from '@/types';
 import { insertOrderItemSchema, insertOrderSchema } from '@/lib/validators';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { OrderStatus, Prisma, ShippingMethod } from '@prisma/client';
 import { getMyCart } from './cart.actions';
 import { formatError } from '../utils/utils';
 import { paypalUtils } from '../paypalUtils';
@@ -13,7 +13,7 @@ import { revalidatePath } from 'next/cache';
 
 // ================= CREATE ORDER =================
 
-export async function createOrder() {
+export async function createOrder(shippingAddress: ShippingAddress, shippingMethod: ShippingMethod) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error('Unauthorized');
@@ -36,9 +36,6 @@ export async function createOrder() {
         return { success: false, message: `Not enough stock for ${item.name}` };
       }
     }
-
-    const shippingMethod = 'DELIVERY';
-    const shippingAddress = {} as ShippingAddress;
 
     const parsedOrder = insertOrderSchema.parse({
       userId,
@@ -109,6 +106,7 @@ export async function createOrder() {
     return { success: false, message: formatError(err) };
   }
 }
+
 
 // ================= GET ORDER BY ID =================
 export async function getOrderById(orderId: string): Promise<Order | null> {

@@ -96,11 +96,16 @@ const PlaceOrderPage = async () => {
                 </TableHeader>
                 <TableBody>
                   {cart.items.map((item: UIOrderItem) => (
-                    <TableRow key={item.slug}>
+                    <TableRow key={`${item.slug}-${item.condition}-${item.language}`}>
                       <TableCell>
                         <Link href={`/product/${item.slug}`} className="flex items-center">
                           <Image src={item.image} alt={item.name} width={50} height={50} />
                           <span className="px-2">{item.name}</span>
+                          {item.type === "CARD" && (
+                              <div className="text-sm text-muted-foreground">
+                                {item.language} — {item.condition}
+                              </div>
+                            )}
                         </Link>
                       </TableCell>
                       <TableCell>
@@ -133,7 +138,7 @@ const PlaceOrderPage = async () => {
               <div>Total:</div>
               <div>{formatCurrency(cart.totalPrice)}</div>
             </div>
-            <PlaceOrderForm />
+            <PlaceOrderForm userAddress={userAddress} shippingMethod={userAddress.shippingMethod} />
           </CardContent>
         </Card>
       </div>
