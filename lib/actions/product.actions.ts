@@ -6,17 +6,21 @@ import { ProductWithRelations, storeProductToUIStoreProduct } from '@/lib/utils/
 
 
 // Common include fields (StoreProduct level + relations)
-const baseInclude = {
+const baseSelect = {
   id: true,
   slug: true,
   type: true,
-  cardMetadata: true,
-  accessory: true,
-  inventory: true,
   rating: true,
   numReviews: true,
   images: true,
   storeId: true,
+  price: true,                 
+  updatedAt: true,             
+  cardMetadataId: true,        
+  accessoryId: true,           
+  cardMetadata: true,
+  accessory: true,
+  inventory: true,
 };
 
 
@@ -46,7 +50,7 @@ export async function getProductsTotalCount(): Promise<number> {
 export async function getSingleProductById(id: string): Promise<UIStoreProduct | null> {
   const product = await prisma.storeProduct.findUnique({
     where: { id },
-    include: baseInclude,
+    include: baseSelect,
   });
 
   if (!product) return null;
@@ -56,15 +60,17 @@ export async function getSingleProductById(id: string): Promise<UIStoreProduct |
 
 // Fetch a product by slug (client usage)
 export async function getSingleProductBySlug(slug: string): Promise<UIStoreProduct | null> {
+  console.log(slug)
   const product = await prisma.storeProduct.findUnique({
-    where: { slug },
-    include: baseInclude,
-  });
+  where: { slug },
+  select: { ...baseSelect },
+});
 
   if (!product) return null;
 
   return storeProductToUIStoreProduct(product as ProductWithRelations);
 }
+
 
 // Get latest products for homepage:
 export async function getLatestProducts(): Promise<UIStoreProduct[]> {
@@ -104,7 +110,7 @@ export async function getLatestProducts(): Promise<UIStoreProduct[]> {
 export async function getAllProducts(): Promise<UIStoreProduct[]> {
   const products = await prisma.storeProduct.findMany({
     orderBy: { updatedAt: 'desc' },
-    include: baseInclude,
+    include: baseSelect,
   });
 
   const converted = products.map((p) => {

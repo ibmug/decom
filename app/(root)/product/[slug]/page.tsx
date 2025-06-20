@@ -23,6 +23,7 @@ export default async function ProductDetailsPage({
   const product: UIStoreProduct = rawProduct;
 
   const isCard = isCardProduct(product);
+  console.log(product)
 
   const firstInventory = product.inventory[0];
   if(!firstInventory) notFound();
